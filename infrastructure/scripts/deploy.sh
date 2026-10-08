@@ -57,6 +57,7 @@ docker compose -f "$COMPOSE_FILE" run --rm api python manage.py collectstatic --
 # 6. Progressive Zero-Downtime Service Update
 echo "==> [STEP 5/6] Updating services with rolling recreation..."
 docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+docker compose -f "$COMPOSE_FILE" restart nginx
 
 # 7. Post-Deployment Verification & Health Probe
 echo "==> [STEP 6/6] Validating application health..."
