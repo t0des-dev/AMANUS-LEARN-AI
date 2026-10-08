@@ -1,5 +1,3 @@
-version: '3.9'
-
 # ==============================================================================
 # Amanus Learn AI - Staging Docker Compose Architecture
 # Exact architectural parity with Production, isolated resources & networks

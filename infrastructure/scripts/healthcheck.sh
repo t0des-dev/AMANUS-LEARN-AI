@@ -47,18 +47,31 @@ fi
 
 # 3. Check Redis
 echo -n "[3/5] Checking Redis broker... "
-REDIS_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null || echo "FAILED")
-if [ "$REDIS_PING" = "PONG" ]; then
+REDIS_AUTH_OPT=""
+REDIS_PASS="${REDIS_PASSWORD:-}"
+if [ -z "$REDIS_PASS" ] && [ -f ".env" ]; then
+    REDIS_PASS=$(grep -E '^REDIS_PASSWORD=' .env 2>/dev/null | cut -d= -f2- | tr -d '"\r' || echo "")
+fi
+if [ -n "$REDIS_PASS" ]; then
+    REDIS_AUTH_OPT="-a $REDIS_PASS"
+fi
+REDIS_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli $REDIS_AUTH_OPT ping 2>/dev/null | tr -d '\r' || echo "FAILED")
+if echo "$REDIS_PING" | grep -qi "PONG"; then
     echo "OK (PONG)"
 else
-    echo "[FAILED] Redis did not respond to PING!"
-    FAILED=1
+    FALLBACK_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | tr -d '\r' || echo "FAILED")
+    if echo "$FALLBACK_PING" | grep -qi "PONG"; then
+        echo "OK (PONG)"
+    else
+        echo "[FAILED] Redis did not respond to PING!"
+        FAILED=1
+    fi
 fi
 
 # 4. Check Celery Workers
 echo -n "[4/5] Checking Celery workers... "
-CELERY_PING=$(docker compose -f "$COMPOSE_FILE" exec -T api celery -A config inspect ping --timeout=3 2>/dev/null || echo "FAILED")
-if echo "$CELERY_PING" | grep -q "pong"; then
+CELERY_PING=$(docker compose -f "$COMPOSE_FILE" exec -T api celery -A config inspect ping --timeout=5 2>/dev/null || echo "FAILED")
+if echo "$CELERY_PING" | grep -qi "pong"; then
     echo "OK (Workers responding)"
 else
     echo "[WARN] Celery ping did not receive immediate pong (workers might be starting)"
@@ -69,12 +82,16 @@ echo -n "[5/5] Checking API Health Endpoint... "
 HTTP_STATUS=$(docker compose -f "$COMPOSE_FILE" exec -T api python -c "
 import urllib.request, json
 try:
-    with urllib.request.urlopen('http://localhost:8000/api/v1/system/health/', timeout=5) as r:
+    req = urllib.request.Request(
+        'http://localhost:8000/api/v1/system/health/',
+        headers={'Host': 'localhost', 'X-Forwarded-Proto': 'https'}
+    )
+    with urllib.request.urlopen(req, timeout=10) as r:
         data = json.loads(r.read().decode())
         print(data.get('status', 'FAIL'))
 except Exception as e:
     print('ERROR:', e)
-" 2>/dev/null || echo "ERROR")
+" 2>/dev/null | tr -d '\r' || echo "ERROR")
 
 if [ "$HTTP_STATUS" = "healthy" ] || [ "$HTTP_STATUS" = "ok" ]; then
     echo "OK (API status: $HTTP_STATUS)"
