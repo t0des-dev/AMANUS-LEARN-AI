@@ -21,11 +21,18 @@ elif (BASE_DIR / ".env").is_file():
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-amanus-learn-ai-default-dev-key")
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,api,web,nginx").split(",")
-    if host.strip()
-]
+raw_allowed_hosts = os.getenv("ALLOWED_HOSTS", "*")
+if "*" in raw_allowed_hosts or not raw_allowed_hosts.strip():
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = [
+        host.strip()
+        for host in raw_allowed_hosts.split(",")
+        if host.strip()
+    ]
+    for default_h in ["localhost", "127.0.0.1", "api", "web", "nginx"]:
+        if default_h not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(default_h)
 
 AUTH_USER_MODEL = "accounts.User"
 
