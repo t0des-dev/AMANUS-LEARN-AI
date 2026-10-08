@@ -9,7 +9,7 @@ import { useAuth } from "../auth/AuthProvider";
 interface VoiceSelectorProps {
   selectedVoiceId: string;
   selectedProvider: string;
-  onSelectVoice: (voiceId: string, provider: string) => void;
+  onSelectVoice: (voiceId: string, provider: string, language?: string) => void;
   className?: string;
 }
 
@@ -58,6 +58,54 @@ export function VoiceSelector({
             description: "Voix féminine douce, idéale pour les révisions.",
           },
           {
+            id: "tariq",
+            name: "Tariq (طارق)",
+            language: "ar",
+            gender: "male",
+            provider: "mock",
+            description: "Voix masculine arabe claire, éloquente et académique.",
+          },
+          {
+            id: "layla",
+            name: "Layla (ليلى)",
+            language: "ar",
+            gender: "female",
+            provider: "mock",
+            description: "Voix féminine arabe douce, dynamique et pédagogique.",
+          },
+          {
+            id: "omar",
+            name: "Omar (عمر)",
+            language: "ar",
+            gender: "male",
+            provider: "mock",
+            description: "Voix masculine arabe posée et chaleureuse pour les cours.",
+          },
+          {
+            id: "fatima",
+            name: "Fatima (فاطمة)",
+            language: "ar",
+            gender: "female",
+            provider: "mock",
+            description: "Voix féminine arabe claire, professionnelle et articulée.",
+          },
+          {
+            id: "adam",
+            name: "Adam",
+            language: "en",
+            gender: "male",
+            provider: "mock",
+            description: "English male narrator, articulate and balanced.",
+          },
+          {
+            id: "rachel",
+            name: "Rachel",
+            language: "en",
+            gender: "female",
+            provider: "mock",
+            description: "English female speaker, professional and clear.",
+          },
+          {
             id: "alloy",
             name: "Alloy (OpenAI)",
             language: "fr",
@@ -100,6 +148,17 @@ export function VoiceSelector({
           </button>
           <button
             type="button"
+            onClick={() => setLanguageFilter("ar")}
+            className={`px-2 py-0.5 text-[10px] font-semibold rounded-md transition ${
+              languageFilter === "ar"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            🇸🇦 العربية (AR)
+          </button>
+          <button
+            type="button"
             onClick={() => setLanguageFilter("en")}
             className={`px-2 py-0.5 text-[10px] font-semibold rounded-md transition ${
               languageFilter === "en"
@@ -131,7 +190,7 @@ export function VoiceSelector({
               <button
                 key={`${voice.provider}-${voice.id}`}
                 type="button"
-                onClick={() => onSelectVoice(voice.id, voice.provider)}
+                onClick={() => onSelectVoice(voice.id, voice.provider, voice.language)}
                 className={`flex items-start justify-between rounded-xl border p-2.5 text-left transition ${
                   isSelected
                     ? "border-indigo-500 bg-indigo-950/40 shadow-sm shadow-indigo-950 ring-1 ring-indigo-500"

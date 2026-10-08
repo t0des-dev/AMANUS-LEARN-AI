@@ -66,6 +66,30 @@ class OpenAITTSProvider(BaseTTSProvider):
             provider="openai",
             description="Voix féminine claire et posée.",
         ),
+        TTSVoice(
+            id="alloy",
+            name="Alloy (عربي)",
+            language="ar",
+            gender="neutral",
+            provider="openai",
+            description="Voix OpenAI neutre et fluide en arabe.",
+        ),
+        TTSVoice(
+            id="nova",
+            name="Nova (عربي)",
+            language="ar",
+            gender="female",
+            provider="openai",
+            description="Voix OpenAI féminine et claire en arabe.",
+        ),
+        TTSVoice(
+            id="echo",
+            name="Echo (عربي)",
+            language="ar",
+            gender="male",
+            provider="openai",
+            description="Voix OpenAI masculine et posée en arabe.",
+        ),
     ]
 
     def __init__(self, api_key: str | None = None):

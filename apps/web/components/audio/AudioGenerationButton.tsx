@@ -242,9 +242,12 @@ export function AudioGenerationButton({
           <VoiceSelector
             selectedVoiceId={selectedVoiceId}
             selectedProvider={selectedProvider}
-            onSelectVoice={(vId, prov) => {
+            onSelectVoice={(vId, prov, lang) => {
               setSelectedVoiceId(vId);
               setSelectedProvider(prov);
+              if (lang) {
+                setSelectedLanguage(lang);
+              }
             }}
           />
 

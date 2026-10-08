@@ -56,6 +56,38 @@ class MockTTSProvider(BaseTTSProvider):
             provider="mock",
             description="English female speaker, professional and clear.",
         ),
+        TTSVoice(
+            id="tariq",
+            name="Tariq (طارق)",
+            language="ar",
+            gender="male",
+            provider="mock",
+            description="Voix masculine arabe claire, éloquente et académique.",
+        ),
+        TTSVoice(
+            id="layla",
+            name="Layla (ليلى)",
+            language="ar",
+            gender="female",
+            provider="mock",
+            description="Voix féminine arabe douce, dynamique et pédagogique.",
+        ),
+        TTSVoice(
+            id="omar",
+            name="Omar (عمر)",
+            language="ar",
+            gender="male",
+            provider="mock",
+            description="Voix masculine arabe posée et chaleureuse pour les cours.",
+        ),
+        TTSVoice(
+            id="fatima",
+            name="Fatima (فاطمة)",
+            language="ar",
+            gender="female",
+            provider="mock",
+            description="Voix féminine arabe claire, professionnelle et articulée.",
+        ),
     ]
 
     def synthesize(

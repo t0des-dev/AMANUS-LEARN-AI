@@ -51,6 +51,14 @@ class ElevenLabsTTSProvider(BaseTTSProvider):
             provider="elevenlabs",
             description="Voix masculine claire et modulée.",
         ),
+        TTSVoice(
+            id="pNInz6obpgDQGcFmaJgB",
+            name="Adam (ElevenLabs - عربي)",
+            language="ar",
+            gender="male",
+            provider="elevenlabs",
+            description="Voix masculine profonde et naturelle en arabe.",
+        ),
     ]
 
     def __init__(self, api_key: str | None = None):
