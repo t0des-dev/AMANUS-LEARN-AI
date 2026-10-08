@@ -101,14 +101,15 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database Configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+if DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
     url = urlparse(DATABASE_URL)
+    from urllib.parse import unquote
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": url.path.lstrip("/"),
-            "USER": url.username,
-            "PASSWORD": url.password,
+            "USER": unquote(url.username) if url.username else "",
+            "PASSWORD": unquote(url.password) if url.password else "",
             "HOST": url.hostname,
             "PORT": url.port or 5432,
         }
