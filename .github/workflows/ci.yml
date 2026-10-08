@@ -1,0 +1,131 @@
+name: CI / CD Quality Gates
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-quality-and-tests:
+    name: Backend Checks & Pytest Suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: amanus_test_db
+          POSTGRES_USER: amanus_user
+          POSTGRES_PASSWORD: amanus_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      ENVIRONMENT: test
+      SECRET_KEY: ci-test-secret-key-32chars-minimum-secure
+      DEBUG: "False"
+      DATABASE_URL: postgresql://amanus_user:amanus_password@localhost:5432/amanus_test_db
+      REDIS_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: apps/api/requirements.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r apps/api/requirements.txt
+
+      - name: Dependency check (pip check)
+        run: |
+          pip check
+
+      - name: Django System Check
+        run: |
+          cd apps/api
+          python manage.py check
+
+      - name: Django Missing Migrations Check
+        run: |
+          cd apps/api
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run Backend Pytest Suite
+        run: |
+          cd apps/api
+          pytest --tb=short
+
+  frontend-quality-and-tests:
+    name: Frontend Quality, Lint & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: apps/web
+        run: |
+          npm ci
+
+      - name: TypeScript Typecheck
+        working-directory: apps/web
+        run: |
+          npm run typecheck
+
+      - name: ESLint Check (Non-Interactive)
+        working-directory: apps/web
+        run: |
+          npm run lint
+
+      - name: Frontend Vitest Suite
+        working-directory: apps/web
+        run: |
+          npm run test:run
+
+      - name: NPM Dependency Audit
+        working-directory: apps/web
+        run: |
+          npm audit --audit-level=critical || true

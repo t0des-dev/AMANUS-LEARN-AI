@@ -1,0 +1,241 @@
+"use client";
+
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { Menu, X, ArrowLeft, BookOpen, AlertCircle } from "lucide-react";
+import { ProtectedRoute } from "../../../../components/auth/ProtectedRoute";
+import { useAuth } from "../../../../components/auth/AuthProvider";
+import { courseService } from "../../../../services/courseService";
+import { CourseItem, CourseSectionItem } from "../../../../types/course";
+import { CourseSidebar } from "../../../../features/course/CourseSidebar";
+import { LessonViewer } from "../../../../features/course/LessonViewer";
+function flattenLessons(sections: CourseSectionItem[]): CourseSectionItem[] {
+  const list: CourseSectionItem[] = [];
+  for (const sec of sections) {
+    if (!sec.children || sec.children.length === 0) {
+      list.push(sec);
+    } else {
+      list.push(...flattenLessons(sec.children));
+    }
+  }
+  return list;
+}
+
+function CourseLearnPageContent() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const courseId = params?.id as string;
+  const urlLessonId = searchParams?.get("lesson");
+
+  const { token, user } = useAuth();
+
+  const [course, setCourse] = useState<CourseItem | null>(null);
+  const [activeLesson, setActiveLesson] = useState<CourseSectionItem | null>(
+    null
+  );
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load completion states from localStorage
+  useEffect(() => {
+    if (!courseId) return;
+    try {
+      const saved = localStorage.getItem(`course_${courseId}_completed`);
+      if (saved) {
+        setCompletedIds(new Set(JSON.parse(saved)));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [courseId]);
+
+  const toggleLessonComplete = (lessonId: string) => {
+    setCompletedIds((prev) => {
+      const updated = new Set(prev);
+      if (updated.has(lessonId)) {
+        updated.delete(lessonId);
+      } else {
+        updated.add(lessonId);
+      }
+      try {
+        localStorage.setItem(
+          `course_${courseId}_completed`,
+          JSON.stringify(Array.from(updated))
+        );
+      } catch {
+        // Ignore
+      }
+      return updated;
+    });
+  };
+
+  const fetchCourse = useCallback(async () => {
+    if (!token || !courseId) return;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await courseService.get(token, courseId);
+      setCourse(data);
+
+      const flat = flattenLessons(data.sections || []);
+      if (urlLessonId) {
+        const found = flat.find((l) => l.id === urlLessonId);
+        if (found) {
+          setActiveLesson(found);
+          return;
+        }
+      }
+
+      // Default to first lesson if not set
+      if (flat.length > 0) {
+        setActiveLesson(flat[0]);
+      }
+    } catch (err: any) {
+      setError(err.message || "Impossible de charger le cours.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token, courseId, urlLessonId]);
+
+  useEffect(() => {
+    fetchCourse();
+  }, [fetchCourse]);
+
+  const allLessons = useMemo(() => {
+    return flattenLessons(course?.sections || []);
+  }, [course]);
+
+  const currentIdx = activeLesson
+    ? allLessons.findIndex((l) => l.id === activeLesson.id)
+    : -1;
+
+  const handleNextLesson = () => {
+    if (currentIdx >= 0 && currentIdx < allLessons.length - 1) {
+      const next = allLessons[currentIdx + 1];
+      setActiveLesson(next);
+      router.push(`/courses/${courseId}/learn?lesson=${next.id}`);
+    }
+  };
+
+  const handlePrevLesson = () => {
+    if (currentIdx > 0) {
+      const prev = allLessons[currentIdx - 1];
+      setActiveLesson(prev);
+      router.push(`/courses/${courseId}/learn?lesson=${prev.id}`);
+    }
+  };
+
+  const handleSelectLesson = (lesson: CourseSectionItem) => {
+    setActiveLesson(lesson);
+    setIsSidebarOpen(false);
+    router.push(`/courses/${courseId}/learn?lesson=${lesson.id}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-gray-50">
+        <div className="w-80 h-full bg-gray-100 animate-pulse hidden md:block" />
+        <div className="flex-1 p-10 space-y-6">
+          <div className="h-10 bg-gray-100 rounded-xl animate-pulse w-2/3" />
+          <div className="h-40 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-4">
+        <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200">
+          {error || "Cours introuvable."}
+        </div>
+        <Link
+          href="/courses"
+          className="text-xs font-semibold text-blue-600 hover:underline"
+        >
+          ← Revenir aux cours
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-white">
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Course Sidebar */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 transform md:relative md:translate-x-0 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <CourseSidebar
+          course={course}
+          activeSectionId={activeLesson?.id}
+          onSelectSection={handleSelectLesson}
+          completedSectionIds={completedIds}
+          isTeacher={true}
+        />
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Mobile top toggle */}
+        <div className="md:hidden border-b border-gray-200 p-3 bg-gray-50 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-white flex items-center gap-1.5 text-xs font-medium"
+          >
+            {isSidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            Sommaire
+          </button>
+          <span className="text-xs font-semibold text-gray-800 truncate px-2">
+            {activeLesson?.title || course.title}
+          </span>
+        </div>
+
+        {/* Scrollable Lesson Viewer */}
+        <main className="flex-1 overflow-y-auto">
+          {activeLesson ? (
+            <LessonViewer
+              courseId={course.id}
+              lesson={activeLesson}
+              isCompleted={completedIds.has(activeLesson.id)}
+              onToggleComplete={() => toggleLessonComplete(activeLesson.id)}
+              onNext={handleNextLesson}
+              onPrev={handlePrevLesson}
+              hasNext={currentIdx < allLessons.length - 1}
+              hasPrev={currentIdx > 0}
+              isTeacher={true}
+            />
+          ) : (
+            <div className="max-w-md mx-auto py-24 text-center text-gray-400 text-sm">
+              Sélectionnez une leçon dans le sommaire pour commencer.
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default function CourseLearnPage() {
+  return (
+    <ProtectedRoute>
+      <CourseLearnPageContent />
+    </ProtectedRoute>
+  );
+}
