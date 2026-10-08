@@ -71,18 +71,21 @@ services:
       --keep-alive 65
       --access-logfile -
       --error-logfile -
+    shm_size: 512m
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.production
       - ENVIRONMENT=production
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY:?Production secret key required}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-app.amanuslearn.com,localhost,api,web,nginx}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - SECURE_SSL_REDIRECT=${SECURE_SSL_REDIRECT:-False}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-amanus_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-amanus_learn_db}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379/0
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379/0
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379/1
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://app.amanuslearn.com}
-      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://app.amanuslearn.com}
+      - CORS_ALLOW_ALL_ORIGINS=${CORS_ALLOW_ALL_ORIGINS:-True}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://192.168.1.10:3030,http://192.168.1.10,http://localhost:3000,http://localhost,https://app.amanuslearn.com}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://192.168.1.10:3030,http://192.168.1.10,http://localhost:3000,http://localhost,https://app.amanuslearn.com}
       - SENTRY_DSN=${SENTRY_DSN:-}
     volumes:
       - static_volume:/app/apps/api/staticfiles
@@ -187,7 +190,7 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://app.amanuslearn.com/api/v1}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-}
       - NEXT_PUBLIC_APP_NAME=Amanus Learn AI
       - PORT=3000
     depends_on:

@@ -7,8 +7,7 @@ import {
   DocumentUploadPayload,
 } from "../types/document";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiBaseUrl } from "./apiClient";
 
 interface PaginatedResponse<T> {
   count: number;
@@ -22,7 +21,8 @@ async function documentFetch<T>(
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
   const isFormData = options.body instanceof FormData;
 
   const headers: Record<string, string> = {
@@ -119,7 +119,8 @@ export const documentService = {
     if (typeof window !== "undefined" && window.XMLHttpRequest && onProgress) {
       return new Promise<DocumentItem>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        const url = `${API_BASE_URL.replace(/\/$/, "")}/documents/`;
+        const baseUrl = getApiBaseUrl();
+        const url = `${baseUrl.replace(/\/$/, "")}/documents/`;
 
         xhr.open("POST", url);
         xhr.setRequestHeader("Authorization", `Bearer ${token}`);

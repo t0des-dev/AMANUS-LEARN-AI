@@ -7,8 +7,7 @@ import {
   OrganizationUpdatePayload,
 } from "../types/organization";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiBaseUrl } from "./apiClient";
 
 interface PaginatedResponse<T> {
   count: number;
@@ -22,7 +21,8 @@ async function orgFetch<T>(
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -90,7 +90,8 @@ export const organizationService = {
   },
 
   async delete(token: string, id: string): Promise<void> {
-    const url = `${API_BASE_URL.replace(/\/$/, "")}/organizations/${id}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl.replace(/\/$/, "")}/organizations/${id}`;
     const response = await fetch(url, {
       method: "DELETE",
       headers: {
@@ -152,7 +153,8 @@ export const organizationService = {
     orgId: string,
     memberId: string
   ): Promise<void> {
-    const url = `${API_BASE_URL.replace(/\/$/, "")}/organizations/${orgId}/members/${memberId}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl.replace(/\/$/, "")}/organizations/${orgId}/members/${memberId}`;
     const response = await fetch(url, {
       method: "DELETE",
       headers: {

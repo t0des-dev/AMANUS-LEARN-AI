@@ -8,8 +8,7 @@ import {
   SourceCitation,
 } from "../types/chat";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiBaseUrl } from "./apiClient";
 
 interface PaginatedResponse<T> {
   count: number;
@@ -23,7 +22,8 @@ async function chatFetch<T>(
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
@@ -145,7 +145,8 @@ export const chatService = {
       onError?: (err: Error) => void;
     }
   ): Promise<void> {
-    const url = `${API_BASE_URL.replace(/\/$/, "")}/chat/sessions/${sessionId}/messages/`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl.replace(/\/$/, "")}/chat/sessions/${sessionId}/messages/`;
 
     try {
       const response = await fetch(url, {

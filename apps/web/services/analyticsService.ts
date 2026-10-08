@@ -5,15 +5,15 @@ import {
   StudentPerformanceItem,
 } from "../types/analytics";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { getApiBaseUrl } from "./apiClient";
 
 async function analyticsFetch<T>(
   endpoint: string,
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
 
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
