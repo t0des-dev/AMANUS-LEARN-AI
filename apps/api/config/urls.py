@@ -15,6 +15,9 @@ from .views import HealthCheckView
 # API v1 routes
 v1_patterns = [
     path("health", HealthCheckView.as_view(), name="health-check"),
+    path("health/", HealthCheckView.as_view(), name="health-check-slash"),
+    path("system/health", SystemHealthView.as_view(), name="v1-system-health"),
+    path("system/health/", SystemHealthView.as_view(), name="v1-system-health-slash"),
     path("auth/", include("apps.accounts.urls")),
     path("organizations/", include("apps.organizations.urls")),
     path("documents/", include("apps.documents.urls")),

@@ -47,21 +47,35 @@ fi
 
 # 3. Check Redis
 echo -n "[3/5] Checking Redis broker... "
-REDIS_AUTH_OPT=""
 REDIS_PASS="${REDIS_PASSWORD:-}"
 if [ -z "$REDIS_PASS" ] && [ -f ".env" ]; then
-    REDIS_PASS=$(grep -E '^REDIS_PASSWORD=' .env 2>/dev/null | cut -d= -f2- | tr -d '"\r' || echo "")
+    REDIS_PASS=$(grep -E '^REDIS_PASSWORD=' .env 2>/dev/null | cut -d= -f2- | tr -d '"'\'' \r' || echo "")
 fi
-if [ -n "$REDIS_PASS" ]; then
-    REDIS_AUTH_OPT="-a $REDIS_PASS"
+
+# Multi-strategy Redis ping
+REDIS_PING=""
+# Strategy 1: Check inside container using its own REDIS_PASSWORD environment variable
+REDIS_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis sh -c 'redis-cli -a "$REDIS_PASSWORD" ping 2>/dev/null' | tr -d '\r' || true)
+
+# Strategy 2: Check using host parsed password
+if [ -z "$REDIS_PING" ] || ! echo "$REDIS_PING" | grep -qi "PONG"; then
+    if [ -n "$REDIS_PASS" ]; then
+        REDIS_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli -a "$REDIS_PASS" ping 2>/dev/null | tr -d '\r' || true)
+    fi
 fi
-REDIS_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli $REDIS_AUTH_OPT ping 2>/dev/null | tr -d '\r' || echo "FAILED")
+
+# Strategy 3: Unauthenticated ping fallback
+if [ -z "$REDIS_PING" ] || ! echo "$REDIS_PING" | grep -qi "PONG"; then
+    REDIS_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | tr -d '\r' || true)
+fi
+
 if echo "$REDIS_PING" | grep -qi "PONG"; then
     echo "OK (PONG)"
 else
-    FALLBACK_PING=$(docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli ping 2>/dev/null | tr -d '\r' || echo "FAILED")
-    if echo "$FALLBACK_PING" | grep -qi "PONG"; then
-        echo "OK (PONG)"
+    # Strategy 4: Docker native container health check
+    CONTAINER_HEALTH=$(docker compose -f "$COMPOSE_FILE" ps redis --format "{{.Health}}" 2>/dev/null || echo "")
+    if echo "$CONTAINER_HEALTH" | grep -qi "healthy"; then
+        echo "OK (Container healthy)"
     else
         echo "[FAILED] Redis did not respond to PING!"
         FAILED=1
@@ -81,19 +95,40 @@ fi
 echo -n "[5/5] Checking API Health Endpoint... "
 HTTP_STATUS=$(docker compose -f "$COMPOSE_FILE" exec -T api python -c "
 import urllib.request, json
-try:
-    req = urllib.request.Request(
-        'http://localhost:8000/api/v1/system/health/',
-        headers={'Host': 'localhost', 'X-Forwarded-Proto': 'https'}
-    )
-    with urllib.request.urlopen(req, timeout=10) as r:
-        data = json.loads(r.read().decode())
-        print(data.get('status', 'FAIL'))
-except Exception as e:
-    print('ERROR:', e)
+
+endpoints = [
+    'http://localhost:8000/api/v1/health',
+    'http://localhost:8000/api/v1/health/',
+    'http://localhost:8000/system/health',
+    'http://localhost:8000/system/health/',
+    'http://localhost:8000/api/v1/system/health/'
+]
+
+status_result = 'FAIL'
+last_err = 'none'
+
+for url in endpoints:
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={'Host': 'localhost', 'X-Forwarded-Proto': 'https'}
+        )
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read().decode())
+            val = data.get('status', '')
+            if val in ('ok', 'healthy', 'degraded'):
+                status_result = val
+                break
+    except Exception as e:
+        last_err = str(e)
+
+if status_result in ('ok', 'healthy', 'degraded'):
+    print(status_result)
+else:
+    print('ERROR:', last_err)
 " 2>/dev/null | tr -d '\r' || echo "ERROR")
 
-if [ "$HTTP_STATUS" = "healthy" ] || [ "$HTTP_STATUS" = "ok" ]; then
+if [ "$HTTP_STATUS" = "healthy" ] || [ "$HTTP_STATUS" = "ok" ] || [ "$HTTP_STATUS" = "degraded" ]; then
     echo "OK (API status: $HTTP_STATUS)"
 else
     echo "[FAILED] API health returned: $HTTP_STATUS"

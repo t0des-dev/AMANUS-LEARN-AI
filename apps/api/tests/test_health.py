@@ -22,3 +22,15 @@ class HealthCheckTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_health_check_with_trailing_slash(self):
+        """Verify GET /api/v1/health/ returns 200 OK and status 'ok'."""
+        response = self.client.get("/api/v1/health/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_v1_system_health_endpoint(self):
+        """Verify GET /api/v1/system/health/ returns 200 OK."""
+        response = self.client.get("/api/v1/system/health/")
+        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_503_SERVICE_UNAVAILABLE))
+        self.assertIn(response.json().get("status"), ("healthy", "degraded"))
