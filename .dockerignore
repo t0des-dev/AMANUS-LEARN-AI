@@ -1,0 +1,29 @@
+# Git & IDE
+.git
+.gitignore
+.idea
+.vscode
+
+# Node & Next.js cache
+**/node_modules
+**/.next
+**/out
+**/build
+**/.turbo
+
+# Python & Django
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/venv
+**/env
+**/media
+**/staticfiles
+
+# Logs & temp
+**/*.log
+**/.DS_Store
