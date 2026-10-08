@@ -5,6 +5,7 @@ import os
 from .base import *
 
 DEBUG = False
+ALLOWED_HOSTS = ["*"]
 
 # Security settings
 SECURE_BROWSER_XSS_FILTER = True
@@ -39,9 +40,21 @@ if not CORS_ALLOW_ALL_ORIGINS:
     ]
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.10:3030,http://192.168.1.10").split(",")
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
+for lan_origin in [
+    "http://192.168.1.10:3030",
+    "http://192.168.1.10",
+    "https://192.168.1.10:3030",
+    "https://192.168.1.10",
+    "http://localhost:3000",
+    "http://localhost:3030",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3030",
+]:
+    if lan_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(lan_origin)
 
 # Error Tracking & APM Monitoring
 SENTRY_DSN = os.getenv("SENTRY_DSN")
