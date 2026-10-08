@@ -43,8 +43,8 @@ if [ -x "./infrastructure/postgres/backup.sh" ]; then
 fi
 
 # 3. Build / Pull Container Images
-echo "==> [STEP 2/6] Building application container images..."
-docker compose -f "$COMPOSE_FILE" build --parallel
+echo "==> [STEP 2/6] Building application container images (no-cache)..."
+docker compose -f "$COMPOSE_FILE" build --no-cache --parallel
 
 # 4. Run Database Migrations in isolated ephemeral container
 echo "==> [STEP 3/6] Applying Django database migrations..."
