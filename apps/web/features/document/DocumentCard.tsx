@@ -82,10 +82,17 @@ export function DocumentCard({
               <Icon className="h-5 w-5" />
             </div>
             <div>
-              <span className="inline-block rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
-                {formatMeta.tag}
-              </span>
-              <p className="text-[11px] text-slate-400">
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block rounded-md bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+                  {formatMeta.tag}
+                </span>
+                {document.language && (
+                  <span className="inline-block rounded-md bg-indigo-950/60 border border-indigo-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
+                    {document.language}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
                 {document.file_size_human}
               </p>
             </div>

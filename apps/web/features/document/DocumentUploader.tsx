@@ -343,9 +343,10 @@ export function DocumentUploader({
               className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-white transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
             >
               <option value="fr">Français (FR)</option>
-              <option value="en">Anglais (EN)</option>
-              <option value="es">Espagnol (ES)</option>
-              <option value="de">Allemand (DE)</option>
+              <option value="ar">العربية - Arabe (AR)</option>
+              <option value="en">English - Anglais (EN)</option>
+              <option value="es">Español - Espagnol (ES)</option>
+              <option value="de">Deutsch - Allemand (DE)</option>
             </select>
           </div>
         </div>

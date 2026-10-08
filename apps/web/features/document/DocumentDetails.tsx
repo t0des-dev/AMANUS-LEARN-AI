@@ -316,6 +316,17 @@ export function DocumentDetails({
                     className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="Description..."
                   />
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="fr">Français (FR)</option>
+                    <option value="ar">العربية - Arabe (AR)</option>
+                    <option value="en">English - Anglais (EN)</option>
+                    <option value="es">Español - Espagnol (ES)</option>
+                    <option value="de">Deutsch - Allemand (DE)</option>
+                  </select>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -502,7 +513,19 @@ export function DocumentDetails({
               <Globe className="h-4 w-4 text-emerald-400" />
               <span className="text-[11px] font-semibold uppercase tracking-wider">Langue du contenu</span>
             </div>
-            <p className="text-sm font-semibold text-white uppercase">{doc.language}</p>
+            <p className="text-sm font-semibold text-white">
+              {doc.language === "ar"
+                ? "العربية - Arabe (AR)"
+                : doc.language === "fr"
+                ? "Français (FR)"
+                : doc.language === "en"
+                ? "English (EN)"
+                : doc.language === "es"
+                ? "Español (ES)"
+                : doc.language === "de"
+                ? "Deutsch (DE)"
+                : doc.language.toUpperCase()}
+            </p>
             <p className="text-xs text-slate-400">Langue principale détectée</p>
           </div>
 
