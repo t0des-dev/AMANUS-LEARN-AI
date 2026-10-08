@@ -95,9 +95,13 @@ export function OrganizationProvider({
 export function useOrganization(): OrganizationContextType {
   const context = useContext(OrganizationContext);
   if (!context) {
-    throw new Error(
-      "useOrganization must be used within an OrganizationProvider"
-    );
+    return {
+      currentOrg: null,
+      organizations: [],
+      isLoading: false,
+      setCurrentOrg: () => {},
+      refreshOrganizations: async () => {},
+    };
   }
   return context;
 }
