@@ -6,10 +6,13 @@ import { useHealth } from "../../hooks/useHealth";
 import { useAuth } from "../auth/AuthProvider";
 import { UserMenu } from "./UserMenu";
 import { OrganizationSwitcher } from "../organization/OrganizationSwitcher";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 export function Navbar() {
   const { data: health, isSuccess } = useHealth();
   const { isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
@@ -28,31 +31,31 @@ export function Navbar() {
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
           <Link href="/" className="transition hover:text-white">
-            Accueil
+            {t("nav.home")}
           </Link>
           <Link href="/dashboard" className="transition hover:text-white">
-            Tableau de bord
+            {t("nav.dashboard")}
           </Link>
           {isAuthenticated && (
             <>
               <Link href="/organizations" className="transition hover:text-white">
-                Organisations
+                {t("nav.organizations")}
               </Link>
               <Link href="/documents" className="transition hover:text-white">
-                Documents
+                {t("nav.documents")}
               </Link>
               <Link href="/courses" className="transition hover:text-white">
-                Cours
+                {t("nav.courses")}
               </Link>
               <Link href="/quizzes" className="transition hover:text-white">
-                Quiz
+                {t("nav.quizzes")}
               </Link>
               <Link
                 href="/chat"
                 className="flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-950/40 px-2.5 py-1 text-xs font-semibold text-indigo-300 transition hover:border-indigo-400 hover:bg-indigo-900/50 hover:text-white"
               >
                 <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-                <span>AI Tutor</span>
+                <span>{t("nav.aiTutor")}</span>
               </Link>
             </>
           )}
@@ -60,16 +63,18 @@ export function Navbar() {
             <Activity className={`h-3.5 w-3.5 ${isSuccess && health?.status === "ok" ? "text-emerald-400 animate-pulse" : "text-amber-400"}`} />
             <span className="text-slate-400">API:</span>
             <span className={isSuccess && health?.status === "ok" ? "text-emerald-400 font-semibold" : "text-amber-400 font-semibold"}>
-              {isSuccess && health?.status === "ok" ? "En ligne (/api/v1/health)" : "Connexion..."}
+              {isSuccess && health?.status === "ok" ? t("nav.apiOnline") : t("nav.apiConnecting")}
             </span>
           </div>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <LanguageSwitcher />
+
           {isLoading ? (
             <div className="h-8 w-20 rounded-lg bg-slate-850 animate-pulse" />
           ) : isAuthenticated ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
               <OrganizationSwitcher />
               <UserMenu />
             </div>
@@ -77,15 +82,15 @@ export function Navbar() {
             <>
               <Link
                 href="/login"
-                className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white"
+                className="rounded-lg px-3 sm:px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white"
               >
-                Connexion
+                {t("nav.login")}
               </Link>
               <Link
                 href="/register"
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 shadow-indigo-600/30"
+                className="rounded-lg bg-indigo-600 px-3 sm:px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 shadow-indigo-600/30"
               >
-                Commencer
+                {t("nav.register")}
               </Link>
             </>
           )}

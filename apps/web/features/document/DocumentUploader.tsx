@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { useOrganization } from "../../components/organization/OrganizationContext";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { documentService } from "../../services/documentService";
 import { DocumentItem } from "../../types/document";
 import { UploadProgress } from "./UploadProgress";
@@ -33,6 +34,7 @@ export function DocumentUploader({
 }: DocumentUploaderProps) {
   const { token } = useAuth();
   const { currentOrg, organizations } = useOrganization();
+  const { t, language: currentAppLang } = useTranslation();
   const router = useRouter();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -41,7 +43,7 @@ export function DocumentUploader({
   );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [language, setLanguage] = useState("fr");
+  const [language, setLanguage] = useState<string>(currentAppLang || "fr");
 
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -174,15 +176,15 @@ export function DocumentUploader({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white">
-            Importer un document
+            {t("docs.uploadTitle")}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Formats acceptés : PDF, DOCX, PPTX et TXT (jusqu'à 50 Mo).
+            {t("docs.acceptedFormats")}
           </p>
         </div>
         <div className="flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-300">
           <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Isolé par organisation</span>
+          <span>{t("docs.isolated")}</span>
         </div>
       </div>
 
@@ -190,7 +192,7 @@ export function DocumentUploader({
         {/* Organization Select */}
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Organisation de destination *
+            {t("docs.orgDestination")}
           </label>
           <select
             value={selectedOrgId}
@@ -199,7 +201,7 @@ export function DocumentUploader({
             className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
           >
             {organizations.length === 0 ? (
-              <option value="">Aucune organisation disponible</option>
+              <option value="">{t("docs.noOrg")}</option>
             ) : (
               organizations.map((org) => (
                 <option key={org.id} value={org.id}>
@@ -235,11 +237,11 @@ export function DocumentUploader({
             </div>
 
             <p className="text-sm font-semibold text-white">
-              Glissez et déposez votre fichier ici, ou{" "}
-              <span className="text-indigo-400 hover:underline">parcourez</span>
+              {t("docs.dragDrop")}{" "}
+              <span className="text-indigo-400 hover:underline">{t("docs.browse")}</span>
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              PDF, Word (.docx), PowerPoint (.pptx) ou Texte brut (.txt)
+              {t("docs.dragDropSub")}
             </p>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-slate-400">
@@ -306,13 +308,13 @@ export function DocumentUploader({
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Titre du document
+              {t("docs.docTitle")}
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Manuel de Data Science - Chapitre 1"
+              placeholder={t("docs.docTitlePlaceholder")}
               disabled={isUploading}
               className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
             />
@@ -320,13 +322,13 @@ export function DocumentUploader({
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Description (optionnelle)
+              {t("docs.docDesc")}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              placeholder="Brève description ou objectifs pédagogiques..."
+              placeholder={t("docs.docDescPlaceholder")}
               disabled={isUploading}
               className="w-full rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-white placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
             />
@@ -334,7 +336,7 @@ export function DocumentUploader({
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Langue principale
+              {t("docs.mainLanguage")}
             </label>
             <select
               value={language}
@@ -365,14 +367,14 @@ export function DocumentUploader({
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isUploading ? (
-            <span>Téléversement ({uploadProgress}%)...</span>
+            <span>{t("docs.uploading")} ({uploadProgress}%)...</span>
           ) : isComplete ? (
             <span className="flex items-center gap-1.5 text-emerald-300">
-              <CheckCircle className="h-4 w-4" /> Importé avec succès
+              <CheckCircle className="h-4 w-4" /> {t("docs.uploadSuccess")}
             </span>
           ) : (
             <span className="flex items-center gap-1.5">
-              <UploadCloud className="h-4 w-4" /> Importer le document
+              <UploadCloud className="h-4 w-4" /> {t("docs.submitUpload")}
             </span>
           )}
         </button>

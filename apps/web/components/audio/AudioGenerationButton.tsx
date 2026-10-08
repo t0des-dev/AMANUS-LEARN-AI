@@ -14,6 +14,7 @@ import {
 import { AudioContent } from "../../types/audio";
 import { audioService } from "../../services/audioService";
 import { useAuth } from "../auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { VoiceSelector } from "./VoiceSelector";
 import { AudioPlayer } from "./AudioPlayer";
 
@@ -31,6 +32,7 @@ export function AudioGenerationButton({
   className = "",
 }: AudioGenerationButtonProps) {
   const { token } = useAuth();
+  const { t, language: currentAppLang } = useTranslation();
 
   const [audio, setAudio] = useState<AudioContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,9 +41,9 @@ export function AudioGenerationButton({
   const [showPlayerModal, setShowPlayerModal] = useState(false);
 
   // Selected voice state
-  const [selectedVoiceId, setSelectedVoiceId] = useState("pierre");
-  const [selectedProvider, setSelectedProvider] = useState("mock");
-  const [selectedLanguage, setSelectedLanguage] = useState("fr");
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>(currentAppLang === "ar" ? "tariq" : "pierre");
+  const [selectedProvider, setSelectedProvider] = useState<string>("mock");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(currentAppLang || "fr");
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -116,7 +118,7 @@ export function AudioGenerationButton({
     return (
       <div className="flex items-center gap-1.5 text-xs text-slate-500 py-1">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        <span>Vérification audio...</span>
+        <span>{t("audio.checking")}</span>
       </div>
     );
   }
@@ -136,7 +138,7 @@ export function AudioGenerationButton({
             className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:from-indigo-500 hover:to-violet-500"
           >
             <Headphones className="h-4 w-4" />
-            <span>{showPlayerModal ? "Masquer le lecteur" : "Écouter la leçon"}</span>
+            <span>{showPlayerModal ? t("audio.hidePlayer") : t("audio.listenLesson")}</span>
             <span className="rounded bg-indigo-950/70 border border-indigo-400/30 px-1.5 py-0.5 text-[10px] text-indigo-200">
               {formattedDuration}
             </span>
@@ -146,7 +148,7 @@ export function AudioGenerationButton({
             type="button"
             onClick={() => setShowVoiceModal(true)}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white transition"
-            title="Régénérer avec une autre voix"
+            title={t("audio.regenerate")}
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
@@ -197,7 +199,7 @@ export function AudioGenerationButton({
           <span>
             {audio?.status === "FAILED"
               ? "Échec de génération (Réessayer)"
-              : "Générer la version audio"}
+              : t("audio.generateTTS")}
           </span>
         </button>
 
@@ -226,7 +228,7 @@ export function AudioGenerationButton({
                 <Headphones className="h-4 w-4" />
               </div>
               <span className="font-bold text-sm text-white">
-                Générer la version audio TTS
+                {t("audio.generateTTS")}
               </span>
             </div>
 
@@ -253,7 +255,7 @@ export function AudioGenerationButton({
 
           <div className="mt-5 border-t border-slate-800 pt-3 flex items-center justify-between">
             <span className="text-[11px] text-slate-400">
-              Traitement asynchrone sécurisé avec Celery.
+              {t("audio.celeryAsync")}
             </span>
 
             <div className="flex items-center gap-2">
@@ -262,7 +264,7 @@ export function AudioGenerationButton({
                 onClick={() => setShowVoiceModal(false)}
                 className="rounded-xl border border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-800"
               >
-                Annuler
+                {t("common.cancel")}
               </button>
               <button
                 type="button"
@@ -273,12 +275,12 @@ export function AudioGenerationButton({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Lancement...</span>
+                    <span>{t("audio.generating")}</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>Lancer la synthèse</span>
+                    <span>{t("audio.launchSynthesis")}</span>
                   </>
                 )}
               </button>
