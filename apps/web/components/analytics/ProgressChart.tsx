@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Layers, ArrowRight, CheckCircle2, Clock } from "lucide-react";
 import { CourseProgressItem } from "../../types/analytics";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface ProgressChartProps {
   overallProgress: number;
@@ -14,16 +15,18 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
   overallProgress,
   coursesProgress,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
       {/* Overall Progress Gauge Card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-950/60 border border-slate-800">
         <div className="space-y-1">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Progression d&apos;apprentissage globale
+            {t("analytics.globalProgressTitle")}
           </span>
           <p className="text-sm text-slate-300">
-            Moyenne pondérée sur tous vos parcours de formation inscrits
+            {t("analytics.globalProgressDesc")}
           </p>
         </div>
 
@@ -42,17 +45,17 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-400" />
             <h3 className="text-sm font-semibold text-white">
-              Progression par formation
+              {t("analytics.progressByCourse")}
             </h3>
           </div>
           <span className="text-xs font-mono text-slate-500">
-            {coursesProgress.length} cours
+            {coursesProgress.length} {t("analytics.courseCount")}
           </span>
         </div>
 
         {coursesProgress.length === 0 ? (
           <div className="py-8 text-center text-xs text-slate-500">
-            Aucun cours suivi pour le moment.
+            {t("analytics.noCoursesTracked")}
           </div>
         ) : (
           <div className="space-y-3.5">
@@ -82,10 +85,10 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
                         }`}
                       >
                         {isCompleted
-                          ? "Terminé"
+                          ? t("common.completed")
                           : item.status === "IN_PROGRESS"
-                          ? "En cours"
-                          : "Non démarré"}
+                          ? t("common.inProgress")
+                          : t("common.notStarted")}
                       </span>
                       <span className="text-xs font-mono font-bold text-slate-300">
                         {item.progress.toFixed(0)}%

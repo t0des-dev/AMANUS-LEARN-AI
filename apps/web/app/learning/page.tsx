@@ -121,10 +121,10 @@ function LearningHubContent() {
                       }`}
                     >
                       {item.status === "COMPLETED"
-                        ? "Terminé"
+                        ? t("common.completed")
                         : item.status === "IN_PROGRESS"
-                        ? "En cours"
-                        : "Non démarré"}
+                        ? t("common.inProgress")
+                        : t("common.notStarted")}
                     </span>
                   </div>
 
@@ -135,7 +135,7 @@ function LearningHubContent() {
 
                 <div className="mt-4 pt-3 border-t border-slate-800/80">
                   <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-slate-400">Progression</span>
+                    <span className="text-slate-400">{t("common.progress")}</span>
                     <span className="font-mono font-bold text-indigo-300">
                       {item.progress.toFixed(0)}%
                     </span>

@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, LogOut, LayoutDashboard, Settings, ChevronDown } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 export function UserMenu() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -57,7 +59,7 @@ export function UserMenu() {
             <p className="text-xs font-semibold text-white truncate">
               {user.first_name && user.last_name
                 ? `${user.first_name} ${user.last_name}`
-                : "Utilisateur"}
+                : t("common.user")}
             </p>
             <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
           </div>
@@ -69,7 +71,7 @@ export function UserMenu() {
               className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white"
             >
               <LayoutDashboard className="h-4 w-4 text-slate-400" />
-              <span>Tableau de bord</span>
+              <span>{t("nav.dashboard")}</span>
             </Link>
 
             <Link
@@ -78,7 +80,7 @@ export function UserMenu() {
               className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-900 hover:text-white"
             >
               <Settings className="h-4 w-4 text-slate-400" />
-              <span>Mon profil</span>
+              <span>{t("nav.profile")}</span>
             </Link>
           </div>
 
@@ -89,7 +91,7 @@ export function UserMenu() {
               className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium text-rose-400 transition hover:bg-rose-500/10 hover:text-rose-300"
             >
               <LogOut className="h-4 w-4" />
-              <span>Se déconnecter</span>
+              <span>{t("nav.logout")}</span>
             </button>
           </div>
         </div>

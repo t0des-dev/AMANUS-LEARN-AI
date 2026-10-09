@@ -1,8 +1,7 @@
-"use client";
-
 import React from "react";
 import { Award, CheckCircle2, XCircle, TrendingUp } from "lucide-react";
 import { ScoreHistoryItem } from "../../types/analytics";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface ScoreChartProps {
   averageScore: number | null;
@@ -15,6 +14,8 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({
   successRate,
   scoresHistory,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
       {/* Header with summary stats */}
@@ -23,18 +24,18 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-amber-400" />
             <h3 className="text-sm font-semibold text-white">
-              Historique des évaluations & Quiz
+              {t("analytics.scoresEvolution")}
             </h3>
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            Évolution de vos résultats aux tests et QCM d&apos;entraînement
+            {t("quizzes.subtitle")}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-center">
             <span className="text-[10px] text-slate-500 uppercase block font-semibold">
-              Moyenne
+              {t("analytics.averageScoreKpi")}
             </span>
             <span className="text-sm font-mono font-bold text-amber-400">
               {averageScore !== null ? `${averageScore.toFixed(0)}%` : "--"}
@@ -42,7 +43,7 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({
           </div>
           <div className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-center">
             <span className="text-[10px] text-slate-500 uppercase block font-semibold">
-              Réussite
+              {t("dashboard.masteryScore")}
             </span>
             <span className="text-sm font-mono font-bold text-emerald-400">
               {successRate.toFixed(0)}%
@@ -54,7 +55,7 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({
       {/* Visual Bar Trend of recent attempts */}
       {scoresHistory.length === 0 ? (
         <div className="py-12 text-center text-xs text-slate-500">
-          Aucun quiz passé pour le moment. Répondez à un QCM pour suivre vos scores.
+          {t("analytics.noScoresYet")}
         </div>
       ) : (
         <div className="space-y-4">
@@ -71,7 +72,7 @@ export const ScoreChart: React.FC<ScoreChartProps> = ({
                   {/* Tooltip on hover */}
                   <div className="absolute -top-12 z-20 hidden group-hover:flex flex-col items-center pointer-events-none">
                     <div className="px-2 py-1 rounded bg-slate-950 border border-slate-700 text-[10px] font-mono text-white shadow-xl whitespace-nowrap">
-                      {item.quiz_title}: <span className="font-bold">{item.score}%</span> ({isPass ? "Réussi" : "Échoué"})
+                      {item.quiz_title}: <span className="font-bold">{item.score}%</span> ({isPass ? t("common.success") : t("common.error")})
                     </div>
                     <div className="w-1.5 h-1.5 bg-slate-950 rotate-45 -mt-1 border-r border-b border-slate-700" />
                   </div>

@@ -4,51 +4,57 @@ import React from "react";
 import Link from "next/link";
 import { History, Clock, BookOpen } from "lucide-react";
 import { RecentActivityItem } from "../../types/learning";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface RecentActivityListProps {
   activities: RecentActivityItem[];
 }
 
-function formatDuration(totalSeconds: number): string {
-  if (!totalSeconds || totalSeconds <= 0) return "< 1 min";
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes} min`;
-}
-
-function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
-}
-
 export const RecentActivityList: React.FC<RecentActivityListProps> = ({ activities }) => {
+  const { t, language } = useTranslation();
+
+  const formatDuration = (totalSeconds: number): string => {
+    if (!totalSeconds || totalSeconds <= 0) return `< 1 ${t("dashboard.minutes")}`;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const hUnit = t("common.hourShort");
+    const mUnit = t("common.minShort");
+    if (hours > 0) {
+      return `${hours}${hUnit} ${minutes}${mUnit}`;
+    }
+    return `${minutes} ${t("dashboard.minutes")}`;
+  };
+
+  const formatDate = (dateStr: string): string => {
+    try {
+      const d = new Date(dateStr);
+      const locale = language === "ar" ? "ar-EG" : language === "en" ? "en-US" : "fr-FR";
+      return d.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <History className="w-4 h-4 text-violet-400" />
-          <h3 className="text-sm font-semibold text-white">Activité récente d&apos;étude</h3>
+          <h3 className="text-sm font-semibold text-white">{t("dashboard.recentActivityTitle")}</h3>
         </div>
         <span className="text-xs font-mono text-slate-500">
-          {activities.length} session{activities.length > 1 ? "s" : ""}
+          {activities.length} {t("dashboard.sessionsCount")}
         </span>
       </div>
 
       {activities.length === 0 ? (
         <div className="py-8 text-center text-slate-400 text-xs">
-          Aucune session d&apos;étude récente enregistrée.
+          {t("dashboard.noRecentActivityRecorded")}
         </div>
       ) : (
         <div className="space-y-2.5">

@@ -3,48 +3,53 @@
 import React from "react";
 import { Clock, CheckCircle2, GraduationCap, Award, Flame } from "lucide-react";
 import { LearningStats } from "../../types/learning";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface LearningStatsGridProps {
   stats: LearningStats;
 }
 
-function formatDuration(totalSeconds: number): string {
-  if (!totalSeconds || totalSeconds <= 0) return "0 min";
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes} min`;
-}
-
 export const LearningStatsGrid: React.FC<LearningStatsGridProps> = ({ stats }) => {
+  const { t } = useTranslation();
+
+  const formatDuration = (totalSeconds: number): string => {
+    if (!totalSeconds || totalSeconds <= 0) return `0 ${t("dashboard.minutes")}`;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const hUnit = t("common.hourShort");
+    const mUnit = t("common.minShort");
+    if (hours > 0) {
+      return `${hours}${hUnit} ${minutes}${mUnit}`;
+    }
+    return `${minutes} ${t("dashboard.minutes")}`;
+  };
+
   const cards = [
     {
-      label: "Temps d'étude effectif",
+      label: t("dashboard.effectiveStudyTime"),
       value: formatDuration(stats.total_study_time_seconds),
-      subtext: "Sessions enregistrées",
+      subtext: t("dashboard.recordedSessions"),
       icon: <Clock className="w-5 h-5 text-indigo-400" />,
       border: "border-indigo-500/20",
     },
     {
-      label: "Modules complétés",
+      label: t("dashboard.completedModules"),
       value: stats.completed_sections_count.toString(),
-      subtext: "Notions et chapitres validés",
+      subtext: t("dashboard.validatedTopics"),
       icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />,
       border: "border-emerald-500/20",
     },
     {
-      label: "Parcours en cours",
+      label: t("dashboard.inProgressPaths"),
       value: `${stats.courses_in_progress} / ${stats.total_enrolled_courses}`,
-      subtext: `${stats.courses_completed} terminé(s)`,
+      subtext: `${stats.courses_completed} ${t("dashboard.completedCountSuffix")}`,
       icon: <GraduationCap className="w-5 h-5 text-violet-400" />,
       border: "border-violet-500/20",
     },
     {
-      label: "Score de maîtrise",
+      label: t("dashboard.masteryScore"),
       value: stats.average_score !== null ? `${stats.average_score.toFixed(0)}%` : "--",
-      subtext: stats.average_score !== null ? "Moyenne des évaluations" : "Aucun test passé",
+      subtext: stats.average_score !== null ? t("dashboard.averageEvals") : t("dashboard.noTestPassed"),
       icon: <Award className="w-5 h-5 text-amber-400" />,
       border: "border-amber-500/20",
     },

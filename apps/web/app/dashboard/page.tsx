@@ -69,7 +69,7 @@ function StudentDashboardContent() {
           </div>
           <p className="mt-1 text-sm text-slate-400">
             {t("dashboard.greeting")}{" "}
-            <span className="text-white font-medium">{user?.first_name || "Apprenant"}</span> !{" "}
+            <span className="text-white font-medium">{user?.first_name || t("dashboard.defaultLearner")}</span> !{" "}
             {t("dashboard.welcomeSub")}
           </p>
         </div>
@@ -78,10 +78,10 @@ function StudentDashboardContent() {
           <button
             onClick={fetchDashboard}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
-            title={t("common.loading")}
+            title={t("common.refresh")}
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>{t("common.filter")}</span>
+            <span>{t("common.refresh")}</span>
           </button>
           <Link
             href="/courses"
@@ -121,7 +121,7 @@ function StudentDashboardContent() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span>{t("home.capBadge")}</span>
+              <span>{t("dashboard.quickActions")}</span>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Link

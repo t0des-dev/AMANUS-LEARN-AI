@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Sparkles, ArrowRight, Zap, Target } from "lucide-react";
 import { RecommendedRevisionItem } from "../../types/learning";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface RecommendedRevisionListProps {
   recommendations: RecommendedRevisionItem[];
@@ -12,21 +13,23 @@ interface RecommendedRevisionListProps {
 export const RecommendedRevisionList: React.FC<RecommendedRevisionListProps> = ({
   recommendations,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          <h3 className="text-sm font-semibold text-white">Révisions recommandées par l&apos;IA</h3>
+          <h3 className="text-sm font-semibold text-white">{t("dashboard.recommendedAiRevisions")}</h3>
         </div>
         <span className="text-xs font-mono text-slate-500">
-          {recommendations.length} suggestion{recommendations.length > 1 ? "s" : ""}
+          {recommendations.length} {t("dashboard.suggestionsCount")}
         </span>
       </div>
 
       {recommendations.length === 0 ? (
         <div className="py-8 text-center text-slate-400 text-xs">
-          Aucune révision urgente requise pour l&apos;instant.
+          {t("dashboard.noUrgentRevisions")}
         </div>
       ) : (
         <div className="space-y-2.5">
@@ -49,11 +52,11 @@ export const RecommendedRevisionList: React.FC<RecommendedRevisionListProps> = (
                   <div className="flex items-center gap-1.5 mb-1">
                     {isWeak ? (
                       <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        Priorité Haute
+                        {t("dashboard.highPriority")}
                       </span>
                     ) : (
                       <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                        En cours
+                        {t("dashboard.inProgressStatus")}
                       </span>
                     )}
                     <span className="text-xs text-slate-400 truncate">
@@ -77,7 +80,7 @@ export const RecommendedRevisionList: React.FC<RecommendedRevisionListProps> = (
                       : "bg-indigo-600 hover:bg-indigo-500 text-white"
                   }`}
                 >
-                  <span>Réviser</span>
+                  <span>{t("dashboard.reviewBtn")}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

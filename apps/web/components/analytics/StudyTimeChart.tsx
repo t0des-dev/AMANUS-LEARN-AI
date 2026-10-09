@@ -3,24 +3,29 @@
 import React from "react";
 import { Clock, Calendar, Flame } from "lucide-react";
 import { StudyTimeDayItem } from "../../types/analytics";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface StudyTimeChartProps {
   totalSeconds: number;
   studyTimeByDay: StudyTimeDayItem[];
 }
 
-function formatDuration(seconds: number): string {
-  if (!seconds || seconds <= 0) return "0 min";
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes} min`;
-}
-
 export const StudyTimeChart: React.FC<StudyTimeChartProps> = ({
   totalSeconds,
   studyTimeByDay,
 }) => {
+  const { t } = useTranslation();
+
+  const formatDuration = (seconds: number): string => {
+    if (!seconds || seconds <= 0) return `0 ${t("dashboard.minutes")}`;
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const hUnit = t("common.hourShort");
+    const mUnit = t("common.minShort");
+    if (hours > 0) return `${hours}${hUnit} ${minutes}${mUnit}`;
+    return `${minutes} ${t("dashboard.minutes")}`;
+  };
+
   const maxMinutes = Math.max(...studyTimeByDay.map((d) => d.duration_minutes), 1);
 
   return (
@@ -31,16 +36,16 @@ export const StudyTimeChart: React.FC<StudyTimeChartProps> = ({
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5 text-indigo-400" />
             <h3 className="text-sm font-semibold text-white">
-              Temps d&apos;étude des 7 derniers jours
+              {t("analytics.studyTimeDistribution")}
             </h3>
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            Sessions actives enregistrées sur vos modules
+            {t("dashboard.recordedSessions")}
           </p>
         </div>
 
         <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800">
-          <span className="text-xs text-slate-400">Cumul total :</span>
+          <span className="text-xs text-slate-400">{t("dashboard.effectiveStudyTime")}:</span>
           <span className="text-sm font-mono font-bold text-indigo-300">
             {formatDuration(totalSeconds)}
           </span>
@@ -61,7 +66,7 @@ export const StudyTimeChart: React.FC<StudyTimeChartProps> = ({
               {/* Tooltip on hover */}
               <div className="absolute -top-10 z-20 hidden group-hover:flex flex-col items-center pointer-events-none">
                 <div className="px-2 py-1 rounded bg-slate-950 border border-slate-700 text-[10px] font-mono text-white shadow-xl whitespace-nowrap">
-                  {item.date}: <span className="font-bold">{item.duration_minutes} min</span>
+                  {item.date}: <span className="font-bold">{item.duration_minutes} {t("dashboard.minutes")}</span>
                 </div>
                 <div className="w-1.5 h-1.5 bg-slate-950 rotate-45 -mt-1 border-r border-b border-slate-700" />
               </div>
@@ -86,8 +91,8 @@ export const StudyTimeChart: React.FC<StudyTimeChartProps> = ({
       </div>
 
       <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>Min : 0 min</span>
-        <span>Pic journalier : {maxMinutes.toFixed(0)} min</span>
+        <span>Min : 0 {t("dashboard.minutes")}</span>
+        <span>Max : {maxMinutes.toFixed(0)} {t("dashboard.minutes")}</span>
       </div>
     </div>
   );
