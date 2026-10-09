@@ -11,10 +11,17 @@ interface LanguageContextType {
   isRTL: boolean;
 }
 
+const defaultTranslate = (key: string, fallback?: string): string => {
+  if (translations.fr && translations.fr[key]) {
+    return translations.fr[key];
+  }
+  return fallback !== undefined ? fallback : key;
+};
+
 const LanguageContext = createContext<LanguageContextType>({
   language: "fr",
   setLanguage: () => {},
-  t: (key: string, fallback?: string) => fallback || key,
+  t: defaultTranslate,
   dir: "ltr",
   isRTL: false,
 });
@@ -92,7 +99,7 @@ export function useTranslation() {
     return {
       language: "fr" as Language,
       setLanguage: () => {},
-      t: (key: string, fallback?: string) => fallback || key,
+      t: defaultTranslate,
       dir: "ltr" as const,
       isRTL: false,
     };

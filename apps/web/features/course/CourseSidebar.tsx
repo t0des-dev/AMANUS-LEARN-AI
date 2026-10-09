@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { CourseItem, CourseSectionItem } from "../../types/course";
 import { CourseProgress } from "./CourseProgress";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface CourseSidebarProps {
   course: CourseItem;
@@ -29,6 +30,7 @@ export function CourseSidebar({
   completedSectionIds = new Set(),
   isTeacher = false,
 }: CourseSidebarProps) {
+  const { t, isRTL } = useTranslation();
   // Collapsed state for chapters
   const [collapsedChapters, setCollapsedChapters] = useState<Record<string, boolean>>({});
 
@@ -65,8 +67,8 @@ export function CourseSidebar({
             href={`/courses/${course.id}`}
             className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Retour à l'aperçu
+            <ArrowLeft className={`w-3.5 h-3.5 ${isRTL ? "rotate-180" : ""}`} />
+            {t("courses.backToOverview", "Retour à l'aperçu")}
           </Link>
           {isTeacher && (
             <Link
@@ -74,7 +76,7 @@ export function CourseSidebar({
               className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
             >
               <Edit3 className="w-3 h-3" />
-              Éditer
+              {t("courses.edit", "Éditer")}
             </Link>
           )}
         </div>
@@ -95,7 +97,7 @@ export function CourseSidebar({
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {rootChapters.length === 0 ? (
           <div className="text-center py-8 text-xs text-gray-400">
-            Aucun contenu structuré dans ce cours.
+            {t("courses.noStructuredContent", "Aucun contenu structuré pour le moment")}
           </div>
         ) : (
           rootChapters.map((chapter, cIdx) => {

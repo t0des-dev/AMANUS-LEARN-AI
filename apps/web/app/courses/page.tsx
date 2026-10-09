@@ -18,6 +18,7 @@ import {
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { useOrganization } from "../../components/organization/OrganizationContext";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { courseService } from "../../services/courseService";
 import { documentService } from "../../services/documentService";
 import { CourseItem, CourseLevel } from "../../types/course";
@@ -26,6 +27,7 @@ import { DocumentItem } from "../../types/document";
 function CoursesPageContent() {
   const { token, user } = useAuth();
   const { currentOrg } = useOrganization();
+  const { t } = useTranslation();
 
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -132,13 +134,13 @@ function CoursesPageContent() {
         <div>
           <div className="flex items-center gap-2 mb-2 text-blue-200 text-xs font-semibold uppercase tracking-wider">
             <GraduationCap className="w-4 h-4" />
-            <span>Moteur Pédagogique & Course Builder</span>
+            <span>{t("home.cap3Title")}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Cours & Modules d&apos;Apprentissage
+            {t("courses.title")}
           </h1>
           <p className="mt-2 text-sm sm:text-base text-blue-100 max-w-2xl">
-            Transformez vos documents et synthèses analysés en véritables cours structurés (Chapitres, Sections, Leçons). Le contenu généré par l&apos;IA est entièrement éditable par les enseignants.
+            {t("courses.subtitle")}
           </p>
         </div>
 
@@ -148,7 +150,7 @@ function CoursesPageContent() {
           className="inline-flex items-center gap-2 px-5 py-3 bg-white text-blue-700 hover:bg-blue-50 font-bold rounded-xl text-sm transition-all shadow-sm shrink-0"
         >
           <PlusCircle className="w-4 h-4" />
-          Créer un cours
+          {t("courses.createBtn")}
         </button>
       </div>
 
@@ -175,10 +177,10 @@ function CoursesPageContent() {
             <BookOpen className="w-7 h-7" />
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-1">
-            Aucun cours disponible dans cette organisation
+            {t("courses.noCourses")}
           </h3>
           <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
-            Créez votre premier cours ou transformez un document PDF/DOCX en parcours d&apos;apprentissage complet grâce à l&apos;IA.
+            {t("courses.noCoursesDesc")}
           </p>
           <button
             type="button"
@@ -186,7 +188,7 @@ function CoursesPageContent() {
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-colors"
           >
             <PlusCircle className="w-4 h-4" />
-            Créer un cours
+            {t("courses.createBtn")}
           </button>
         </div>
       ) : (
@@ -206,7 +208,7 @@ function CoursesPageContent() {
                           : "bg-amber-50 text-amber-700 border border-amber-200"
                       }`}
                     >
-                      {course.status === "PUBLISHED" ? "Publié" : "Brouillon"}
+                      {course.status === "PUBLISHED" ? t("courses.statusPublished") : t("courses.statusDraft")}
                     </span>
 
                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -277,7 +279,7 @@ function CoursesPageContent() {
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <GraduationCap className="w-5 h-5 text-blue-600" />
-                Créer un nouveau cours
+                {t("courses.createModalTitle")}
               </h3>
               <button
                 type="button"
@@ -291,27 +293,27 @@ function CoursesPageContent() {
             <form onSubmit={handleCreateCourse} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Titre du cours *
+                  {t("courses.courseTitle")} *
                 </label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Ex : Apprentissage Profond & Réseaux Convolutifs"
+                  placeholder={t("courses.courseTitlePlaceholder")}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Description
+                  {t("courses.courseDesc")}
                 </label>
                 <textarea
                   rows={3}
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Objectifs et public visé pour ce cours..."
+                  placeholder={t("courses.courseDescPlaceholder")}
                   className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -319,16 +321,16 @@ function CoursesPageContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Niveau
+                    {t("courses.level")}
                   </label>
                   <select
                     value={newLevel}
                     onChange={(e) => setNewLevel(e.target.value as CourseLevel)}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="BEGINNER">Débutant</option>
-                    <option value="INTERMEDIATE">Intermédiaire</option>
-                    <option value="ADVANCED">Avancé</option>
+                    <option value="BEGINNER">{t("courses.levelBeginner")}</option>
+                    <option value="INTERMEDIATE">{t("courses.levelIntermediate")}</option>
+                    <option value="ADVANCED">{t("courses.levelAdvanced")}</option>
                     <option value="EXPERT">Expert</option>
                   </select>
                 </div>
@@ -336,14 +338,14 @@ function CoursesPageContent() {
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                    Document source (RAG)
+                    {t("courses.sourceDoc")}
                   </label>
                   <select
                     value={selectedDocId}
                     onChange={(e) => setSelectedDocId(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">-- Aucun (cours manuel) --</option>
+                    <option value="">-- {t("courses.noDoc")} --</option>
                     {documents.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.title}
@@ -357,7 +359,7 @@ function CoursesPageContent() {
                 <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-xs text-indigo-900 flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <span>
-                    La structure hiérarchique (Chapitres, Sections, Leçons) sera automatiquement générée à partir des extraits RAG de ce document. Vous pourrez ensuite l&apos;éditer librement.
+                    La structure hiérarchique (Chapitres, Sections, Leçons) sera automatiquement générée à partir des extraits RAG de ce document.
                   </span>
                 </div>
               )}
@@ -368,14 +370,14 @@ function CoursesPageContent() {
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
-                  Annuler
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold shadow-sm"
                 >
-                  {isSubmitting ? "Création en cours..." : "Créer le cours"}
+                  {isSubmitting ? t("common.loading") : t("courses.createBtn")}
                 </button>
               </div>
             </form>

@@ -18,6 +18,7 @@ import {
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { useOrganization } from "../../components/organization/OrganizationContext";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { chatService } from "../../services/chatService";
 import { documentService } from "../../services/documentService";
 import { ChatSession, PedagogicalCommandCode } from "../../types/chat";
@@ -28,6 +29,7 @@ function ChatHubContent() {
   const router = useRouter();
   const { token } = useAuth();
   const { currentOrg } = useOrganization();
+  const { t } = useTranslation();
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -117,10 +119,10 @@ function ChatHubContent() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              AI Tutor <span className="text-indigo-400">• Assistant Pédagogique</span>
+              {t("chat.title")}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400">
-              Conversations grounded par RAG sur vos cours, fiches et documents d&apos;apprentissage.
+              {t("chat.subtitle")}
             </p>
           </div>
         </div>
@@ -132,7 +134,7 @@ function ChatHubContent() {
           className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50"
         >
           <PlusCircle className="h-4 w-4" />
-          <span>Nouvelle conversation</span>
+          <span>{t("chat.newChat")}</span>
         </button>
       </div>
 

@@ -10,6 +10,8 @@ import { courseService } from "../../../../services/courseService";
 import { CourseItem, CourseSectionItem } from "../../../../types/course";
 import { CourseSidebar } from "../../../../features/course/CourseSidebar";
 import { LessonViewer } from "../../../../features/course/LessonViewer";
+import { useTranslation } from "../../../../lib/i18n/LanguageContext";
+
 function flattenLessons(sections: CourseSectionItem[]): CourseSectionItem[] {
   const list: CourseSectionItem[] = [];
   for (const sec of sections) {
@@ -23,6 +25,7 @@ function flattenLessons(sections: CourseSectionItem[]): CourseSectionItem[] {
 }
 
 function CourseLearnPageContent() {
+  const { t } = useTranslation();
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -159,7 +162,7 @@ function CourseLearnPageContent() {
           href="/courses"
           className="text-xs font-semibold text-blue-600 hover:underline"
         >
-          ← Revenir aux cours
+          {t("courses.backToCourses", "← Revenir aux cours")}
         </Link>
       </div>
     );
@@ -200,7 +203,7 @@ function CourseLearnPageContent() {
             className="p-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-white flex items-center gap-1.5 text-xs font-medium"
           >
             {isSidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            Sommaire
+            {t("courses.outline", "Sommaire")}
           </button>
           <span className="text-xs font-semibold text-gray-800 truncate px-2">
             {activeLesson?.title || course.title}
@@ -223,7 +226,7 @@ function CourseLearnPageContent() {
             />
           ) : (
             <div className="max-w-md mx-auto py-24 text-center text-gray-400 text-sm">
-              Sélectionnez une leçon dans le sommaire pour commencer.
+              {t("courses.noStructuredContent", "Sélectionnez une leçon dans le sommaire pour commencer.")}
             </div>
           )}
         </main>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 import { useAuth } from "../../components/auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { learningService } from "../../services/learningService";
 import { StudentDashboardData } from "../../types/learning";
 import { ContinueLearningCard } from "../../components/learning/ContinueLearningCard";
@@ -23,6 +24,7 @@ import { RecommendedRevisionList } from "../../components/learning/RecommendedRe
 
 function StudentDashboardContent() {
   const { user, token } = useAuth();
+  const { t } = useTranslation();
   const [data, setData] = useState<StudentDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -35,11 +37,11 @@ function StudentDashboardContent() {
       const res = await learningService.getDashboard(token);
       setData(res);
     } catch (err: any) {
-      setErrorMsg(err.message || "Erreur de chargement des statistiques d'apprentissage.");
+      setErrorMsg(err.message || t("common.error"));
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     fetchDashboard();
@@ -49,7 +51,7 @@ function StudentDashboardContent() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
-        <p className="text-sm">Chargement de votre espace d&apos;apprentissage...</p>
+        <p className="text-sm">{t("dashboard.loading")}</p>
       </div>
     );
   }
@@ -62,11 +64,13 @@ function StudentDashboardContent() {
           <div className="flex items-center gap-2">
             <GraduationCap className="w-7 h-7 text-indigo-400" />
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              Tableau de bord de l&apos;apprenant
+              {t("dashboard.title")}
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-400">
-            Bonjour {user?.first_name || "Apprenant"} ! Suivez votre progression, vos temps d&apos;étude et vos révisions prioritaires.
+            {t("dashboard.greeting")}{" "}
+            <span className="text-white font-medium">{user?.first_name || "Apprenant"}</span> !{" "}
+            {t("dashboard.welcomeSub")}
           </p>
         </div>
 
@@ -74,17 +78,17 @@ function StudentDashboardContent() {
           <button
             onClick={fetchDashboard}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
-            title="Rafraîchir les statistiques"
+            title={t("common.loading")}
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Actualiser</span>
+            <span>{t("common.filter")}</span>
           </button>
           <Link
             href="/courses"
             className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition shadow-md shadow-indigo-950"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            <span>Nouveau cours</span>
+            <span>{t("courses.createBtn")}</span>
           </Link>
         </div>
       </div>
@@ -117,7 +121,7 @@ function StudentDashboardContent() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span>Outils pédagogiques disponibles</span>
+              <span>{t("home.capBadge")}</span>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Link
@@ -125,24 +129,24 @@ function StudentDashboardContent() {
                 className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-indigo-500/50 hover:bg-slate-900 transition flex flex-col items-center text-center group"
               >
                 <BookOpen className="w-5 h-5 text-indigo-400 mb-2 group-hover:scale-110 transition" />
-                <span className="text-xs font-semibold text-white">Mes Cours</span>
-                <span className="text-[10px] text-slate-500 mt-0.5">Modules & leçons</span>
+                <span className="text-xs font-semibold text-white">{t("nav.courses")}</span>
+                <span className="text-[10px] text-slate-500 mt-0.5">{t("courses.outline")}</span>
               </Link>
               <Link
                 href="/quizzes"
                 className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-violet-500/50 hover:bg-slate-900 transition flex flex-col items-center text-center group"
               >
                 <Sparkles className="w-5 h-5 text-violet-400 mb-2 group-hover:scale-110 transition" />
-                <span className="text-xs font-semibold text-white">Quiz & Tests</span>
-                <span className="text-[10px] text-slate-500 mt-0.5">Évaluer mes acquis</span>
+                <span className="text-xs font-semibold text-white">{t("nav.quizzes")}</span>
+                <span className="text-[10px] text-slate-500 mt-0.5">{t("quizzes.subtitle")}</span>
               </Link>
               <Link
                 href="/chat"
                 className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-sky-500/50 hover:bg-slate-900 transition flex flex-col items-center text-center group"
               >
                 <MessageSquare className="w-5 h-5 text-sky-400 mb-2 group-hover:scale-110 transition" />
-                <span className="text-xs font-semibold text-white">Tuteur IA</span>
-                <span className="text-[10px] text-slate-500 mt-0.5">Poser une question</span>
+                <span className="text-xs font-semibold text-white">{t("nav.aiTutor")}</span>
+                <span className="text-[10px] text-slate-500 mt-0.5">{t("chat.subtitle")}</span>
               </Link>
             </div>
           </div>

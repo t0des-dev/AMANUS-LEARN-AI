@@ -26,8 +26,10 @@ import {
 import { CourseItem } from "../../../types/course";
 import { CourseAnalytics } from "../../../components/analytics/CourseAnalytics";
 import { StudentPerformance } from "../../../components/analytics/StudentPerformance";
+import { useTranslation } from "../../../lib/i18n/LanguageContext";
 
 function TeacherAnalyticsContent() {
+  const { t } = useTranslation();
   const { token, user } = useAuth();
   const { currentOrg } = useOrganization();
 
@@ -101,7 +103,7 @@ function TeacherAnalyticsContent() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
-        <p className="text-sm">Chargement des cours de l&apos;organisation...</p>
+        <p className="text-sm">{t("analytics.loadingCohort", "Chargement des cours de l'organisation...")}</p>
       </div>
     );
   }
@@ -116,11 +118,11 @@ function TeacherAnalyticsContent() {
           <div className="flex items-center gap-2">
             <GraduationCap className="w-7 h-7 text-indigo-400" />
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              Espace Analytics Enseignant
+              {t("analytics.teacherTitle", "Espace Analytics Enseignant")}
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-400">
-            Suivi des cohortes d&apos;étudiants, identification des chapitres problématiques et taux de réussite.
+            {t("analytics.teacherSub", "Suivi des cohortes d'étudiants, identification des chapitres problématiques et taux de réussite.")}
           </p>
         </div>
 
@@ -147,7 +149,7 @@ function TeacherAnalyticsContent() {
             onClick={fetchCourseData}
             disabled={!selectedCourseId || isLoadingAnalytics}
             className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition disabled:opacity-40"
-            title="Actualiser les statistiques"
+            title={t("analytics.refreshStats", "Actualiser les statistiques")}
           >
             <RefreshCw className={`w-4 h-4 ${isLoadingAnalytics ? "animate-spin" : ""}`} />
           </button>
@@ -164,23 +166,23 @@ function TeacherAnalyticsContent() {
       {courses.length === 0 ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-400 text-sm">
           <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30 text-indigo-400" />
-          <h3 className="text-base font-semibold text-white">Aucun cours trouvé</h3>
+          <h3 className="text-base font-semibold text-white">{t("analytics.noCoursesFound", "Aucun cours trouvé")}</h3>
           <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
-            Créez ou publiez des cours dans votre organisation pour afficher les analyses pédagogiques.
+            {t("analytics.noCoursesDesc", "Créez ou publiez des cours dans votre organisation pour afficher les analyses pédagogiques.")}
           </p>
           <div className="mt-6">
             <Link
               href="/courses"
               className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-500 transition"
             >
-              Gérer les cours
+              {t("analytics.manageCourses", "Gérer les cours")}
             </Link>
           </div>
         </div>
       ) : isLoadingAnalytics ? (
         <div className="py-20 flex flex-col items-center justify-center text-slate-400">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
-          <p className="text-sm">Agrégation des statistiques de cohorte en cours...</p>
+          <p className="text-sm">{t("analytics.aggregating", "Agrégation des statistiques de cohorte en cours...")}</p>
         </div>
       ) : courseAnalytics ? (
         <div className="space-y-8">

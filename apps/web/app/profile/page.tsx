@@ -4,8 +4,10 @@ import React, { useState, useEffect } from "react";
 import { User, Mail, Globe, Save, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 import { useAuth } from "../../components/auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 function ProfileContent() {
+  const { t } = useTranslation();
   const { user, updateProfile } = useAuth();
 
   const [firstName, setFirstName] = useState("");
@@ -50,9 +52,9 @@ function ProfileContent() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-white">Mon Profil</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">{t("profile.title", "Mon Profil")}</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Gérez vos informations personnelles et vos préférences de plateforme.
+          {t("profile.subtitle", "Gérez vos informations personnelles et vos préférences de plateforme.")}
         </p>
       </div>
 
@@ -68,23 +70,23 @@ function ProfileContent() {
             <h2 className="mt-4 text-base font-semibold text-white truncate max-w-full">
               {user?.first_name && user?.last_name
                 ? `${user.first_name} ${user.last_name}`
-                : "Utilisateur"}
+                : t("profile.user", "Utilisateur")}
             </h2>
             <p className="text-xs text-slate-400 truncate max-w-full">{user?.email}</p>
 
             <div className="mt-6 w-full border-t border-slate-800 pt-4 text-left space-y-3 text-xs text-slate-400">
               <div className="flex justify-between">
-                <span>Statut :</span>
+                <span>{t("profile.status", "Statut :")}</span>
                 <span className="font-semibold text-emerald-400">
-                  {user?.is_active ? "Actif" : "Inactif"}
+                  {user?.is_active ? t("profile.active", "Actif") : t("profile.inactive", "Inactif")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Langue :</span>
+                <span>{t("auth.preferredLanguage", "Langue :")}</span>
                 <span className="font-semibold text-slate-200 uppercase">{user?.language}</span>
               </div>
               <div className="flex justify-between">
-                <span>Membre depuis :</span>
+                <span>{t("profile.memberSince", "Membre depuis :")}</span>
                 <span className="font-semibold text-slate-300">
                   {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "--"}
                 </span>
@@ -95,7 +97,7 @@ function ProfileContent() {
 
         {/* Right Card: Edit Form */}
         <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-8 backdrop-blur-xl">
-          <h3 className="text-lg font-semibold text-white">Informations Générales</h3>
+          <h3 className="text-lg font-semibold text-white">{t("profile.generalInfo", "Informations Générales")}</h3>
 
           {successMessage && (
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
@@ -139,21 +141,21 @@ function ProfileContent() {
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Prénom"
+                    placeholder={t("auth.firstName", "Prénom")}
                     className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300">Nom</label>
+                <label className="block text-xs font-medium text-slate-300">{t("auth.lastName", "Nom")}</label>
                 <div className="relative mt-1.5">
                   <User className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-500" />
                   <input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Nom"
+                    placeholder={t("auth.lastName", "Nom")}
                     className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
@@ -161,7 +163,7 @@ function ProfileContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300">Langue préférée</label>
+              <label className="block text-xs font-medium text-slate-300">{t("auth.preferredLanguage", "Langue préférée")}</label>
               <div className="relative mt-1.5">
                 <Globe className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-500" />
                 <select
@@ -170,9 +172,8 @@ function ProfileContent() {
                   className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2.5 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="fr">Français (fr)</option>
-                  <option value="en">English (en)</option>
-                  <option value="es">Español (es)</option>
                   <option value="ar">العربية (ar)</option>
+                  <option value="en">English (en)</option>
                 </select>
               </div>
             </div>
@@ -186,12 +187,12 @@ function ProfileContent() {
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Enregistrement...</span>
+                    <span>{t("profile.saving", "Enregistrement...")}</span>
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4" />
-                    <span>Sauvegarder les modifications</span>
+                    <span>{t("profile.saveBtn", "Sauvegarder les modifications")}</span>
                   </>
                 )}
               </button>

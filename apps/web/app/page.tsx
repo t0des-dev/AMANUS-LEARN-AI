@@ -1,3 +1,6 @@
+"use client";
+
+import React from "react";
 import Link from "next/link";
 import {
   FileText,
@@ -10,38 +13,41 @@ import {
   Headphones,
   SlidersHorizontal,
 } from "lucide-react";
+import { useTranslation } from "../lib/i18n/LanguageContext";
 
 export default function HomePage() {
+  const { t, isRTL } = useTranslation();
+
   const capabilities = [
     {
       icon: <FileText className="h-6 w-6 text-indigo-400" />,
-      title: "Ingestion Multi-Format",
-      description: "Support natif PDF, DOCX, PPTX, TXT et documents scannés via moteur OCR dédié.",
+      title: t("home.cap1Title"),
+      description: t("home.cap1Desc"),
     },
     {
       icon: <BrainCircuit className="h-6 w-6 text-violet-400" />,
-      title: "RAG & Traçabilité IA",
-      description: "Génération sourcée rigoureuse avec citations précises du document, page et chunk.",
+      title: t("home.cap2Title"),
+      description: t("home.cap2Desc"),
     },
     {
       icon: <GraduationCap className="h-6 w-6 text-sky-400" />,
-      title: "Génération Pédagogique",
-      description: "Résumés, fiches mémo, QCM interactifs, examens blancs avec corrigés détaillés.",
+      title: t("home.cap3Title"),
+      description: t("home.cap3Desc"),
     },
     {
       icon: <Headphones className="h-6 w-6 text-emerald-400" />,
-      title: "Audio & Présentations",
-      description: "Synthèse vocale (TTS) multi-voix pour cours audio nomades et diapositives prêtes à l'emploi.",
+      title: t("home.cap4Title"),
+      description: t("home.cap4Desc"),
     },
     {
       icon: <Layers className="h-6 w-6 text-amber-400" />,
-      title: "Architecture Multi-Tenant",
-      description: "Cloisonnement étanche des données par organisation et gouvernance fine des accès.",
+      title: t("home.cap5Title"),
+      description: t("home.cap5Desc"),
     },
     {
       icon: <ShieldCheck className="h-6 w-6 text-teal-400" />,
-      title: "Agnostique IA",
-      description: "Connexion transparente aux modèles OpenAI, Anthropic, Gemini ou LLMs locaux.",
+      title: t("home.cap6Title"),
+      description: t("home.cap6Desc"),
     },
   ];
 
@@ -56,25 +62,27 @@ export default function HomePage() {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300 backdrop-blur-md">
             <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-            <span>Sprint 00 : Socle Technique & Architecture Initialisé</span>
+            <span>{t("home.badge")}</span>
           </div>
 
           <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
-            L&apos;Intelligence Artificielle au service de votre <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">Apprentissage</span>
+            {t("home.heroTitle1")}{" "}
+            <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
+              {t("home.heroHighlight")}
+            </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
-            Importez vos cours, manuels ou documentations d&apos;entreprise et transformez-les en parcours
-            d&apos;apprentissage interactifs, QCM, cours audio et synthèses personnalisées.
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400 leading-relaxed">
+            {t("home.heroSubtitle")}
           </p>
 
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/register"
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
             >
-              <span>Accéder à la plateforme</span>
-              <ArrowRight className="h-4 w-4" />
+              <span>{t("home.ctaStart")}</span>
+              <ArrowRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />
             </Link>
 
             <Link
@@ -82,7 +90,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              <span>Tableau de bord</span>
+              <span>{t("nav.dashboard")}</span>
             </Link>
           </div>
         </div>

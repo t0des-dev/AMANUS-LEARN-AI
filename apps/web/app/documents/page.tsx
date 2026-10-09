@@ -16,8 +16,10 @@ import { useOrganization } from "../../components/organization/OrganizationConte
 import { documentService } from "../../services/documentService";
 import { DocumentItem } from "../../types/document";
 import { DocumentList } from "../../features/document/DocumentList";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 function DocumentsPageContent() {
+  const { t } = useTranslation();
   const { token } = useAuth();
   const { currentOrg, organizations, isLoading: isOrgLoading } = useOrganization();
 
@@ -85,12 +87,11 @@ function DocumentsPageContent() {
               <FolderOpen className="h-5 w-5" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              Gestionnaire de Documents
+              {t("docs.title")}
             </h1>
           </div>
           <p className="text-xs text-slate-400">
-            Importez et organisez les supports pédagogiques (PDF, Word, PPTX, TXT) pour
-            générer des contenus d&apos;apprentissage interactifs.
+            {t("docs.subtitle")}
           </p>
         </div>
 
@@ -108,7 +109,7 @@ function DocumentsPageContent() {
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Importer un document</span>
+              <span>{t("docs.uploadBtn")}</span>
             </Link>
           )}
         </div>

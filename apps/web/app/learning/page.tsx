@@ -20,8 +20,10 @@ import { LearningStatsGrid } from "../../components/learning/LearningStatsGrid";
 import { WeakTopicsList } from "../../components/learning/WeakTopicsList";
 import { RecentActivityList } from "../../components/learning/RecentActivityList";
 import { RecommendedRevisionList } from "../../components/learning/RecommendedRevisionList";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 function LearningHubContent() {
+  const { t } = useTranslation();
   const { user, token } = useAuth();
   const [dashboardData, setDashboardData] = useState<StudentDashboardData | null>(null);
   const [courses, setCourses] = useState<LearningPathItem[]>([]);
@@ -52,7 +54,7 @@ function LearningHubContent() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-slate-400">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
-        <p className="text-sm">Chargement de votre moteur d&apos;apprentissage...</p>
+        <p className="text-sm">{t("learning.loading", "Chargement de votre moteur d'apprentissage...")}</p>
       </div>
     );
   }
@@ -64,11 +66,11 @@ function LearningHubContent() {
         <div className="flex items-center gap-2">
           <GraduationCap className="w-7 h-7 text-indigo-400" />
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Espace d&apos;Apprentissage
+            {t("learning.title", "Espace d'Apprentissage")}
           </h1>
         </div>
         <p className="mt-1 text-sm text-slate-400">
-          Suivez votre progression continue, vos temps d&apos;étude et vos recommandations adaptatives.
+          {t("learning.subtitle", "Suivez votre progression continue, vos temps d'étude et vos recommandations adaptatives.")}
         </p>
       </div>
 
@@ -84,17 +86,17 @@ function LearningHubContent() {
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-400" />
             <h3 className="text-sm font-semibold text-white">
-              Mes Parcours de Formation
+              {t("learning.myPaths", "Mes Parcours de Formation")}
             </h3>
           </div>
           <span className="text-xs font-mono text-slate-500">
-            {courses.length} formation{courses.length > 1 ? "s" : ""}
+            {courses.length} {t("learning.formationCount", "formations")}
           </span>
         </div>
 
         {courses.length === 0 ? (
           <div className="py-8 text-center text-slate-400 text-xs">
-            Vous n&apos;êtes inscrit à aucun parcours actuellement.
+            {t("learning.noPaths", "Vous n'êtes inscrit à aucun parcours actuellement.")}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

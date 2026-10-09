@@ -19,8 +19,10 @@ import { useOrganization } from "../../components/organization/OrganizationConte
 import { authStorage } from "../../lib/authTokens";
 import { organizationService } from "../../services/organizationService";
 import { OrganizationPlan } from "../../types/organization";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 function OrganizationsContent() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { organizations, currentOrg, setCurrentOrg, refreshOrganizations, isLoading } =
     useOrganization();
@@ -65,10 +67,10 @@ function OrganizationsContent() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-8 border-b border-slate-800">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            Organisations Multi-Tenant
+            {t("org.multiTenantTitle", "Organisations Multi-Tenant")}
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            Gérez vos espaces d&apos;organisations, équipes pédagogiques et apprenants.
+            {t("org.multiTenantSub", "Gérez vos espaces d'organisations, équipes pédagogiques et apprenants.")}
           </p>
         </div>
 
@@ -78,7 +80,7 @@ function OrganizationsContent() {
           className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition"
         >
           <PlusCircle className="h-4 w-4" />
-          <span>Nouvelle organisation</span>
+          <span>{t("org.newOrg", "Nouvelle organisation")}</span>
         </button>
       </div>
 
@@ -90,10 +92,10 @@ function OrganizationsContent() {
         <div className="mt-12 rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-12 text-center">
           <Building2 className="mx-auto h-12 w-12 text-slate-600" />
           <h3 className="mt-4 text-base font-semibold text-white">
-            Aucune organisation trouvée
+            {t("org.noOrgsTitle", "Aucune organisation trouvée")}
           </h3>
           <p className="mt-2 text-xs text-slate-400 max-w-sm mx-auto">
-            Vous ne faites actuellement partie d&apos;aucune organisation. Créez votre première organisation pour commencer à collaborer.
+            {t("org.noOrgsDesc", "Vous ne faites actuellement partie d'aucune organisation. Créez votre première organisation pour commencer à collaborer.")}
           </p>
           <div className="mt-6">
             <button
@@ -102,7 +104,7 @@ function OrganizationsContent() {
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-indigo-500 transition"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Créer mon organisation</span>
+              <span>{t("org.createFirst", "Créer une première organisation")}</span>
             </button>
           </div>
         </div>

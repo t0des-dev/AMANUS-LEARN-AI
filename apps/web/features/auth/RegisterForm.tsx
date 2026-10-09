@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserPlus, Mail, Lock, User, AlertCircle, Loader2, Globe } from "lucide-react";
+import { UserPlus, Mail, Lock, AlertCircle, Loader2, Globe } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 export function RegisterForm() {
   const { register } = useAuth();
+  const { t, language: currentAppLang } = useTranslation();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -15,7 +17,7 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [language, setLanguage] = useState("fr");
+  const [language, setLanguage] = useState(currentAppLang || "fr");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,12 +26,12 @@ export function RegisterForm() {
     setError(null);
 
     if (password !== passwordConfirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("auth.passwordMismatch"));
       return;
     }
 
     if (password.length < 8) {
-      setError("Le mot de passe doit comporter au moins 8 caractères.");
+      setError(t("auth.passwordTooShort"));
       return;
     }
 
@@ -48,7 +50,7 @@ export function RegisterForm() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Impossible de créer le compte.");
+        setError(t("common.error"));
       }
     } finally {
       setIsSubmitting(false);
@@ -61,9 +63,9 @@ export function RegisterForm() {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/20 text-indigo-400">
           <UserPlus className="h-6 w-6" />
         </div>
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Créer un compte</h2>
+        <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">{t("auth.registerTitle")}</h2>
         <p className="mt-2 text-xs text-slate-400">
-          Rejoignez Amanus Learn AI pour transformer vos documents
+          {t("auth.registerSub")}
         </p>
       </div>
 
@@ -77,7 +79,7 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-300">Prénom</label>
+            <label className="block text-xs font-medium text-slate-300">{t("auth.firstName")}</label>
             <div className="relative mt-1">
               <input
                 type="text"
@@ -89,7 +91,7 @@ export function RegisterForm() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-300">Nom</label>
+            <label className="block text-xs font-medium text-slate-300">{t("auth.lastName")}</label>
             <div className="relative mt-1">
               <input
                 type="text"
@@ -103,7 +105,7 @@ export function RegisterForm() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300">Adresse email</label>
+          <label className="block text-xs font-medium text-slate-300">{t("auth.email")}</label>
           <div className="relative mt-1.5">
             <Mail className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-500" />
             <input
@@ -112,31 +114,30 @@ export function RegisterForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="jean.dupont@organisation.com"
+              placeholder={t("auth.emailPlaceholder")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300">Langue préférée</label>
+          <label className="block text-xs font-medium text-slate-300">{t("auth.preferredLanguage")}</label>
           <div className="relative mt-1.5">
             <Globe className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-500" />
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => setLanguage(e.target.value as "fr" | "ar" | "en")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
-              <option value="fr">Français (fr)</option>
-              <option value="en">English (en)</option>
-              <option value="es">Español (es)</option>
-              <option value="ar">العربية (ar)</option>
+              <option value="fr">Français (FR)</option>
+              <option value="ar">العربية (AR)</option>
+              <option value="en">English (EN)</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300">Mot de passe</label>
+          <label className="block text-xs font-medium text-slate-300">{t("auth.password")}</label>
           <div className="relative mt-1.5">
             <Lock className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-500" />
             <input
@@ -146,14 +147,14 @@ export function RegisterForm() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min. 8 caractères"
+              placeholder={t("auth.passwordPlaceholder")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300">Confirmer le mot de passe</label>
+          <label className="block text-xs font-medium text-slate-300">{t("auth.passwordConfirm")}</label>
           <div className="relative mt-1.5">
             <Lock className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-500" />
             <input
@@ -163,7 +164,7 @@ export function RegisterForm() {
               minLength={8}
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
-              placeholder="Répétez le mot de passe"
+              placeholder={t("auth.passwordPlaceholder")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -177,18 +178,18 @@ export function RegisterForm() {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Création du compte...</span>
+              <span>{t("auth.creating")}</span>
             </>
           ) : (
-            <span>Créer mon compte</span>
+            <span>{t("auth.signUpBtn")}</span>
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-xs text-slate-500">
-        Vous avez déjà un compte ?{" "}
+        {t("auth.hasAccount")}{" "}
         <Link href="/login" className="text-indigo-400 hover:underline font-medium">
-          Se connecter
+          {t("auth.signInBtn")}
         </Link>
       </p>
     </div>

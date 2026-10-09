@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CourseSectionItem } from "../../types/course";
 import { AudioGenerationButton } from "../../components/audio/AudioGenerationButton";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface LessonViewerProps {
   courseId: string;
@@ -38,6 +39,7 @@ export function LessonViewer({
   hasNext = false,
   isTeacher = false,
 }: LessonViewerProps) {
+  const { t, isRTL } = useTranslation();
   return (
     <article className="max-w-4xl mx-auto py-8 px-6 lg:px-10 bg-white min-h-screen">
       {/* Top action bar */}
@@ -58,7 +60,7 @@ export function LessonViewer({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <Edit3 className="w-3.5 h-3.5 text-blue-600" />
-              Modifier cette leçon
+              {t("courses.editCourse", "Modifier cette leçon")}
             </Link>
           )}
 
@@ -77,7 +79,7 @@ export function LessonViewer({
                   isCompleted ? "text-emerald-600" : "text-gray-400"
                 }`}
               />
-              {isCompleted ? "Terminée" : "Marquer comme terminée"}
+              {isCompleted ? t("courses.statusPublished", "Terminée") : t("courses.markCompleted", "Marquer comme terminée")}
             </button>
           )}
         </div>
@@ -178,8 +180,8 @@ export function LessonViewer({
               : "text-gray-300 bg-gray-50 cursor-not-allowed"
           }`}
         >
-          <ChevronLeft className="w-4 h-4" />
-          Leçon précédente
+          <ChevronLeft className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
+          {t("courses.prevLesson", "Leçon précédente")}
         </button>
 
         <button
@@ -192,8 +194,8 @@ export function LessonViewer({
               : "text-gray-400 bg-gray-100 cursor-not-allowed"
           }`}
         >
-          Leçon suivante
-          <ChevronRight className="w-4 h-4" />
+          {t("courses.nextLesson", "Leçon suivante")}
+          <ChevronRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
         </button>
       </div>
     </article>

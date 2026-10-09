@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogIn, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 export function LoginForm() {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -27,7 +29,7 @@ export function LoginForm() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Impossible de se connecter.");
+        setError(t("auth.loginFailed"));
       }
     } finally {
       setIsSubmitting(false);
@@ -40,9 +42,9 @@ export function LoginForm() {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600/20 text-indigo-400">
           <LogIn className="h-6 w-6" />
         </div>
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Connexion</h2>
+        <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">{t("auth.loginTitle")}</h2>
         <p className="mt-2 text-xs text-slate-400">
-          Accédez à votre espace d'apprentissage Amanus Learn AI
+          {t("auth.loginSub")}
         </p>
       </div>
 
@@ -55,7 +57,7 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label className="block text-xs font-medium text-slate-300">Adresse email</label>
+          <label className="block text-xs font-medium text-slate-300">{t("auth.email")}</label>
           <div className="relative mt-1.5">
             <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
             <input
@@ -64,14 +66,14 @@ export function LoginForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nom@organisation.com"
+              placeholder={t("auth.emailPlaceholder")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-300">Mot de passe</label>
+          <label className="block text-xs font-medium text-slate-300">{t("auth.password")}</label>
           <div className="relative mt-1.5">
             <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
             <input
@@ -80,7 +82,7 @@ export function LoginForm() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder={t("auth.passwordPlaceholder")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -94,18 +96,18 @@ export function LoginForm() {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Connexion en cours...</span>
+              <span>{t("auth.submitting")}</span>
             </>
           ) : (
-            <span>Se connecter</span>
+            <span>{t("auth.signInBtn")}</span>
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-xs text-slate-500">
-        Pas encore de compte ?{" "}
+        {t("auth.noAccount")}{" "}
         <Link href="/register" className="text-indigo-400 hover:underline font-medium">
-          Créer un compte
+          {t("auth.signUpBtn")}
         </Link>
       </p>
     </div>
