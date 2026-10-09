@@ -141,12 +141,12 @@ function CourseLearnPageContent() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <div className="w-80 h-full bg-gray-100 animate-pulse hidden md:block" />
+      <div className="flex h-screen bg-slate-950">
+        <div className="w-80 h-full bg-slate-900/60 border-r border-slate-800 animate-pulse hidden md:block" />
         <div className="flex-1 p-10 space-y-6">
-          <div className="h-10 bg-gray-100 rounded-xl animate-pulse w-2/3" />
-          <div className="h-40 bg-gray-100 rounded-xl animate-pulse" />
-          <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-10 bg-slate-900 border border-slate-800 rounded-2xl animate-pulse w-2/3" />
+          <div className="h-40 bg-slate-900 border border-slate-800 rounded-2xl animate-pulse" />
+          <div className="h-64 bg-slate-900 border border-slate-800 rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -155,25 +155,25 @@ function CourseLearnPageContent() {
   if (error || !course) {
     return (
       <div className="max-w-md mx-auto py-16 text-center space-y-4">
-        <div className="p-4 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200">
-          {error || "Cours introuvable."}
+        <div className="p-4 bg-rose-950/20 text-rose-300 text-xs rounded-2xl border border-rose-500/30">
+          {error || t("courses.noCourses")}
         </div>
         <Link
           href="/courses"
-          className="text-xs font-semibold text-blue-600 hover:underline"
+          className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition"
         >
-          {t("courses.backToCourses", "← Revenir aux cours")}
+          {t("courses.backToCourses")}
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-white">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 text-slate-200">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -194,24 +194,24 @@ function CourseLearnPageContent() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
         {/* Mobile top toggle */}
-        <div className="md:hidden border-b border-gray-200 p-3 bg-gray-50 flex items-center justify-between">
+        <div className="md:hidden border-b border-slate-800 p-3 bg-slate-900/60 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-white flex items-center gap-1.5 text-xs font-medium"
+            className="p-1.5 rounded-xl border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5 text-xs font-medium transition"
           >
             {isSidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            {t("courses.outline", "Sommaire")}
+            <span>{t("courses.outline")}</span>
           </button>
-          <span className="text-xs font-semibold text-gray-800 truncate px-2">
+          <span className="text-xs font-semibold text-white truncate px-2">
             {activeLesson?.title || course.title}
           </span>
         </div>
 
         {/* Scrollable Lesson Viewer */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
           {activeLesson ? (
             <LessonViewer
               courseId={course.id}
@@ -225,8 +225,8 @@ function CourseLearnPageContent() {
               isTeacher={true}
             />
           ) : (
-            <div className="max-w-md mx-auto py-24 text-center text-gray-400 text-sm">
-              {t("courses.noStructuredContent", "Sélectionnez une leçon dans le sommaire pour commencer.")}
+            <div className="max-w-md mx-auto py-24 text-center text-slate-500 text-xs">
+              {t("courses.noStructuredContent")}
             </div>
           )}
         </main>

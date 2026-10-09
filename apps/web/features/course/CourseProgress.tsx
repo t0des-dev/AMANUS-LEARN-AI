@@ -2,6 +2,7 @@
 
 import React from "react";
 import { CheckCircle2, Clock, BookOpen } from "lucide-react";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface CourseProgressProps {
   totalLessons: number;
@@ -16,37 +17,39 @@ export function CourseProgress({
   totalMinutes,
   className = "",
 }: CourseProgressProps) {
+  const { t } = useTranslation();
   const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  const remaining = Math.max(0, totalLessons - completedLessons);
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 p-4 shadow-sm ${className}`}>
+    <div className={`bg-slate-900/80 rounded-2xl border border-slate-800 p-3.5 shadow-md ${className}`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">Progression du cours</span>
-        <span className="text-sm font-bold text-blue-600">{percent}%</span>
+        <span className="text-xs font-semibold text-slate-300">{t("courses.progress")}</span>
+        <span className="text-xs font-bold font-mono text-indigo-400">{percent}%</span>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-gray-100 rounded-full h-2.5 mb-4 overflow-hidden">
+      <div className="w-full bg-slate-800 rounded-full h-2 mb-3 overflow-hidden">
         <div
-          className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+          className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-2 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${percent}%` }}
         />
       </div>
 
       {/* Quick Metrics */}
-      <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 pt-2 border-t border-gray-100">
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+      <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400 pt-2 border-t border-slate-800/80 font-mono">
+        <div className="flex items-center gap-1 text-emerald-400">
+          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
           <span>
-            {completedLessons} / {totalLessons} terminées
+            {completedLessons} / {totalLessons} {t("courses.completed")}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 justify-center">
-          <BookOpen className="w-3.5 h-3.5 text-blue-500" />
-          <span>{totalLessons - completedLessons} restantes</span>
+        <div className="flex items-center gap-1 text-slate-400">
+          <BookOpen className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <span>{remaining} {t("courses.remaining")}</span>
         </div>
-        <div className="flex items-center gap-1.5 justify-end">
-          <Clock className="w-3.5 h-3.5 text-purple-500" />
+        <div className="flex items-center gap-1 text-slate-400">
+          <Clock className="w-3.5 h-3.5 text-purple-400 shrink-0" />
           <span>~{totalMinutes} min</span>
         </div>
       </div>
