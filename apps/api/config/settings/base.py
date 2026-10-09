@@ -97,7 +97,25 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database Configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
+
+def _can_resolve_host(hostname: str | None) -> bool:
+    if not hostname:
+        return False
+    if hostname in ("localhost", "127.0.0.1", "::1"):
+        return True
+    import socket
+    try:
+        socket.gethostbyname(hostname)
+        return True
+    except (socket.gaierror, OSError):
+        return False
+
+
+if (
+    DATABASE_URL
+    and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"))
+    and _can_resolve_host(urlparse(DATABASE_URL).hostname)
+):
     url = urlparse(DATABASE_URL)
     from urllib.parse import unquote
     DATABASES = {
