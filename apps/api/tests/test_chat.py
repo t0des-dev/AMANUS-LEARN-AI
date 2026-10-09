@@ -1,5 +1,4 @@
 import json
-import uuid
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -7,8 +6,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.ai.services import DeterministicEmbeddingProvider, get_embedding_provider
-from apps.chat.models import ChatMessage, ChatSession, MessageRole
+from apps.ai.services import DeterministicEmbeddingProvider
+from apps.chat.models import ChatSession, MessageRole
 from apps.chat.services.pedagogical_commands import (
     PEDAGOGICAL_COMMANDS,
     detect_pedagogical_command,

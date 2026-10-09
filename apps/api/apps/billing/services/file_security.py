@@ -4,8 +4,8 @@ Provides comprehensive validation for uploads to prevent remote code execution,
 path traversal, MIME spoofing, zip bombs, and cross-site scripting vectors.
 """
 
-from pathlib import Path
 import re
+from pathlib import Path
 
 from django.conf import settings
 from rest_framework.exceptions import ValidationError

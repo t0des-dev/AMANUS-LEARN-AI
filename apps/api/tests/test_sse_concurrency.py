@@ -1,6 +1,6 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -73,7 +73,6 @@ class TestSSEStreamingHardening:
 
     def test_concurrent_sse_streams_do_not_block_standard_api_requests(self, chat_setup):
         """Simulate concurrent slow SSE streams and verify that regular API calls remain immediately responsive."""
-        client = chat_setup["client"]
         session = chat_setup["session"]
 
         def slow_generator(*args, **kwargs):

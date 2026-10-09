@@ -1,5 +1,4 @@
 import re
-from typing import Any
 
 from apps.courses.models import CourseSection
 

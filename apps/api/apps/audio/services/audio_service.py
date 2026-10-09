@@ -1,8 +1,5 @@
 import logging
 import uuid
-from typing import Any
-
-from django.db import transaction
 
 from apps.documents.services.storage import get_storage_service
 

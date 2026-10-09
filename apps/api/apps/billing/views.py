@@ -16,7 +16,6 @@ from apps.billing.models import (
     PLAN_QUOTAS,
     AuditLog,
     PlanChoices,
-    Subscription,
     SubscriptionStatus,
 )
 from apps.billing.serializers import (

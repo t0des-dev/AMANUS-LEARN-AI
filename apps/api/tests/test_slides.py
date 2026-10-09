@@ -5,9 +5,7 @@ import uuid
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
-from django.test import override_settings
 from pptx import Presentation as PptxPresentation
-from pptx.util import Inches
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -15,7 +13,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.courses.models import Course, CourseLevel, CourseSection, CourseStatus
 from apps.documents.services.storage import LocalStorageService, reset_storage_service
 from apps.organizations.models import Organization, OrganizationMember, RoleChoices
-from apps.slides.models import Presentation, PresentationSlide, PresentationStatus, PresentationTheme
+from apps.slides.models import (
+    Presentation,
+    PresentationSlide,
+    PresentationStatus,
+    PresentationTheme,
+)
 from apps.slides.services.pptx_exporter import PPTXExporter
 from apps.slides.services.slide_generator import SlideGenerator
 from apps.slides.services.slide_planner import SlidePlanner
@@ -176,7 +179,6 @@ class PPTXExporterTests(APITestCase):
         self.assertTrue(storage_service.file_exists(storage_key))
 
     def test_async_celery_export_task(self):
-        storage_service = LocalStorageService(base_dir=self.temp_dir)
         with patch("apps.slides.tasks.PPTXExporter") as mock_exporter_cls:
             mock_inst = MagicMock()
             mock_inst.export_and_save.return_value = "presentations/test/pres.pptx"

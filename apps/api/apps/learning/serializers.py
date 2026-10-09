@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.courses.models import Course, CourseSection
+from apps.courses.models import Course
 from apps.learning.models import LearningPath, LearningProgress, StudySession
 
 

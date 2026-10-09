@@ -197,7 +197,6 @@ class AuthenticationAPITests(APITestCase):
     def test_drf_uses_strictly_jwt_authentication(self):
         """Vérifier que DRF est configuré pour JWT exclusivement afin d'éviter les failles CSRF."""
         from django.conf import settings
-        from rest_framework_simplejwt.authentication import JWTAuthentication
 
         auth_classes = settings.REST_FRAMEWORK.get("DEFAULT_AUTHENTICATION_CLASSES", [])
         self.assertEqual(len(auth_classes), 1)

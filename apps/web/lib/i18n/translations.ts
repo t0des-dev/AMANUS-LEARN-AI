@@ -67,6 +67,8 @@ export const translations: Record<Language, Translations> = {
     "audio.celeryAsync": "Traitement asynchrone sécurisé avec Celery.",
     "audio.regenerate": "Régénérer avec une autre voix",
     "audio.checking": "Vérification audio...",
+    "audio.loadingVoices": "Chargement des voix disponibles...",
+    "audio.noVoicesForLanguage": "Aucune voix trouvée pour cette langue.",
 
     // Common
     "common.save": "Enregistrer",
@@ -146,6 +148,8 @@ export const translations: Record<Language, Translations> = {
     "audio.celeryAsync": "معالجة غير متزامنة وآمنة عبر Celery.",
     "audio.regenerate": "إعادة التوليد بصوت آخر",
     "audio.checking": "جارٍ التحقق من الصوت...",
+    "audio.loadingVoices": "جارٍ تحميل الأصوات المتاحة...",
+    "audio.noVoicesForLanguage": "لا توجد أصوات متاحة لهذه اللغة.",
 
     // Common
     "common.save": "حفظ",
@@ -225,6 +229,8 @@ export const translations: Record<Language, Translations> = {
     "audio.celeryAsync": "Secure asynchronous processing with Celery.",
     "audio.regenerate": "Regenerate with another voice",
     "audio.checking": "Checking audio...",
+    "audio.loadingVoices": "Loading available voices...",
+    "audio.noVoicesForLanguage": "No voices found for this language.",
 
     // Common
     "common.save": "Save",

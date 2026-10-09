@@ -1,10 +1,14 @@
 import logging
-from typing import Any
 
 from django.db import transaction
 
 from apps.courses.models import Course
-from apps.slides.models import Presentation, PresentationSlide, PresentationStatus, PresentationTheme
+from apps.slides.models import (
+    Presentation,
+    PresentationSlide,
+    PresentationStatus,
+    PresentationTheme,
+)
 from apps.slides.services.slide_planner import SlidePlanner
 
 logger = logging.getLogger(__name__)

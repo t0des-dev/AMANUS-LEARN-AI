@@ -16,7 +16,6 @@ from .permissions import CanManageAudio, IsAudioOrganizationMember
 from .serializers import (
     AudioContentSerializer,
     AudioGenerateRequestSerializer,
-    VoiceSerializer,
 )
 from .services.providers import list_available_voices
 from .tasks import generate_section_audio_task

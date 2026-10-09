@@ -5,10 +5,12 @@ import { Mic, Check, Globe, User, Sparkles } from "lucide-react";
 import { TTSVoice } from "../../types/audio";
 import { audioService } from "../../services/audioService";
 import { useAuth } from "../auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface VoiceSelectorProps {
   selectedVoiceId: string;
   selectedProvider: string;
+  initialLanguage?: string;
   onSelectVoice: (voiceId: string, provider: string, language?: string) => void;
   className?: string;
 }
@@ -16,12 +18,16 @@ interface VoiceSelectorProps {
 export function VoiceSelector({
   selectedVoiceId,
   selectedProvider,
+  initialLanguage,
   onSelectVoice,
   className = "",
 }: VoiceSelectorProps) {
   const { token } = useAuth();
+  const { t, language: currentAppLang } = useTranslation();
   const [voices, setVoices] = useState<TTSVoice[]>([]);
-  const [languageFilter, setLanguageFilter] = useState<string>("fr");
+  const [languageFilter, setLanguageFilter] = useState<string>(
+    initialLanguage || (currentAppLang === "ar" ? "ar" : currentAppLang === "en" ? "en" : "fr")
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -131,7 +137,7 @@ export function VoiceSelector({
       <div className="flex items-center justify-between border-b border-slate-800 pb-2">
         <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
           <Mic className="h-3.5 w-3.5 text-indigo-400" />
-          <span>Sélectionner une voix de synthèse</span>
+          <span>{t("audio.selectVoice")}</span>
         </label>
 
         <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-0.5 border border-slate-800">
@@ -175,11 +181,11 @@ export function VoiceSelector({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
         {isLoading ? (
           <div className="col-span-2 py-4 text-center text-xs text-slate-500">
-            Chargement des voix disponibles...
+            {t("audio.loadingVoices")}
           </div>
         ) : filteredVoices.length === 0 ? (
           <div className="col-span-2 py-4 text-center text-xs text-slate-500">
-            Aucune voix trouvée pour cette langue.
+            {t("audio.noVoicesForLanguage")}
           </div>
         ) : (
           filteredVoices.map((voice) => {
@@ -188,7 +194,7 @@ export function VoiceSelector({
 
             return (
               <button
-                key={`${voice.provider}-${voice.id}`}
+                key={`${voice.provider}-${voice.id}-${voice.language}`}
                 type="button"
                 onClick={() => onSelectVoice(voice.id, voice.provider, voice.language)}
                 className={`flex items-start justify-between rounded-xl border p-2.5 text-left transition ${

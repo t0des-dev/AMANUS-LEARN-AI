@@ -1,7 +1,6 @@
 import shutil
 import tempfile
-import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import override_settings
@@ -21,7 +20,6 @@ from apps.audio.services.providers import (
 from apps.audio.services.script_generator import PedagogicalScriptGenerator
 from apps.courses.models import Course, CourseLevel, CourseSection, CourseStatus
 from apps.documents.services.storage import (
-    LocalStorageService,
     get_storage_service,
     reset_storage_service,
 )

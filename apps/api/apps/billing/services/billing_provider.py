@@ -4,10 +4,10 @@ Defines the contract for SaaS billing integrations (Stripe, LemonSqueezy, Paddle
 without coupling the platform to any single payment processor.
 """
 
-from abc import ABC, abstractmethod
 import logging
-from typing import Any
 import uuid
+from abc import ABC, abstractmethod
+from typing import Any
 
 from django.conf import settings
 from django.utils import timezone

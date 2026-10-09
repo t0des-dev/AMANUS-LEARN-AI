@@ -36,6 +36,7 @@ class BaseTTSProvider(ABC):
 
     name: str = "base"
     default_voice: str = "default"
+    _VOICES: list[TTSVoice] = []
 
     @abstractmethod
     def synthesize(
@@ -47,7 +48,9 @@ class BaseTTSProvider(ABC):
         """Synthesizes text into audio bytes and measures/estimates duration."""
         pass
 
-    @abstractmethod
     def get_available_voices(self, language: str | None = None) -> list[TTSVoice]:
-        """Returns the list of voices provided by this backend."""
-        pass
+        """Returns the list of voices provided by this backend, optionally filtered by language."""
+        if not language:
+            return list(self._VOICES)
+        target = language.lower()
+        return [v for v in self._VOICES if v.language.lower() == target]

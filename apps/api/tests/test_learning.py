@@ -1,5 +1,3 @@
-import time
-import uuid
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -10,9 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.courses.models import Course, CourseLevel, CourseSection, CourseStatus
 from apps.learning.models import (
-    LearningPath,
     LearningPathStatus,
-    LearningProgress,
     StudySession,
 )
 from apps.learning.services.learning_engine import LearningEngine

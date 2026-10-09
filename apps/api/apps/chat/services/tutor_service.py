@@ -11,7 +11,7 @@ from apps.ai.services import (
     Retriever,
     get_ai_provider,
 )
-from apps.documents.models import Document, DocumentStatus
+from apps.documents.models import Document
 
 from ..models import ChatMessage, ChatSession, MessageRole
 from .pedagogical_commands import detect_pedagogical_command, get_command_instruction

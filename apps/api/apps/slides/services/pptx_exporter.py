@@ -5,11 +5,15 @@ from typing import Any
 from pptx import Presentation as PptxPresentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
 from apps.documents.services.storage import get_storage_service
-from apps.slides.models import Presentation, PresentationSlide, PresentationStatus, PresentationTheme
+from apps.slides.models import (
+    Presentation,
+    PresentationSlide,
+    PresentationStatus,
+    PresentationTheme,
+)
 
 logger = logging.getLogger(__name__)
 

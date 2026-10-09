@@ -1,19 +1,19 @@
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
-from apps.courses.models import Course, CourseSection
+from apps.courses.models import Course
 from apps.learning.models import (
     LearningPath,
     LearningPathStatus,
     LearningProgress,
     StudySession,
 )
-from apps.quizzes.models import Quiz, QuizAttempt, QuizQuestion
+from apps.quizzes.models import Quiz, QuizAttempt
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -158,7 +158,6 @@ class AnalyticsService:
 
         for sec in sections:
             sec_progresses = list(LearningProgress.objects.filter(section=sec))
-            sec_students_count = len(sec_progresses)
             completed_sec_count = sum(1 for p in sec_progresses if p.completion_percent >= 100.0)
 
             comp_rate = (

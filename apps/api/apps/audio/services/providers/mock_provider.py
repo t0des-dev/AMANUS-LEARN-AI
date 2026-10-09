@@ -118,9 +118,3 @@ class MockTTSProvider(BaseTTSProvider):
             voice_id=active_voice,
             provider=self.name,
         )
-
-    def get_available_voices(self, language: str | None = None) -> list[TTSVoice]:
-        if not language:
-            return list(self._VOICES)
-        target = language.lower()
-        return [v for v in self._VOICES if v.language.lower() == target]

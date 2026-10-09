@@ -49,7 +49,7 @@ class AIProvider(ABC):
         max_tokens: int = 3000,
     ):
         """Streams text chunks or tokens from LLM inference.
-        
+
         Default implementation calls generate and yields word tokens.
         """
         response = self.generate(

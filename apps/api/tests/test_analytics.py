@@ -1,5 +1,4 @@
 from datetime import timedelta
-import uuid
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -17,7 +16,6 @@ from apps.learning.models import (
 )
 from apps.organizations.models import Organization, OrganizationMember, RoleChoices
 from apps.quizzes.models import (
-    DifficultyLevel,
     Quiz,
     QuizAttempt,
     QuizQuestion,

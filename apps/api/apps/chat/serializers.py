@@ -4,8 +4,7 @@ from apps.courses.models import Course
 from apps.documents.models import Document
 from apps.organizations.models import Organization
 
-from .models import ChatMessage, ChatSession, MessageRole
-from .services.pedagogical_commands import PEDAGOGICAL_COMMANDS
+from .models import ChatMessage, ChatSession
 
 
 class DocumentBriefSerializer(serializers.ModelSerializer):

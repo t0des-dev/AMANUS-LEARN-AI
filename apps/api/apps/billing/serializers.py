@@ -3,11 +3,9 @@
 from rest_framework import serializers
 
 from apps.billing.models import (
-    PLAN_QUOTAS,
     AuditLog,
     PlanChoices,
     Subscription,
-    SubscriptionStatus,
     UsageRecord,
 )
 

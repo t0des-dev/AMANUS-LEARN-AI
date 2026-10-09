@@ -3,13 +3,13 @@ from uuid import UUID
 
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.courses.models import Course, CourseSection
-from apps.learning.models import LearningPath, LearningProgress, StudySession
+from apps.learning.models import LearningPath, StudySession
 from apps.learning.serializers import (
     LearningPathSerializer,
     LearningProgressSerializer,

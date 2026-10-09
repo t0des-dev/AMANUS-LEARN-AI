@@ -140,6 +140,3 @@ class OpenAITTSProvider(BaseTTSProvider):
         except Exception as e:
             logger.warning(f"[OpenAITTSProvider] OpenAI TTS failed ({e}); falling back to mock.")
             return self._fallback.synthesize(text=text, voice_id=active_voice, language=language)
-
-    def get_available_voices(self, language: str | None = None) -> list[TTSVoice]:
-        return list(self._VOICES)

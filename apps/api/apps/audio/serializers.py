@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import AudioContent, AudioStatus
+from .models import AudioContent
 
 
 class AudioContentSerializer(serializers.ModelSerializer):

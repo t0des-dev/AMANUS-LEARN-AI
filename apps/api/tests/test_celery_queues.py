@@ -1,12 +1,12 @@
 import pytest
 from django.conf import settings
-from config.celery import app as celery_app
 
 from apps.audio.tasks import generate_section_audio_task
 from apps.documents.tasks import process_document_pipeline
 from apps.ingestion.tasks import process_document
 from apps.notifications.tasks import send_notification_task, send_system_alert_task
 from apps.slides.tasks import export_presentation_task
+from config.celery import app as celery_app
 
 
 @pytest.mark.django_db

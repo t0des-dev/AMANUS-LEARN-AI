@@ -1,6 +1,7 @@
 from django.urls import path
 
 from apps.audio.views import SectionAudioView
+
 from .views import SectionDetailView
 
 app_name = "sections"

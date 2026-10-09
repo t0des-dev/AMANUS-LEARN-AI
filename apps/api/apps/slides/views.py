@@ -5,14 +5,19 @@ from django.db import transaction
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.courses.models import Course
 from apps.courses.permissions import CanManageCourse
-from apps.slides.models import Presentation, PresentationSlide, PresentationStatus, PresentationTheme
+from apps.slides.models import (
+    Presentation,
+    PresentationSlide,
+    PresentationStatus,
+    PresentationTheme,
+)
 from apps.slides.permissions import CanManagePresentation, IsPresentationOrganizationMember
 from apps.slides.serializers import (
     PresentationCreateSerializer,

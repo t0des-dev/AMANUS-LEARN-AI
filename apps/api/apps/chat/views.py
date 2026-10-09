@@ -19,7 +19,7 @@ from .serializers import (
     ChatSessionDetailSerializer,
     ChatSessionListSerializer,
 )
-from .services import AITutorService, PEDAGOGICAL_COMMANDS
+from .services import PEDAGOGICAL_COMMANDS, AITutorService
 
 logger = logging.getLogger(__name__)
 
