@@ -10,9 +10,17 @@ from .structure_detector import detect_structure
 
 logger = logging.getLogger(__name__)
 
+MAX_EXTRACT_SLIDES = 200
+MAX_EXTRACT_CHARS = 1_000_000
+MIN_SLIDE_CHARS = 15
+
 
 class PPTXParser(DocumentParser):
-    """Adapter for parsing Microsoft PowerPoint (.pptx) presentations."""
+    """Adapter for parsing Microsoft PowerPoint (.pptx) presentations.
+
+    Preserves slide boundaries, titles, shapes, tables, speaker notes,
+    and tracks empty slides and extraction warnings.
+    """
 
     def parse(self, file_source: bytes | BinaryIO, **kwargs) -> ParsedDocument:
         if isinstance(file_source, bytes):
@@ -25,7 +33,9 @@ class PPTXParser(DocumentParser):
         except Exception as e:
             raise InvalidDocumentFileError(f"Fichier PPTX invalide ou corrompu : {e}") from e
 
-        global_metadata: dict = {}
+        global_metadata: dict = {"warnings": []}
+        warnings: list[str] = global_metadata["warnings"]
+
         try:
             core_props = prs.core_properties
             if core_props:
@@ -36,15 +46,24 @@ class PPTXParser(DocumentParser):
         except Exception as e:
             logger.debug(f"[PPTXParser] Error extracting core properties: {e}")
 
-        pages: list[ParsedPage] = []
         total_slides = len(prs.slides)
         if total_slides == 0:
             raise InvalidDocumentFileError("La présentation PPTX ne contient aucune diapositive.")
 
-        for idx, slide in enumerate(prs.slides):
+        slides_to_process = total_slides
+        if total_slides > MAX_EXTRACT_SLIDES:
+            warnings.append(f"MAX_SLIDES_LIMIT_REACHED_{MAX_EXTRACT_SLIDES}_OF_{total_slides}")
+            slides_to_process = MAX_EXTRACT_SLIDES
+
+        pages: list[ParsedPage] = []
+        accumulated_chars = 0
+
+        for idx in range(slides_to_process):
+            slide = prs.slides[idx]
             page_num = idx + 1
             slide_elements: list[str] = []
             slide_title: str | None = None
+            page_warnings: list[str] = []
 
             # Check title placeholder if available
             try:
@@ -56,24 +75,28 @@ class PPTXParser(DocumentParser):
 
             # Extract text from shapes and tables
             for shape in slide.shapes:
-                # Avoid duplicating slide title
-                if slide_title and hasattr(shape, "text") and shape.text.strip() == slide_title:
-                    continue
+                try:
+                    # Avoid duplicating slide title
+                    if slide_title and hasattr(shape, "text") and shape.text.strip() == slide_title:
+                        continue
 
-                if shape.has_text_frame:
-                    for paragraph in shape.text_frame.paragraphs:
-                        text = paragraph.text.strip()
-                        if text:
-                            slide_elements.append(text)
+                    if shape.has_text_frame:
+                        for paragraph in shape.text_frame.paragraphs:
+                            text = paragraph.text.strip()
+                            if text:
+                                slide_elements.append(text)
 
-                elif shape.has_table:
-                    table_rows: list[str] = []
-                    for row in shape.table.rows:
-                        cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-                        if cells:
-                            table_rows.append(" | ".join(cells))
-                    if table_rows:
-                        slide_elements.append("[Tableau]\n" + "\n".join(table_rows))
+                    elif shape.has_table:
+                        table_rows: list[str] = []
+                        for row in shape.table.rows:
+                            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                            if cells:
+                                table_rows.append(" | ".join(cells))
+                        if table_rows:
+                            slide_elements.append("[Tableau]\n" + "\n".join(table_rows))
+                except Exception as e:
+                    logger.warning(f"[PPTXParser] Error reading shape on slide {page_num}: {e}")
+                    page_warnings.append(f"SLIDE_{page_num}_SHAPE_READ_ERROR")
 
             # Extract speaker notes if any
             try:
@@ -87,6 +110,10 @@ class PPTXParser(DocumentParser):
             raw_slide_text = "\n\n".join(slide_elements)
             clean_text = normalize_text(raw_slide_text)
 
+            if len(clean_text) < MIN_SLIDE_CHARS:
+                page_warnings.append(f"SLIDE_{page_num}_EMPTY")
+
+            accumulated_chars += len(clean_text)
             struct_info = detect_structure(clean_text)
             page_meta = {
                 "page_number": page_num,
@@ -97,6 +124,8 @@ class PPTXParser(DocumentParser):
                 "subsection": struct_info.get("subsection"),
                 "char_count": len(clean_text),
                 "headings": struct_info.get("headings", []),
+                "is_empty": len(clean_text) < MIN_SLIDE_CHARS,
+                "warnings": page_warnings,
             }
 
             pages.append(
@@ -107,5 +136,9 @@ class PPTXParser(DocumentParser):
                     metadata=page_meta,
                 )
             )
+
+            if accumulated_chars >= MAX_EXTRACT_CHARS:
+                warnings.append("MAX_CHARS_LIMIT_REACHED")
+                break
 
         return ParsedDocument(pages=pages, metadata=global_metadata)

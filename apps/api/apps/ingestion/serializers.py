@@ -47,6 +47,8 @@ class DocumentProcessingStatusSerializer(serializers.ModelSerializer):
     progress_stage = serializers.SerializerMethodField()
     pages_count = serializers.SerializerMethodField()
     chunks_count = serializers.SerializerMethodField()
+    quality_grade = serializers.SerializerMethodField()
+    quality_warnings = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
@@ -54,6 +56,8 @@ class DocumentProcessingStatusSerializer(serializers.ModelSerializer):
             "id",
             "status",
             "progress_stage",
+            "quality_grade",
+            "quality_warnings",
             "page_count",
             "pages_count",
             "chunks_count",
@@ -61,6 +65,20 @@ class DocumentProcessingStatusSerializer(serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = fields
+
+    def get_quality_grade(self, obj: Document) -> str:
+        meta = obj.processing_metadata or {}
+        if meta.get("quality_grade"):
+            return meta["quality_grade"]
+        if obj.status == DocumentStatus.READY:
+            return "FULL"
+        if obj.status == DocumentStatus.FAILED:
+            return "UNUSABLE"
+        return "UNKNOWN"
+
+    def get_quality_warnings(self, obj: Document) -> list:
+        meta = obj.processing_metadata or {}
+        return meta.get("quality_warnings", [])
 
     def get_progress_stage(self, obj: Document) -> str:
         # Check explicit stage in processing_metadata first

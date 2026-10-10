@@ -83,6 +83,8 @@ export interface DocumentProcessingStatusResponse {
   page_count: number;
   pages_count: number;
   chunks_count: number;
+  quality_grade?: "FULL" | "PARTIAL" | "UNUSABLE" | string;
+  quality_warnings?: string[];
   error_message: string;
   updated_at: string;
 }

@@ -131,6 +131,23 @@ class DocumentProcessView(APIView):
 
         self.check_object_permissions(request, document)
 
+        # Concurrency & Idempotency Safeguard: prevent duplicate background tasks
+        in_progress_statuses = (
+            DocumentStatus.EXTRACTING,
+            DocumentStatus.OCR,
+            DocumentStatus.STRUCTURING,
+            DocumentStatus.CHUNKING,
+            DocumentStatus.PROCESSING,
+        )
+        if document.status in in_progress_statuses:
+            return Response(
+                {
+                    "detail": "Le traitement de ce document est déjà en cours d'exécution.",
+                    "status": document.status,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
         # Trigger Celery background task (or run synchronously if eager/in-test)
         try:
             task_result = process_document_pipeline.delay(str(document.id))

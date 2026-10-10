@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  AlertCircle,
 } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { documentService } from "../../services/documentService";
@@ -466,6 +467,26 @@ export function DocumentDetails({
               <div>
                 <p className="font-semibold">Erreur d'ingestion :</p>
                 <p className="mt-0.5 text-rose-400/90">{doc.error_message}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Quality Assessment & Partial Extraction Warnings */}
+          {doc.processing_metadata?.quality_grade === "PARTIAL" && (
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+              <div className="space-y-1">
+                <p className="font-semibold text-amber-200">
+                  Extraction partielle : Le document a été indexé avec des avertissements de qualité.
+                </p>
+                {Array.isArray(doc.processing_metadata.quality_warnings) &&
+                  doc.processing_metadata.quality_warnings.length > 0 && (
+                    <ul className="list-disc list-inside space-y-0.5 text-amber-300/80">
+                      {doc.processing_metadata.quality_warnings.map((w: string, idx: number) => (
+                        <li key={idx}>Avertissement : {w}</li>
+                      ))}
+                    </ul>
+                  )}
               </div>
             </div>
           )}

@@ -109,6 +109,18 @@ export function DocumentStatus({
       bg: "bg-rose-500/10 text-rose-400 border-rose-500/20",
       dot: "bg-rose-400",
     },
+    PARTIAL: {
+      label: "Partiel (Avertissements)",
+      icon: AlertTriangle,
+      bg: "bg-amber-500/10 text-amber-300 border-amber-500/20",
+      dot: "bg-amber-400",
+    },
+    UNUSABLE: {
+      label: "Inexploitable",
+      icon: AlertTriangle,
+      bg: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+      dot: "bg-rose-400",
+    },
     ARCHIVED: {
       label: "Archivé",
       icon: Archive,

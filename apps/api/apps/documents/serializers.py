@@ -73,6 +73,8 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             "language",
             "page_count",
             "status",
+            "error_message",
+            "processing_metadata",
             "download_url",
             "created_at",
             "updated_at",
@@ -87,6 +89,8 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             "file_size_human",
             "file_extension",
             "storage_key",
+            "error_message",
+            "processing_metadata",
             "download_url",
             "created_at",
             "updated_at",
@@ -137,14 +141,16 @@ class DocumentUploadSerializer(serializers.Serializer):
         uploaded_file = validated_data["file"]
         organization = validated_data["organization"]
 
-        original_name = uploaded_file.name
+        from .validators import sanitize_file_name
+
+        original_name = sanitize_file_name(uploaded_file.name)
         file_ext = Path(original_name).suffix.lstrip(".").lower()
         title = validated_data.get("title")
         if not title or not title.strip():
             title = Path(original_name).stem.replace("_", " ").replace("-", " ").title()
 
         doc_uuid = uuid.uuid4()
-        # Secure storage key isolated per organization
+        # Secure storage key isolated per organization and sanitized against path traversal
         storage_key = f"organizations/{organization.id}/documents/{doc_uuid}/{original_name}"
 
         # Persist to abstract storage

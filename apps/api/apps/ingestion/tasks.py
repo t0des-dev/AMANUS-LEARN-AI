@@ -10,12 +10,13 @@ from apps.documents.services.storage import get_storage_service
 from apps.ingestion.models import DocumentPage
 from apps.ingestion.parsers import DocumentParserFactory
 from apps.ingestion.services.chunking import ChunkingService
+from apps.ingestion.services.quality import DocumentQualityEvaluator
 
 logger = logging.getLogger(__name__)
 
 
 def extract_document(document_id: str) -> dict[str, Any]:
-    """Step 1 & 2: Extract text, perform OCR if needed, normalize, and detect structure."""
+    """Step 1 & 2: Extract text, perform OCR if needed, assess quality, and detect structure."""
     document = Document.objects.get(id=document_id)
 
     document.status = DocumentStatus.EXTRACTING
@@ -46,7 +47,7 @@ def extract_document(document_id: str) -> dict[str, Any]:
     document.save(update_fields=["status", "updated_at"])
 
     with transaction.atomic():
-        # Clear previous pages if re-extracting
+        # Clear previous pages if re-extracting (guarantee clean slate)
         DocumentPage.objects.filter(document=document).delete()
 
         pages_to_create = []
@@ -67,12 +68,22 @@ def extract_document(document_id: str) -> dict[str, Any]:
         document.page_count = len(pages_to_create)
         document.save(update_fields=["page_count", "updated_at"])
 
+    # Step: Quality & Usability Assessment
+    quality_result = DocumentQualityEvaluator.evaluate(parsed_doc)
+    logger.info(
+        f"[Ingestion] Document {document.id} quality assessed: grade={quality_result.quality_grade}, "
+        f"usable={quality_result.is_usable}, total_chars={quality_result.total_chars}, "
+        f"warnings={quality_result.warnings}"
+    )
+
     logger.info(f"[Ingestion] Extracted {len(pages_to_create)} pages for document {document.id}")
     return {
         "status": "extracted",
         "document_id": str(document.id),
         "pages_count": len(pages_to_create),
         "ocr_used": any_ocr,
+        "quality_result": quality_result,
+        "is_usable": quality_result.is_usable,
     }
 
 
@@ -99,7 +110,7 @@ def process_document(self, document_id: str) -> dict[str, Any]:
     """Celery background pipeline orchestrating the complete ingestion lifecycle.
 
     Lifecycle progression:
-    UPLOADED -> EXTRACTING -> [OCR] -> STRUCTURING -> CHUNKING -> COMPLETED
+    UPLOADED -> EXTRACTING -> [OCR] -> STRUCTURING -> CHUNKING -> READY / FAILED
     """
     logger.info(f"[Ingestion Pipeline] Initiating processing for document ID: {document_id}")
 
@@ -112,17 +123,34 @@ def process_document(self, document_id: str) -> dict[str, Any]:
     try:
         # Phase 1: Extraction & Structuring
         extract_result = extract_document(str(document.id))
+        quality_report = extract_result.get("quality_result")
+        is_usable = extract_result.get("is_usable", True)
 
-        # Phase 2: Chunking
-        chunk_result = create_chunks(str(document.id))
+        chunks_count = 0
+        if is_usable:
+            # Phase 2: Chunking (only if document has usable text)
+            chunk_result = create_chunks(str(document.id))
+            chunks_count = chunk_result.get("chunks_count", 0)
 
         document.refresh_from_db()
         document.status = DocumentStatus.READY
-        document.error_message = ""
+        quality_grade = getattr(quality_report, "quality_grade", "FULL")
+        warnings = getattr(quality_report, "warnings", [])
+
+        if quality_grade == "UNUSABLE":
+            document.error_message = "Document vide ou contenu inexploitable."
+        else:
+            document.error_message = ""
+
         document.processing_metadata = {
             "progress_stage": "Completed",
+            "quality_grade": quality_grade,
+            "quality_warnings": warnings,
+            "total_chars": getattr(quality_report, "total_chars", 0),
+            "empty_pages": getattr(quality_report, "empty_pages", 0),
+            "scanned_pages": getattr(quality_report, "scanned_pages", 0),
             "pages_count": extract_result.get("pages_count", 0),
-            "chunks_count": chunk_result.get("chunks_count", 0),
+            "chunks_count": chunks_count,
             "ocr_used": extract_result.get("ocr_used", False),
             "processed_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -131,15 +159,17 @@ def process_document(self, document_id: str) -> dict[str, Any]:
         )
 
         logger.info(
-            f"[Ingestion Pipeline] Document {document_id} ingestion completed successfully. "
-            f"Pages: {extract_result.get('pages_count')}, Chunks: {chunk_result.get('chunks_count')}"
+            f"[Ingestion Pipeline] Document {document_id} ingestion completed. "
+            f"Grade: {quality_grade}, Pages: {extract_result.get('pages_count')}, Chunks: {chunks_count}"
         )
 
         return {
             "status": "completed",
             "document_id": str(document.id),
+            "quality_grade": quality_grade,
+            "warnings": warnings,
             "pages_count": extract_result.get("pages_count"),
-            "chunks_count": chunk_result.get("chunks_count"),
+            "chunks_count": chunks_count,
         }
 
     except Exception as exc:
