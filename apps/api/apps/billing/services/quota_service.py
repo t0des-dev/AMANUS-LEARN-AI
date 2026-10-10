@@ -146,8 +146,7 @@ class QuotaService:
         plan_quotas = PLAN_QUOTAS.get(subscription.plan, PLAN_QUOTAS[PlanChoices.FREE])
 
         records_map = {
-            r.metric: r.quantity
-            for r in UsageRecord.objects.filter(organization=organization)
+            r.metric: r.quantity for r in UsageRecord.objects.filter(organization=organization)
         }
 
         summary: dict[str, Any] = {}

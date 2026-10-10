@@ -29,6 +29,9 @@ class SlideGenerator:
         course: Course,
         title: str | None = None,
         theme: str = PresentationTheme.MODERN_DARK,
+        language: str | None = None,
+        level: str | None = None,
+        focus: str | None = None,
     ) -> Presentation:
         """Plans and generates a new Presentation with all slides."""
         presentation_title = (title or course.title).strip()
@@ -42,7 +45,13 @@ class SlideGenerator:
             )
 
             try:
-                blueprints = self.planner.plan_presentation(course, title=presentation_title)
+                blueprints = self.planner.plan_presentation(
+                    course,
+                    title=presentation_title,
+                    language=language,
+                    level=level,
+                    focus=focus,
+                )
 
                 slide_instances = [
                     PresentationSlide(

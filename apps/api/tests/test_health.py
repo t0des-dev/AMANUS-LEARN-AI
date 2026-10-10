@@ -32,5 +32,7 @@ class HealthCheckTests(TestCase):
     def test_v1_system_health_endpoint(self):
         """Verify GET /api/v1/system/health/ returns 200 OK."""
         response = self.client.get("/api/v1/system/health/")
-        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_503_SERVICE_UNAVAILABLE))
+        self.assertIn(
+            response.status_code, (status.HTTP_200_OK, status.HTTP_503_SERVICE_UNAVAILABLE)
+        )
         self.assertIn(response.json().get("status"), ("healthy", "degraded"))

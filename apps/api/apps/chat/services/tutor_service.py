@@ -37,13 +37,9 @@ class AITutorService:
         self.context_builder = context_builder or ContextBuilder()
         self.ai_provider = ai_provider or get_ai_provider()
 
-    def validate_document_access(
-        self, session: ChatSession, document_id: str | None
-    ) -> str | None:
+    def validate_document_access(self, session: ChatSession, document_id: str | None) -> str | None:
         """Validates that target document belongs to the session's organization."""
-        target_doc_id = document_id or (
-            str(session.document_id) if session.document_id else None
-        )
+        target_doc_id = document_id or (str(session.document_id) if session.document_id else None)
         if not target_doc_id:
             return None
 
@@ -59,13 +55,9 @@ class AITutorService:
 
         return target_doc_id
 
-    def build_conversation_history(
-        self, session: ChatSession, limit: int = 6
-    ) -> str:
+    def build_conversation_history(self, session: ChatSession, limit: int = 6) -> str:
         """Assembles recent conversation history for memory and context continuity."""
-        recent_messages = list(
-            session.messages.order_by("-created_at")[:limit]
-        )
+        recent_messages = list(session.messages.order_by("-created_at")[:limit])
         recent_messages.reverse()
 
         if not recent_messages:
@@ -287,9 +279,7 @@ class AITutorService:
         full_content_chunks: list[str] = []
 
         if not context:
-            fallback = (
-                "Cette information n'est pas présente dans les documents disponibles."
-            )
+            fallback = "Cette information n'est pas présente dans les documents disponibles."
             full_content_chunks.append(fallback)
             yield f"data: {json.dumps({'type': 'token', 'content': fallback})}\n\n"
         else:

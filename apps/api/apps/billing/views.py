@@ -113,12 +113,14 @@ class BillingPlanView(APIView):
     def get(self, request):
         plans_data = []
         for choice_key, choice_label in PlanChoices.choices:
-            plans_data.append({
-                "plan": choice_key,
-                "name": choice_label,
-                "quotas": PLAN_QUOTAS.get(choice_key, {}),
-                "features": PLAN_FEATURES.get(choice_key, []),
-            })
+            plans_data.append(
+                {
+                    "plan": choice_key,
+                    "name": choice_label,
+                    "quotas": PLAN_QUOTAS.get(choice_key, {}),
+                    "features": PLAN_FEATURES.get(choice_key, []),
+                }
+            )
         return Response(plans_data, status=status.HTTP_200_OK)
 
 
@@ -182,7 +184,9 @@ class BillingSubscriptionView(APIView):
 
         # Only owners or admins can modify subscription
         if not organization.is_admin_or_owner(request.user):
-            raise PermissionDenied("Seul un administrateur ou propriétaire peut modifier l'abonnement.")
+            raise PermissionDenied(
+                "Seul un administrateur ou propriétaire peut modifier l'abonnement."
+            )
 
         serializer = ChangePlanSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -324,4 +328,6 @@ class AuditLogListView(generics.ListAPIView):
         if not organization.is_admin_or_owner(user):
             raise PermissionDenied("Seul un administrateur peut consulter le journal d'audit.")
 
-        return AuditLog.objects.filter(organization=organization).select_related("actor", "organization")
+        return AuditLog.objects.filter(organization=organization).select_related(
+            "actor", "organization"
+        )

@@ -130,7 +130,9 @@ class PPTXExporterTests(APITestCase):
             password="testpassword123",
         )
         self.org = Organization.objects.create(name="Slide Org", slug="slide-org")
-        OrganizationMember.objects.create(organization=self.org, user=self.user, role=RoleChoices.TEACHER)
+        OrganizationMember.objects.create(
+            organization=self.org, user=self.user, role=RoleChoices.TEACHER
+        )
         self.course = Course.objects.create(
             organization=self.org,
             created_by=self.user,
@@ -429,5 +431,7 @@ class PresentationAPITests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         # Student cannot edit
-        res_patch = self.client.patch(url, {"title": "Hacked"}, format="json", **self.student_headers)
+        res_patch = self.client.patch(
+            url, {"title": "Hacked"}, format="json", **self.student_headers
+        )
         self.assertEqual(res_patch.status_code, status.HTTP_403_FORBIDDEN)

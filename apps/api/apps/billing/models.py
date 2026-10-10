@@ -96,11 +96,19 @@ class Subscription(models.Model):
         db_index=True,
     )
     started_at = models.DateTimeField(default=timezone.now, verbose_name="Début de la période")
-    current_period_end = models.DateTimeField(null=True, blank=True, verbose_name="Fin de la période")
+    current_period_end = models.DateTimeField(
+        null=True, blank=True, verbose_name="Fin de la période"
+    )
     canceled_at = models.DateTimeField(null=True, blank=True, verbose_name="Date d'annulation")
-    billing_provider = models.CharField(max_length=50, default="mock", verbose_name="Fournisseur de facturation")
-    provider_customer_id = models.CharField(max_length=255, blank=True, default="", verbose_name="ID Client externe")
-    provider_subscription_id = models.CharField(max_length=255, blank=True, default="", verbose_name="ID Abonnement externe")
+    billing_provider = models.CharField(
+        max_length=50, default="mock", verbose_name="Fournisseur de facturation"
+    )
+    provider_customer_id = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="ID Client externe"
+    )
+    provider_subscription_id = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="ID Abonnement externe"
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Mis à jour le")
 
@@ -179,8 +187,12 @@ class AuditLog(models.Model):
         db_index=True,
     )
     action = models.CharField(max_length=100, verbose_name="Action réalisée", db_index=True)
-    resource_type = models.CharField(max_length=100, verbose_name="Type de ressource", db_index=True)
-    resource_id = models.CharField(max_length=255, blank=True, default="", verbose_name="Identifiant ressource")
+    resource_type = models.CharField(
+        max_length=100, verbose_name="Type de ressource", db_index=True
+    )
+    resource_id = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="Identifiant ressource"
+    )
     ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="Adresse IP")
     user_agent = models.TextField(blank=True, default="", verbose_name="User Agent")
     metadata = models.JSONField(default=dict, blank=True, verbose_name="Données contextuelles")

@@ -104,6 +104,7 @@ def _can_resolve_host(hostname: str | None) -> bool:
     if hostname in ("localhost", "127.0.0.1", "::1"):
         return True
     import socket
+
     try:
         socket.gethostbyname(hostname)
         return True
@@ -118,6 +119,7 @@ if (
 ):
     url = urlparse(DATABASE_URL)
     from urllib.parse import unquote
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -254,11 +256,12 @@ CELERY_QUEUES = {
     },
 }
 CELERY_TASK_ROUTES = {
-    # Heavy operations (document extraction/OCR, ingestion chunking/embeddings, audio TTS, PPTX export)
+    # Heavy operations (document extraction/OCR, ingestion chunking/embeddings, audio TTS, PPTX export, course AI generation)
     "apps.documents.tasks.*": {"queue": "heavy"},
     "apps.ingestion.tasks.*": {"queue": "heavy"},
     "apps.audio.tasks.*": {"queue": "heavy"},
     "apps.slides.tasks.*": {"queue": "heavy"},
+    "apps.courses.tasks.*": {"queue": "heavy"},
     # Lightweight tasks (notifications, maintenance, debug)
     "apps.notifications.tasks.*": {"queue": "default"},
     "config.celery.debug_task": {"queue": "default"},

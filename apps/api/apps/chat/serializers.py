@@ -51,7 +51,9 @@ class ChatMessageCreateSerializer(serializers.Serializer):
         # Support both 'content' and 'message' keys
         text = attrs.get("content") or attrs.get("message")
         if not text or not text.strip():
-            raise serializers.ValidationError({"content": "Le contenu du message ne peut pas être vide."})
+            raise serializers.ValidationError(
+                {"content": "Le contenu du message ne peut pas être vide."}
+            )
         attrs["content"] = text.strip()
         return attrs
 
@@ -138,23 +140,35 @@ class ChatSessionCreateSerializer(serializers.ModelSerializer):
 
         if org_id:
             if not Organization.objects.filter(id=org_id, members__user=user).exists():
-                raise serializers.ValidationError({"organization_id": "Organisation invalide ou accès non autorisé."})
+                raise serializers.ValidationError(
+                    {"organization_id": "Organisation invalide ou accès non autorisé."}
+                )
         else:
             # Fall back to user's first organization
             membership = user.organization_memberships.first()
             if not membership:
-                raise serializers.ValidationError({"organization_id": "Vous devez appartenir à au moins une organisation."})
+                raise serializers.ValidationError(
+                    {"organization_id": "Vous devez appartenir à au moins une organisation."}
+                )
             attrs["organization_id"] = membership.organization_id
 
         doc_id = attrs.get("document_id")
         if doc_id:
-            if not Document.objects.filter(id=doc_id, organization_id=attrs["organization_id"]).exists():
-                raise serializers.ValidationError({"document_id": "Document introuvable dans cette organisation."})
+            if not Document.objects.filter(
+                id=doc_id, organization_id=attrs["organization_id"]
+            ).exists():
+                raise serializers.ValidationError(
+                    {"document_id": "Document introuvable dans cette organisation."}
+                )
 
         course_id = attrs.get("course_id")
         if course_id:
-            if not Course.objects.filter(id=course_id, organization_id=attrs["organization_id"]).exists():
-                raise serializers.ValidationError({"course_id": "Cours introuvable dans cette organisation."})
+            if not Course.objects.filter(
+                id=course_id, organization_id=attrs["organization_id"]
+            ).exists():
+                raise serializers.ValidationError(
+                    {"course_id": "Cours introuvable dans cette organisation."}
+                )
 
         return attrs
 
@@ -165,6 +179,7 @@ class ChatSessionCreateSerializer(serializers.ModelSerializer):
 
         if initial_message and initial_message.strip():
             from .services import AITutorService
+
             tutor = AITutorService()
             tutor.process_message_sync(session=session, user_content=initial_message.strip())
 

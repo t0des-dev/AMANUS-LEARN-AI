@@ -60,6 +60,16 @@ class SectionAudioView(APIView):
 
         # Look for existing audio record for this section or create new
         audio_content = AudioContent.objects.filter(section=section).first()
+        if audio_content and audio_content.status == AudioStatus.PROCESSING:
+            return Response(
+                {
+                    "detail": "Une génération audio est déjà en cours pour cette section.",
+                    "code": "audio_generation_in_progress",
+                    "audio": AudioContentSerializer(audio_content).data,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
         if audio_content:
             audio_content.voice_provider = voice_provider
             audio_content.voice_id = voice_id
@@ -96,9 +106,7 @@ class SectionAudioView(APIView):
             raise PermissionDenied("Accès interdit à cette section.")
 
         audio_content = (
-            AudioContent.objects.filter(section=section)
-            .select_related("course", "section")
-            .first()
+            AudioContent.objects.filter(section=section).select_related("course", "section").first()
         )
         if not audio_content:
             return Response(
@@ -148,9 +156,7 @@ class AudioDetailView(APIView):
                 storage = get_storage_service()
                 storage.delete_file(audio_content.storage_key)
             except Exception as e:
-                logger.warning(
-                    f"Could not delete storage file {audio_content.storage_key}: {e}"
-                )
+                logger.warning(f"Could not delete storage file {audio_content.storage_key}: {e}")
 
         audio_content.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

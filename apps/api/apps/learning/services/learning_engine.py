@@ -67,7 +67,9 @@ class LearningEngine:
                 progress.last_position = last_position
                 if score is not None:
                     progress.score = score
-                progress.save(update_fields=["completion_percent", "last_position", "score", "updated_at"])
+                progress.save(
+                    update_fields=["completion_percent", "last_position", "score", "updated_at"]
+                )
 
             # Recalculate parent course progress
             learning_path.recalculate_progress()
@@ -103,7 +105,9 @@ class LearningEngine:
                 course=course,
                 started_at=timezone.now(),
             )
-            logger.info("Started study session %s for user %s on course %s", session.id, user.id, course.id)
+            logger.info(
+                "Started study session %s for user %s on course %s", session.id, user.id, course.id
+            )
             return session
 
     def finish_study_session(self, user: Any, session_id: UUID | str) -> StudySession:
@@ -125,8 +129,7 @@ class LearningEngine:
         total_sections = len(all_sections)
 
         progresses = {
-            p.section_id: p
-            for p in LearningProgress.objects.filter(user=user, course=course)
+            p.section_id: p for p in LearningProgress.objects.filter(user=user, course=course)
         }
 
         sections_data = []
@@ -175,29 +178,27 @@ class LearningEngine:
         """Aggregates authentic dashboard metrics calculated from actual user activity."""
         # 1. Total study time in seconds
         total_duration = (
-            StudySession.objects.filter(user=user).aggregate(models.Sum("duration"))["duration__sum"]
+            StudySession.objects.filter(user=user).aggregate(models.Sum("duration"))[
+                "duration__sum"
+            ]
             or 0
         )
 
         # 2. Enrolled / In-progress / Completed paths
         paths = list(
-            LearningPath.objects.filter(user=user)
-            .select_related("course")
-            .order_by("-updated_at")
+            LearningPath.objects.filter(user=user).select_related("course").order_by("-updated_at")
         )
         total_enrolled = len(paths)
         in_progress_count = sum(1 for p in paths if p.status == LearningPathStatus.IN_PROGRESS)
         completed_count = sum(1 for p in paths if p.status == LearningPathStatus.COMPLETED)
 
         # 3. Average score calculation across QuizAttempts and LearningProgress
-        quiz_avg = (
-            QuizAttempt.objects.filter(user=user).aggregate(models.Avg("score"))["score__avg"]
-        )
-        progress_avg = (
-            LearningProgress.objects.filter(user=user, score__isnull=False).aggregate(
-                models.Avg("score")
-            )["score__avg"]
-        )
+        quiz_avg = QuizAttempt.objects.filter(user=user).aggregate(models.Avg("score"))[
+            "score__avg"
+        ]
+        progress_avg = LearningProgress.objects.filter(user=user, score__isnull=False).aggregate(
+            models.Avg("score")
+        )["score__avg"]
 
         valid_scores = [s for s in (quiz_avg, progress_avg) if s is not None]
         overall_average_score = (
@@ -251,7 +252,9 @@ class LearningEngine:
             "recommended_revision": recommended_revision,
         }
 
-    def _find_continue_learning(self, user: Any, paths: list[LearningPath]) -> dict[str, Any] | None:
+    def _find_continue_learning(
+        self, user: Any, paths: list[LearningPath]
+    ) -> dict[str, Any] | None:
         """Determines the exact course and chapter the student should continue."""
         # Check active paths first
         active_paths = [p for p in paths if p.status == LearningPathStatus.IN_PROGRESS] or paths

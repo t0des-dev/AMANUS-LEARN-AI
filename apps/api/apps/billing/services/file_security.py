@@ -11,17 +11,51 @@ from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
 DANGEROUS_EXTENSIONS = {
-    ".exe", ".bat", ".cmd", ".sh", ".bash", ".ps1", ".vbs",
-    ".php", ".phtml", ".php3", ".php4", ".php5", ".phps",
-    ".py", ".pyc", ".rb", ".pl", ".cgi",
-    ".js", ".jsp", ".jspx", ".asp", ".aspx", ".cfm",
-    ".dll", ".so", ".dylib", ".bin", ".jar",
-    ".html", ".htm", ".xhtml", ".svg",  # SVG can contain embedded XSS
+    ".exe",
+    ".bat",
+    ".cmd",
+    ".sh",
+    ".bash",
+    ".ps1",
+    ".vbs",
+    ".php",
+    ".phtml",
+    ".php3",
+    ".php4",
+    ".php5",
+    ".phps",
+    ".py",
+    ".pyc",
+    ".rb",
+    ".pl",
+    ".cgi",
+    ".js",
+    ".jsp",
+    ".jspx",
+    ".asp",
+    ".aspx",
+    ".cfm",
+    ".dll",
+    ".so",
+    ".dylib",
+    ".bin",
+    ".jar",
+    ".html",
+    ".htm",
+    ".xhtml",
+    ".svg",  # SVG can contain embedded XSS
 }
 
 DEFAULT_ALLOWED_EXTENSIONS = {
-    ".pdf", ".docx", ".pptx", ".txt", ".md",
-    ".mp3", ".wav", ".m4a", ".ogg",
+    ".pdf",
+    ".docx",
+    ".pptx",
+    ".txt",
+    ".md",
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".ogg",
 }
 
 MIME_SIGNATURES: dict[str, list[bytes]] = {
@@ -64,21 +98,27 @@ def validate_file_security(
 
     # 1. Path traversal / null byte check
     if "\x00" in original_name or "/" in original_name or "\\" in original_name:
-        raise ValidationError({"file": "Nom de fichier invalide (tentative de traversée détectée)."})
+        raise ValidationError(
+            {"file": "Nom de fichier invalide (tentative de traversée détectée)."}
+        )
 
     extension = Path(sanitized).suffix.lower()
 
     # 2. Block dangerous executable extensions immediately
     if extension in DANGEROUS_EXTENSIONS:
         raise ValidationError(
-            {"file": f"Le type de fichier '{extension}' est strictement interdit pour des raisons de sécurité."}
+            {
+                "file": f"Le type de fichier '{extension}' est strictement interdit pour des raisons de sécurité."
+            }
         )
 
     # 3. Verify against allowed extensions
     allowed = allowed_extensions or DEFAULT_ALLOWED_EXTENSIONS
     if extension not in allowed:
         raise ValidationError(
-            {"file": f"Extension non supportée '{extension}'. Extensions autorisées : {', '.join(sorted(allowed))}."}
+            {
+                "file": f"Extension non supportée '{extension}'. Extensions autorisées : {', '.join(sorted(allowed))}."
+            }
         )
 
     # 4. Size validation
@@ -88,7 +128,9 @@ def validate_file_security(
         raise ValidationError({"file": "Le fichier est vide (0 octet)."})
     if size > max_size:
         max_mb = max_size / (1024 * 1024)
-        raise ValidationError({"file": f"Fichier trop volumineux. La limite maximale est de {max_mb:.0f} Mo."})
+        raise ValidationError(
+            {"file": f"Fichier trop volumineux. La limite maximale est de {max_mb:.0f} Mo."}
+        )
 
     # 5. Magic Byte validation
     signatures = MIME_SIGNATURES.get(extension)
@@ -101,7 +143,9 @@ def validate_file_security(
         matches = any(header.startswith(sig) for sig in signatures)
         if not matches:
             raise ValidationError(
-                {"file": f"Le contenu binaire ne correspond pas à la signature attendue pour '{extension}'."}
+                {
+                    "file": f"Le contenu binaire ne correspond pas à la signature attendue pour '{extension}'."
+                }
             )
 
     return True

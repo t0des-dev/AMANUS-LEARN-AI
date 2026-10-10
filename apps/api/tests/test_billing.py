@@ -74,6 +74,7 @@ def other_org(db, other_user):
 # Billing Plans Tests
 # ==============================================================================
 
+
 @pytest.mark.django_db
 class TestBillingPlanAPI:
     def test_list_plans_public(self, api_client):
@@ -105,6 +106,7 @@ class TestBillingPlanAPI:
 # ==============================================================================
 # Subscription Tests
 # ==============================================================================
+
 
 @pytest.mark.django_db
 class TestBillingSubscriptionAPI:
@@ -155,11 +157,14 @@ class TestBillingSubscriptionAPI:
 # Quota Service Tests
 # ==============================================================================
 
+
 @pytest.mark.django_db
 class TestQuotaService:
     def test_check_quota_within_limit(self, organization):
         # Free plan: 5 documents
-        is_allowed, current, limit = QuotaService.check_quota(organization, UsageMetric.DOCUMENTS, amount=1)
+        is_allowed, current, limit = QuotaService.check_quota(
+            organization, UsageMetric.DOCUMENTS, amount=1
+        )
         assert is_allowed is True
         assert current == 0
         assert limit == 5
@@ -185,7 +190,9 @@ class TestQuotaService:
 
         # Should never fail even with huge amount
         QuotaService.check_and_increment(organization, UsageMetric.TOKENS, amount=999_999_999)
-        is_allowed, current, limit = QuotaService.check_quota(organization, UsageMetric.TOKENS, amount=1_000_000)
+        is_allowed, current, limit = QuotaService.check_quota(
+            organization, UsageMetric.TOKENS, amount=1_000_000
+        )
         assert is_allowed is True
         assert limit == -1
 
@@ -210,6 +217,7 @@ class TestQuotaService:
 # Usage API Tests
 # ==============================================================================
 
+
 @pytest.mark.django_db
 class TestBillingUsageAPI:
     def test_get_usage_endpoint(self, api_client, owner_user, organization):
@@ -229,6 +237,7 @@ class TestBillingUsageAPI:
 # ==============================================================================
 # Audit Log Tests
 # ==============================================================================
+
 
 @pytest.mark.django_db
 class TestAuditLogService:
@@ -271,6 +280,7 @@ class TestAuditLogService:
 # File Security Tests
 # ==============================================================================
 
+
 class TestFileSecurity:
     def test_sanitize_filename(self):
         assert sanitize_filename("../../../etc/passwd") == "passwd"
@@ -278,23 +288,31 @@ class TestFileSecurity:
         assert sanitize_filename("file\x00withnull.docx") == "filewithnull.docx"
 
     def test_reject_executable_extensions(self):
-        fake_file = SimpleUploadedFile("malware.exe", b"MZ\x90\x00\x03\x00", content_type="application/x-msdownload")
+        fake_file = SimpleUploadedFile(
+            "malware.exe", b"MZ\x90\x00\x03\x00", content_type="application/x-msdownload"
+        )
         with pytest.raises(ValidationError) as exc:
             validate_file_security(fake_file)
         assert "strictement interdit" in str(exc.value)
 
     def test_reject_shell_script(self):
-        fake_file = SimpleUploadedFile("script.sh", b"#!/bin/bash\nrm -rf /", content_type="text/x-sh")
+        fake_file = SimpleUploadedFile(
+            "script.sh", b"#!/bin/bash\nrm -rf /", content_type="text/x-sh"
+        )
         with pytest.raises(ValidationError) as exc:
             validate_file_security(fake_file)
         assert "strictement interdit" in str(exc.value)
 
     def test_valid_pdf_magic_bytes(self):
-        valid_pdf = SimpleUploadedFile("course.pdf", b"%PDF-1.4 sample content", content_type="application/pdf")
+        valid_pdf = SimpleUploadedFile(
+            "course.pdf", b"%PDF-1.4 sample content", content_type="application/pdf"
+        )
         assert validate_file_security(valid_pdf) is True
 
     def test_invalid_pdf_spoofing(self):
-        fake_pdf = SimpleUploadedFile("fake.pdf", b"NOT A PDF HEADER", content_type="application/pdf")
+        fake_pdf = SimpleUploadedFile(
+            "fake.pdf", b"NOT A PDF HEADER", content_type="application/pdf"
+        )
         with pytest.raises(ValidationError) as exc:
             validate_file_security(fake_pdf)
         assert "signature attendue" in str(exc.value)
@@ -303,6 +321,7 @@ class TestFileSecurity:
 # ==============================================================================
 # System Health Probe Tests
 # ==============================================================================
+
 
 @pytest.mark.django_db
 class TestSystemHealthProbe:

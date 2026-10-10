@@ -51,10 +51,54 @@ class GenerationService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
     ) -> AIGeneration:
         """Executes generation pipeline with full audit persistence in AIGeneration."""
         provider = self.default_provider or get_ai_provider(provider_name)
         active_model = model or getattr(provider, "default_model", "default")
+        generator = self.get_generator(generation_type)
+        prompt_version = getattr(generator, "prompt_version", "v1.0")
+
+        # Check tenant-isolated cache if opted in
+        cache_fingerprint = None
+        org_id = str(document.organization_id)
+        if use_cache:
+            from .orchestration.cache_service import GenerationCacheService
+
+            doc_updated = getattr(document, "updated_at", None)
+            content_key = (
+                f"{document.id}:{doc_updated.isoformat() if doc_updated else ''}:{focus or ''}"
+            )
+            cache_fingerprint = GenerationCacheService.compute_fingerprint(
+                organization_id=org_id,
+                resource_type=generation_type,
+                content=content_key,
+                prompt_version=prompt_version,
+                model=active_model,
+                language=language or "fr",
+                extra_params={"level": level, "top_k": top_k},
+            )
+            cached_data = GenerationCacheService.get_cached(org_id, cache_fingerprint)
+            if cached_data:
+                logger.info(
+                    "Returning cached generation for doc %s type %s", document.id, generation_type
+                )
+                return AIGeneration.objects.create(
+                    organization=document.organization,
+                    user=user if getattr(user, "is_authenticated", False) else None,
+                    document=document,
+                    type=generation_type,
+                    provider=getattr(provider, "name", "mock") + "-cached",
+                    model=active_model,
+                    prompt_version=prompt_version,
+                    status=GenerationStatus.SUCCESS,
+                    result=cached_data.get("result", {}),
+                    input_tokens=0,
+                    output_tokens=0,
+                    error="",
+                )
 
         # 1. Initialize audit record in DB with PENDING status
         generation_record = AIGeneration.objects.create(
@@ -70,8 +114,6 @@ class GenerationService:
             error="",
         )
 
-        generator = self.get_generator(generation_type)
-
         try:
             # 2. Run generation with RAG retrieval and strict safeguards
             structured_result, ai_response, prompt_version = generator.generate(
@@ -80,6 +122,8 @@ class GenerationService:
                 model=model,
                 focus=focus,
                 top_k=top_k,
+                language=language,
+                level=level,
             )
 
             # 3. Persist success audit
@@ -99,6 +143,15 @@ class GenerationService:
                     "prompt_version",
                 ]
             )
+
+            if use_cache and cache_fingerprint:
+                from .orchestration.cache_service import GenerationCacheService
+
+                GenerationCacheService.set_cached(
+                    organization_id=org_id,
+                    fingerprint=cache_fingerprint,
+                    result_data={"result": structured_result},
+                )
 
             logger.info(
                 "AIGeneration %s [%s] completed successfully for doc %s (in: %s, out: %s tokens)",
@@ -140,6 +193,9 @@ class GenerationService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
     ) -> AIGeneration:
         return self.generate(
             document=document,
@@ -149,6 +205,9 @@ class GenerationService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
         )
 
     def generate_key_points(
@@ -159,6 +218,9 @@ class GenerationService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
     ) -> AIGeneration:
         return self.generate(
             document=document,
@@ -168,6 +230,9 @@ class GenerationService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
         )
 
     def generate_objectives(
@@ -178,6 +243,9 @@ class GenerationService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
     ) -> AIGeneration:
         return self.generate(
             document=document,
@@ -187,6 +255,9 @@ class GenerationService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
         )
 
     def generate_lesson(
@@ -197,6 +268,9 @@ class GenerationService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
     ) -> AIGeneration:
         return self.generate(
             document=document,
@@ -206,6 +280,9 @@ class GenerationService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
         )
 
     def generate_revision_sheet(
@@ -216,6 +293,9 @@ class GenerationService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
     ) -> AIGeneration:
         return self.generate(
             document=document,
@@ -225,4 +305,7 @@ class GenerationService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
         )

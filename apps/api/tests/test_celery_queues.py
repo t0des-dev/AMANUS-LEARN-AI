@@ -46,7 +46,9 @@ class TestCeleryQueueArchitecture:
             queue_name = route.get("queue")
             if hasattr(queue_name, "name"):
                 queue_name = queue_name.name
-            assert queue_name == "heavy", f"Expected task {task_name} to route to 'heavy', got {queue_name}"
+            assert queue_name == "heavy", (
+                f"Expected task {task_name} to route to 'heavy', got {queue_name}"
+            )
 
     def test_router_routes_lightweight_tasks_to_default_queue(self):
         """Celery AMQP router routes notifications to 'default' queue."""
@@ -61,4 +63,6 @@ class TestCeleryQueueArchitecture:
             queue_name = route.get("queue")
             if hasattr(queue_name, "name"):
                 queue_name = queue_name.name
-            assert queue_name == "default", f"Expected task {task_name} to route to 'default', got {queue_name}"
+            assert queue_name == "default", (
+                f"Expected task {task_name} to route to 'default', got {queue_name}"
+            )

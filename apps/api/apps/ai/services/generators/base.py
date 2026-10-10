@@ -136,6 +136,8 @@ class BaseGenerator(abc.ABC):
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
     ) -> tuple[dict[str, Any], AIResponse, str]:
         """Executes full generation flow:
 
@@ -151,10 +153,21 @@ class BaseGenerator(abc.ABC):
             top_k=top_k,
         )
 
-        # Step 2: Build prompts
+        resolved_lang = (
+            language
+            or getattr(document, "detected_language", None)
+            or getattr(document, "language", None)
+            or "fr"
+        )
+        resolved_level = level or "BEGINNER"
+
+        # Step 2: Build prompts with multilingual and level adaptation
         system_inst, user_prompt, prompt_version = self.get_prompts(
             document_title=document.title,
             context=context,
+            language=resolved_lang,
+            level=resolved_level,
+            focus=focus,
         )
 
         # Step 3: Invoke AI Provider (Strictly structured JSON)
@@ -170,15 +183,30 @@ class BaseGenerator(abc.ABC):
         if ai_response.parsed_json and isinstance(ai_response.parsed_json, dict):
             result_data = dict(ai_response.parsed_json)
         else:
+            raw_text = (ai_response.content or "").strip()
+            # Clean markdown codeblocks ```json ... ``` if present
+            if raw_text.startswith("```"):
+                import re
+
+                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.IGNORECASE)
+                raw_text = re.sub(r"\s*```$", "", raw_text)
             try:
-                result_data = json.loads(ai_response.content)
-            except Exception:
+                result_data = json.loads(raw_text)
+                if not isinstance(result_data, dict):
+                    result_data = {"raw_content": raw_text}
+            except Exception as parse_err:
+                logger.warning(
+                    "JSON parsing failed for AI response: %s. Storing raw content.",
+                    parse_err,
+                )
                 result_data = {"raw_content": ai_response.content}
 
-        # Inject sources and citations audit
+        # Inject sources, citations, language and level audit
         result_data["citations"] = citations
         result_data["sources_summary"] = sources_summary
         result_data["document_id"] = str(document.id)
         result_data["document_title"] = document.title
+        result_data["language"] = resolved_lang
+        result_data["level"] = resolved_level
 
         return result_data, ai_response, prompt_version

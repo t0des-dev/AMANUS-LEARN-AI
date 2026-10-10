@@ -188,7 +188,64 @@ class CourseGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        from apps.ai.services.orchestration import (
+            ConcurrentGenerationConflictError,
+            GenerationLock,
+            IdempotencyManager,
+        )
+
+        idempotency_key = request.headers.get("Idempotency-Key") or request.query_params.get(
+            "idempotency_key"
+        )
+        if idempotency_key:
+            cached_res = IdempotencyManager.get_existing_result(idempotency_key)
+            if cached_res:
+                return Response(cached_res, status=status.HTTP_200_OK)
+
+        # Concurrency guard
+        try:
+            GenerationLock.acquire(
+                "course", str(course.id), owner_id=str(request.user.id if request.user else "anon")
+            )
+        except ConcurrentGenerationConflictError as lock_err:
+            return Response(
+                {
+                    "detail": str(lock_err),
+                    "code": "generation_in_progress",
+                    "course_id": str(course.id),
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
         builder = CourseBuilderService()
+        if data.get("async_mode"):
+            from apps.courses.tasks import generate_course_task
+
+            task = generate_course_task.delay(
+                course_id=str(course.id),
+                document_id=str(document.id),
+                user_id=request.user.id if request.user else None,
+                provider=data.get("provider"),
+                model=data.get("model"),
+                focus=data.get("focus"),
+                top_k=data.get("top_k", 10),
+                language=data.get("language"),
+                level=data.get("level"),
+                preserve_existing=data.get("preserve_existing", False),
+            )
+            response_payload = {
+                "status": "PENDING",
+                "task_id": task.id,
+                "course_id": str(course.id),
+                "message": "Génération du cours initiée en arrière-plan.",
+            }
+            if idempotency_key:
+                IdempotencyManager.record_result(idempotency_key, response_payload)
+            return Response(
+                response_payload,
+                status=status.HTTP_202_ACCEPTED,
+            )
+
         try:
             updated_course = builder.generate_course_from_document(
                 course=course,
@@ -198,8 +255,13 @@ class CourseGenerateView(APIView):
                 model=data.get("model"),
                 focus=data.get("focus"),
                 top_k=data.get("top_k", 10),
+                language=data.get("language"),
+                level=data.get("level"),
+                preserve_existing=data.get("preserve_existing", False),
             )
             out_serializer = CourseDetailSerializer(updated_course)
+            if idempotency_key:
+                IdempotencyManager.record_result(idempotency_key, out_serializer.data)
             return Response(out_serializer.data, status=status.HTTP_200_OK)
 
         except Exception as exc:
@@ -211,3 +273,5 @@ class CourseGenerateView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        finally:
+            GenerationLock.release("course", str(course.id))

@@ -51,7 +51,9 @@ class ChatSessionListCreateView(generics.ListCreateAPIView):
         org_id = self.request.query_params.get("organization_id")
         if org_id:
             if not Organization.objects.filter(id=org_id, members__user=user).exists():
-                raise PermissionDenied("Vous n'avez pas accès aux conversations de cette organisation.")
+                raise PermissionDenied(
+                    "Vous n'avez pas accès aux conversations de cette organisation."
+                )
             qs = qs.filter(organization_id=org_id)
 
         doc_id = self.request.query_params.get("document_id")
@@ -92,9 +94,9 @@ class ChatMessageCreateView(APIView):
 
     def post(self, request, id):
         session = get_object_or_404(
-            ChatSession.objects.filter(
-                organization__members__user=request.user
-            ).select_related("organization", "document"),
+            ChatSession.objects.filter(organization__members__user=request.user).select_related(
+                "organization", "document"
+            ),
             id=id,
         )
         self.check_object_permissions(request, session)
@@ -105,10 +107,9 @@ class ChatMessageCreateView(APIView):
         content = serializer.validated_data["content"]
         command = serializer.validated_data.get("command")
         document_id = serializer.validated_data.get("document_id")
-        is_stream = (
-            serializer.validated_data.get("stream", False)
-            or request.query_params.get("stream", "").lower() in ("1", "true")
-        )
+        is_stream = serializer.validated_data.get("stream", False) or request.query_params.get(
+            "stream", ""
+        ).lower() in ("1", "true")
 
         tutor = AITutorService()
 

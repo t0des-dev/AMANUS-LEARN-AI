@@ -26,15 +26,15 @@ class AnalyticsService:
         """Calculates exhaustive individual student analytics."""
         # 1. Total study duration
         total_study_time = (
-            StudySession.objects.filter(user=user).aggregate(models.Sum("duration"))["duration__sum"]
+            StudySession.objects.filter(user=user).aggregate(models.Sum("duration"))[
+                "duration__sum"
+            ]
             or 0
         )
 
         # 2. Courses metrics
         paths = list(
-            LearningPath.objects.filter(user=user)
-            .select_related("course")
-            .order_by("-updated_at")
+            LearningPath.objects.filter(user=user).select_related("course").order_by("-updated_at")
         )
         enrolled_count = len(paths)
         completed_courses = sum(1 for p in paths if p.status == LearningPathStatus.COMPLETED)
@@ -46,9 +46,7 @@ class AnalyticsService:
 
         # 3. Quiz & Assessment metrics
         attempts = list(
-            QuizAttempt.objects.filter(user=user)
-            .select_related("quiz")
-            .order_by("-started_at")
+            QuizAttempt.objects.filter(user=user).select_related("quiz").order_by("-started_at")
         )
         quizzes_taken = len(attempts)
         passed_quizzes = sum(1 for a in attempts if a.passed)
@@ -64,10 +62,13 @@ class AnalyticsService:
         study_time_by_day = []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
-            day_sessions = StudySession.objects.filter(
-                user=user,
-                started_at__date=day,
-            ).aggregate(models.Sum("duration"))["duration__sum"] or 0
+            day_sessions = (
+                StudySession.objects.filter(
+                    user=user,
+                    started_at__date=day,
+                ).aggregate(models.Sum("duration"))["duration__sum"]
+                or 0
+            )
             study_time_by_day.append(
                 {
                     "date": day.strftime("%Y-%m-%d"),
@@ -134,7 +135,9 @@ class AnalyticsService:
 
         # 2. Total study duration on this course
         total_study_time = (
-            StudySession.objects.filter(course=course).aggregate(models.Sum("duration"))["duration__sum"]
+            StudySession.objects.filter(course=course).aggregate(models.Sum("duration"))[
+                "duration__sum"
+            ]
             or 0
         )
 
@@ -161,16 +164,17 @@ class AnalyticsService:
             completed_sec_count = sum(1 for p in sec_progresses if p.completion_percent >= 100.0)
 
             comp_rate = (
-                round((completed_sec_count / total_students) * 100, 1) if total_students > 0 else 0.0
+                round((completed_sec_count / total_students) * 100, 1)
+                if total_students > 0
+                else 0.0
             )
 
             scores = [p.score for p in sec_progresses if p.score is not None]
             avg_sec_score = round(sum(scores) / len(scores), 1) if scores else None
 
             # Mark as problematic if low completion rate (< 50%) or low score (< 60%)
-            is_problematic = (
-                (comp_rate < 50.0 and total_students > 0)
-                or (avg_sec_score is not None and avg_sec_score < 60.0)
+            is_problematic = (comp_rate < 50.0 and total_students > 0) or (
+                avg_sec_score is not None and avg_sec_score < 60.0
             )
 
             chapter_data = {
@@ -188,7 +192,10 @@ class AnalyticsService:
 
         # Sort with highest concern first
         problematic_chapters.sort(
-            key=lambda x: (x["average_score"] if x["average_score"] is not None else 100.0, x["completion_rate"])
+            key=lambda x: (
+                x["average_score"] if x["average_score"] is not None else 100.0,
+                x["completion_rate"],
+            )
         )
 
         return {
@@ -220,18 +227,16 @@ class AnalyticsService:
             u = p.user
             # Total study time for this student on this course
             u_duration = (
-                StudySession.objects.filter(user=u, course=course).aggregate(models.Sum("duration"))[
-                    "duration__sum"
-                ]
+                StudySession.objects.filter(user=u, course=course).aggregate(
+                    models.Sum("duration")
+                )["duration__sum"]
                 or 0
             )
 
             # Quiz scores for this course
             u_attempts = list(QuizAttempt.objects.filter(user=u, quiz__course=course))
             u_score = (
-                round(sum(a.score for a in u_attempts) / len(u_attempts), 1)
-                if u_attempts
-                else None
+                round(sum(a.score for a in u_attempts) / len(u_attempts), 1) if u_attempts else None
             )
 
             students_perf.append(
@@ -260,9 +265,7 @@ class AnalyticsService:
             round(sum(a.score for a in attempts) / total_attempts, 1) if total_attempts > 0 else 0.0
         )
         passed_count = sum(1 for a in attempts if a.passed)
-        pass_rate = (
-            round((passed_count / total_attempts) * 100, 1) if total_attempts > 0 else 0.0
-        )
+        pass_rate = round((passed_count / total_attempts) * 100, 1) if total_attempts > 0 else 0.0
 
         # Compute question difficulties from answers_data
         questions = list(quiz.questions.all().order_by("order"))

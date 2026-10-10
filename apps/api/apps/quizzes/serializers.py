@@ -27,9 +27,14 @@ class QuizAnswerStudentSerializer(serializers.ModelSerializer):
 
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
-    """Question serializer with answers and pedagogical explanations."""
+    """Question serializer with answers and pedagogical explanations.
+
+    Protects both correct answers and explanations from premature leakage to students
+    before they submit their attempt.
+    """
 
     answers = serializers.SerializerMethodField()
+    explanation = serializers.SerializerMethodField()
 
     class Meta:
         model = QuizQuestion
@@ -44,9 +49,8 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
-    def get_answers(self, obj: QuizQuestion):
+    def _should_reveal(self, obj: QuizQuestion) -> bool:
         request = self.context.get("request")
-        # If user is teacher/admin or reviewing results, show is_correct
         is_teacher = False
         if request and request.user and request.user.is_authenticated:
             org = obj.quiz.organization
@@ -54,11 +58,17 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
             if role in (RoleChoices.OWNER, RoleChoices.ADMIN, RoleChoices.TEACHER):
                 is_teacher = True
 
-        show_answers = self.context.get("reveal_correct", False) or is_teacher
+        return bool(self.context.get("reveal_correct", False) or is_teacher)
 
-        if show_answers:
+    def get_answers(self, obj: QuizQuestion):
+        if self._should_reveal(obj):
             return QuizAnswerSerializer(obj.answers.all(), many=True).data
         return QuizAnswerStudentSerializer(obj.answers.all(), many=True).data
+
+    def get_explanation(self, obj: QuizQuestion):
+        if self._should_reveal(obj):
+            return obj.explanation
+        return ""
 
 
 class QuizListSerializer(serializers.ModelSerializer):
@@ -178,6 +188,13 @@ class QuizGenerateRequestSerializer(serializers.Serializer):
         min_value=1,
         max_value=25,
         help_text="Nombre d'extraits RAG à analyser",
+    )
+    language = serializers.CharField(
+        required=False,
+        default=None,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Langue cible pour la génération (fr, ar, en)",
     )
 
 

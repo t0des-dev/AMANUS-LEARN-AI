@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 @shared_task(bind=True, queue="heavy", max_retries=3, default_retry_delay=10)
 def export_presentation_task(self, presentation_id: str):
     """Celery background task for asynchronous PPTX export."""
-    logger.info("[Celery] Starting asynchronous PPTX export task for Presentation %s", presentation_id)
+    logger.info(
+        "[Celery] Starting asynchronous PPTX export task for Presentation %s", presentation_id
+    )
     try:
         presentation = Presentation.objects.get(id=presentation_id)
         exporter = PPTXExporter()

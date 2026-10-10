@@ -1,8 +1,11 @@
 import logging
 from typing import Any
 
+from django.db import transaction
+
 from apps.ai.services import AIService
-from apps.courses.models import Course, CourseSection
+from apps.courses.models import Course, CourseLevel, CourseSection
+from apps.courses.services.validator import CoursePayloadValidator
 from apps.documents.models import Document
 from apps.ingestion.models import DocumentChunk
 
@@ -11,16 +14,32 @@ logger = logging.getLogger(__name__)
 
 class CourseBuilderService:
     """Transforms analyzed document content and RAG extractions into a complete,
-
     hierarchical course structure:
-    Course -> Chapter -> Section -> Lesson.
+    Course -> Chapter -> Section / Lesson.
 
-    Crucial Rule: All generated content is immediately mutable and editable by teachers.
-    AI output is never treated as static or immutable.
+    Crucial Rules:
+    1. All generated content is immediately mutable and editable by teachers.
+    2. Strict validation and normalization ensures resilient, pedagogical output.
+    3. Structural chapters from document metadata and multilingual headings (FR, AR, EN)
+       are respected.
+    4. Database changes are wrapped in atomic transactions to prevent partial or destructive state.
     """
 
-    def __init__(self, ai_service: AIService | None = None):
-        self.ai_service = ai_service or AIService()
+    def __init__(
+        self,
+        ai_service: AIService | None = None,
+        validator: CoursePayloadValidator | None = None,
+        provider: Any | None = None,
+    ):
+        if provider is not None:
+            self.ai_service = AIService(provider=provider)
+        else:
+            self.ai_service = ai_service or AIService()
+        self.validator = validator or CoursePayloadValidator()
+
+    def generate_from_document(self, *args: Any, **kwargs: Any) -> Course:
+        """Convenience alias for generate_course_from_document."""
+        return self.generate_course_from_document(*args, **kwargs)
 
     def generate_course_from_document(
         self,
@@ -31,9 +50,28 @@ class CourseBuilderService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 10,
+        language: str | None = None,
+        level: str | None = None,
+        preserve_existing: bool = False,
     ) -> Course:
         """Executes RAG-driven AI generation and materializes hierarchical CourseSections."""
-        logger.info("Building course %s from analyzed document %s", course.id, document.id)
+        logger.info(
+            "Building course %s from analyzed document %s (lang=%s, level=%s, preserve=%s)",
+            course.id,
+            document.id,
+            language,
+            level,
+            preserve_existing,
+        )
+
+        target_lang = (
+            language
+            or getattr(course, "language", None)
+            or getattr(document, "detected_language", None)
+            or getattr(document, "language", None)
+            or "fr"
+        )
+        target_level = level or getattr(course, "level", None) or CourseLevel.BEGINNER
 
         # 1. Trigger AI Course generation using AIService facade
         ai_generation = self.ai_service.generate_course(
@@ -43,23 +81,13 @@ class CourseBuilderService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=target_lang,
+            level=target_level,
         )
 
         result_data = ai_generation.result or {}
 
-        # 2. Update course metadata if appropriate
-        generated_title = result_data.get("title")
-        if generated_title and (not course.title or course.title.startswith("Nouveau cours")):
-            course.title = generated_title
-
-        intro_text = result_data.get("introduction", "")
-        if intro_text and not course.description:
-            course.description = intro_text[:500]
-
-        course.document = document
-        course.save(update_fields=["title", "description", "document"])
-
-        # 3. Analyze document chunk metadata to identify existing chapters/sections
+        # 2. Extract document chunk metadata to identify existing chapters/sections
         doc_chunks = (
             DocumentChunk.objects.filter(document=document)
             .order_by("chunk_index")
@@ -69,114 +97,77 @@ class CourseBuilderService:
         identified_chapters: dict[str, list[dict[str, Any]]] = {}
         for c in doc_chunks:
             meta = c.get("metadata") or {}
-            chap = meta.get("chapter") or "Chapitre Général"
+            chap = meta.get("chapter")
             sec = meta.get("section") or "Généralités"
-            if chap not in identified_chapters:
-                identified_chapters[chap] = []
-            identified_chapters[chap].append({"section": sec, "content": c.get("content", "")})
+            if chap:
+                if chap not in identified_chapters:
+                    identified_chapters[chap] = []
+                identified_chapters[chap].append({"section": sec, "content": c.get("content", "")})
 
-        # 4. Construct hierarchical outline: Course -> Chapter -> Section -> Lesson
-        sections_data = result_data.get("sections", [])
-        if not sections_data:
-            # Fallback structure from document or default intro
-            sections_data = [
-                {
-                    "title": "Fondements et Concepts Clés",
-                    "content": intro_text or "Introduction détaillée au contenu du cours.",
-                },
-                {
-                    "title": "Applications Pratiques et Méthodologie",
-                    "content": "Développement des notions et cas d'usage pratiques.",
-                },
-            ]
-
-        # Clear existing draft sections if regenerating
-        course.sections.all().delete()
-
-        chapter_order = 0
-
-        # Chapter 1: Introduction & Fondements (Level 1)
-        chap1 = CourseSection.objects.create(
-            course=course,
-            parent=None,
-            title="Chapitre 1 : Introduction & Fondements",
-            order=chapter_order,
-            summary=result_data.get("introduction", "Présentation des objectifs et du contexte."),
-            estimated_minutes=30,
-        )
-        chapter_order += 1
-
-        # Section under Chapter 1 (Level 2)
-        sec1 = CourseSection.objects.create(
-            course=course,
-            parent=chap1,
-            title="Section 1.1 : Vue d'ensemble du domaine",
-            order=0,
-            summary="Synthèse conceptuelle et cadre général.",
-            estimated_minutes=15,
+        # 3. Validate and normalize the course blueprint
+        validated_blueprint = self.validator.validate_and_normalize(
+            raw_data=result_data,
+            language=target_lang,
+            default_level=target_level,
+            identified_chapters=identified_chapters if len(identified_chapters) > 1 else None,
         )
 
-        # Lessons under Section 1.1 (Level 3)
-        lesson_order = 0
-        for s_idx, sec in enumerate(sections_data):
-            CourseSection.objects.create(
-                course=course,
-                parent=sec1,
-                title=f"Leçon 1.1.{lesson_order + 1} : {sec.get('title', f'Module {s_idx + 1}')}",
-                order=lesson_order,
-                content=sec.get("content", ""),
-                summary=f"Étude approfondie de : {sec.get('title', '')}",
-                objectives=[
-                    f"Comprendre les éléments clés de {sec.get('title', '')}",
-                    "Être capable d'appliquer les concepts dans un contexte pratique",
-                ],
-                estimated_minutes=15,
-            )
-            lesson_order += 1
+        # 4. Atomic database persistence
+        with transaction.atomic():
+            # Update Course metadata
+            gen_title = validated_blueprint.get("title")
+            if gen_title and (
+                not course.title
+                or course.title.startswith("Nouveau cours")
+                or course.title.startswith("New course")
+                or course.title.startswith("دورة جديدة")
+            ):
+                course.title = gen_title
 
-        # Chapter 2: Approfondissement & Pratique (Level 1)
-        chap2 = CourseSection.objects.create(
-            course=course,
-            parent=None,
-            title="Chapitre 2 : Approfondissement & Études de cas",
-            order=chapter_order,
-            summary="Mise en pratique des compétences et analyse des cas d'usage.",
-            estimated_minutes=45,
-        )
-        chapter_order += 1
+            gen_desc = validated_blueprint.get("description")
+            if gen_desc and not course.description:
+                course.description = gen_desc[:500]
 
-        sec2 = CourseSection.objects.create(
-            course=course,
-            parent=chap2,
-            title="Section 2.1 : Mise en œuvre et applications",
-            order=0,
-            summary="Exercices et scénarios d'application directe.",
-            estimated_minutes=25,
-        )
+            course.level = validated_blueprint.get("level", target_level)
+            course.language = target_lang
+            course.document = document
+            course.save(update_fields=["title", "description", "level", "language", "document"])
 
-        CourseSection.objects.create(
-            course=course,
-            parent=sec2,
-            title="Leçon 2.1.1 : Analyse méthodologique et synthèse",
-            order=0,
-            content=(
-                result_data.get(
-                    "conclusion",
-                    "Synthèse pédagogique et consolidation des connaissances acquises.",
+            # Manage existing sections
+            if not preserve_existing:
+                course.sections.all().delete()
+                chapter_order = 0
+            else:
+                chapter_order = course.sections.filter(parent__isnull=True).count()
+
+            # 5. Materialize hierarchical Chapters -> Lessons
+            chapters_data = validated_blueprint.get("chapters", [])
+            for ch_idx, ch_data in enumerate(chapters_data):
+                chap_obj = CourseSection.objects.create(
+                    course=course,
+                    parent=None,
+                    title=ch_data["title"],
+                    order=chapter_order,
+                    summary=ch_data.get("summary", ""),
+                    estimated_minutes=ch_data.get("estimated_minutes", 30),
                 )
-                + "\n\n"
-                + result_data.get("sources_summary", "")
-            ),
-            summary="Bilan des compétences acquises et révision finale.",
-            objectives=[
-                "Analyser les résultats et identifier les points de vigilance",
-                "Évaluer son niveau de maîtrise du cours",
-            ],
-            estimated_minutes=20,
-        )
+                chapter_order += 1
+
+                lessons_data = ch_data.get("sections", [])
+                for l_idx, l_data in enumerate(lessons_data):
+                    CourseSection.objects.create(
+                        course=course,
+                        parent=chap_obj,
+                        title=l_data["title"],
+                        order=l_idx,
+                        content=l_data.get("content", ""),
+                        summary=l_data.get("summary", ""),
+                        objectives=l_data.get("objectives", []),
+                        estimated_minutes=l_data.get("estimated_minutes", 15),
+                    )
 
         logger.info(
-            "Course %s populated with %s total hierarchical sections",
+            "Course %s successfully populated with %s total hierarchical sections",
             course.id,
             course.sections.count(),
         )

@@ -5,7 +5,15 @@ from .models import LearningPath, LearningProgress, StudySession
 
 @admin.register(LearningPath)
 class LearningPathAdmin(admin.ModelAdmin):
-    list_display = ("user", "course", "status", "progress", "started_at", "completed_at", "updated_at")
+    list_display = (
+        "user",
+        "course",
+        "status",
+        "progress",
+        "started_at",
+        "completed_at",
+        "updated_at",
+    )
     list_filter = ("status", "created_at")
     search_fields = ("user__email", "course__title")
     ordering = ("-updated_at",)
@@ -13,7 +21,15 @@ class LearningPathAdmin(admin.ModelAdmin):
 
 @admin.register(LearningProgress)
 class LearningProgressAdmin(admin.ModelAdmin):
-    list_display = ("user", "course", "section", "completion_percent", "last_position", "score", "updated_at")
+    list_display = (
+        "user",
+        "course",
+        "section",
+        "completion_percent",
+        "last_position",
+        "score",
+        "updated_at",
+    )
     list_filter = ("created_at",)
     search_fields = ("user__email", "course__title", "section__title")
     ordering = ("-updated_at",)

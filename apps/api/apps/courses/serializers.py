@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Course, CourseSection
+from .models import Course, CourseLevel, CourseSection
 
 
 class CourseSectionSerializer(serializers.ModelSerializer):
@@ -216,4 +216,28 @@ class CourseGenerateRequestSerializer(serializers.Serializer):
         min_value=1,
         max_value=30,
         help_text="Nombre de segments RAG à analyser",
+    )
+    language = serializers.ChoiceField(
+        choices=["fr", "ar", "en"],
+        required=False,
+        default="fr",
+        allow_null=True,
+        help_text="Langue du cours à générer (fr, ar, en)",
+    )
+    level = serializers.ChoiceField(
+        choices=CourseLevel.choices,
+        required=False,
+        default=None,
+        allow_null=True,
+        help_text="Niveau d'apprentissage ciblé",
+    )
+    preserve_existing = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Préserver les sections/chapitres déjà existants au lieu de les remplacer",
+    )
+    async_mode = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Exécuter la génération en arrière-plan via Celery",
     )

@@ -12,4 +12,3 @@ urlpatterns = [
     path("<uuid:id>/audio", SectionAudioView.as_view(), name="section-audio-no-slash"),
     path("<uuid:id>/audio/", SectionAudioView.as_view(), name="section-audio"),
 ]
-

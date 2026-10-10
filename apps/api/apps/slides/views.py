@@ -59,7 +59,9 @@ class CoursePresentationsView(APIView):
         # Verify management permission on the course
         perm = CanManageCourse()
         if not perm.has_object_permission(request, self, course):
-            raise PermissionDenied("Vous n'avez pas les droits nécessaires pour générer des présentations.")
+            raise PermissionDenied(
+                "Vous n'avez pas les droits nécessaires pour générer des présentations."
+            )
 
         input_serializer = PresentationCreateSerializer(data=request.data)
         input_serializer.is_valid(raise_exception=True)
@@ -67,9 +69,19 @@ class CoursePresentationsView(APIView):
 
         title = data.get("title") or course.title
         theme = data.get("theme", PresentationTheme.MODERN_DARK)
+        language = data.get("language")
+        level = data.get("level")
+        focus = data.get("focus")
 
         generator = SlideGenerator()
-        presentation = generator.generate_presentation(course=course, title=title, theme=theme)
+        presentation = generator.generate_presentation(
+            course=course,
+            title=title,
+            theme=theme,
+            language=language,
+            level=level,
+            focus=focus,
+        )
 
         output_serializer = PresentationDetailSerializer(presentation)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
@@ -81,7 +93,11 @@ class PresentationDetailView(generics.RetrieveUpdateDestroyAPIView):
     DELETE /api/v1/presentations/{id}/ — Delete presentation.
     """
 
-    queryset = Presentation.objects.all().select_related("course", "course__organization").prefetch_related("slides")
+    queryset = (
+        Presentation.objects.all()
+        .select_related("course", "course__organization")
+        .prefetch_related("slides")
+    )
     permission_classes = [IsAuthenticated, IsPresentationOrganizationMember]
     lookup_field = "id"
     lookup_url_kwarg = "id"
@@ -118,14 +134,38 @@ class PresentationExportView(APIView):
 
     def post(self, request, id: UUID):
         presentation = get_object_or_404(
-            Presentation.objects.select_related("course", "course__organization").prefetch_related("slides"),
+            Presentation.objects.select_related("course", "course__organization").prefetch_related(
+                "slides"
+            ),
             id=id,
         )
         self.check_object_permissions(request, presentation)
 
-        is_async = (
-            request.query_params.get("async", "").lower() in ("true", "1")
-            or bool(request.data.get("async"))
+        # Validate that presentation has slides to export
+        from apps.slides.services.validator import (
+            InvalidPresentationPayloadError,
+            PresentationValidator,
+        )
+
+        if presentation.status == PresentationStatus.EXPORTING:
+            return Response(
+                {
+                    "detail": "Une exportation PPTX est déjà en cours pour cette présentation.",
+                    "code": "export_already_in_progress",
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        try:
+            PresentationValidator.validate_deck_for_export(presentation)
+        except InvalidPresentationPayloadError as exc:
+            return Response(
+                {"detail": str(exc), "code": "empty_presentation"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        is_async = request.query_params.get("async", "").lower() in ("true", "1") or bool(
+            request.data.get("async")
         )
 
         if is_async:
@@ -143,7 +183,14 @@ class PresentationExportView(APIView):
 
         # Synchronous execution
         exporter = PPTXExporter()
-        storage_key = exporter.export_and_save(presentation)
+        try:
+            storage_key = exporter.export_and_save(presentation)
+        except InvalidPresentationPayloadError as exc:
+            return Response(
+                {"detail": str(exc), "code": "invalid_deck"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         presentation.refresh_from_db()
 
         serializer = PresentationDetailSerializer(presentation)
@@ -196,7 +243,9 @@ class PresentationSlideDetailView(APIView):
 
     permission_classes = [IsAuthenticated, CanManagePresentation]
 
-    def _get_slide_and_presentation(self, pres_id: UUID, slide_id: UUID) -> tuple[Presentation, PresentationSlide]:
+    def _get_slide_and_presentation(
+        self, pres_id: UUID, slide_id: UUID
+    ) -> tuple[Presentation, PresentationSlide]:
         presentation = get_object_or_404(Presentation, id=pres_id)
         self.check_object_permissions(self.request, presentation)
         slide = get_object_or_404(PresentationSlide, id=slide_id, presentation=presentation)
@@ -216,7 +265,9 @@ class PresentationSlideDetailView(APIView):
 
         # Renumber subsequent slides to prevent gaps
         with transaction.atomic():
-            subsequent_slides = presentation.slides.filter(slide_number__gt=deleted_order).order_by("slide_number")
+            subsequent_slides = presentation.slides.filter(slide_number__gt=deleted_order).order_by(
+                "slide_number"
+            )
             for item in subsequent_slides:
                 item.slide_number -= 1
                 item.save(update_fields=["slide_number"])

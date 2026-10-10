@@ -178,6 +178,8 @@ class DocumentGenerateBaseView(APIView):
                 model=data.get("model"),
                 focus=data.get("focus"),
                 top_k=data.get("top_k", 5),
+                language=data.get("language"),
+                level=data.get("level"),
             )
             out_serializer = AIGenerationSerializer(record)
             return Response(out_serializer.data, status=status.HTTP_201_CREATED)
@@ -247,3 +249,31 @@ class DocumentGenerateRevisionSheetView(DocumentGenerateBaseView):
 
     def post(self, request, id):
         return self.execute_generation(request, id, "generate_revision_sheet")
+
+
+class TaskStatusView(APIView):
+    """GET /api/v1/ai/tasks/{task_id}/ (and /api/v1/tasks/{task_id}/)
+
+    Returns the unified lifecycle status, progress, duration, and result of any background generation task.
+    Enforces strict multi-tenant authorization.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, task_id: str):
+        from apps.ai.services.orchestration import TaskAccessDeniedError, TaskTracker
+
+        try:
+            status_data = TaskTracker.get_task_status(task_id, user=request.user)
+            return Response(status_data, status=status.HTTP_200_OK)
+        except TaskAccessDeniedError as err:
+            return Response(
+                {"detail": str(err), "code": "task_access_denied"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        except Exception as exc:
+            logger.exception("Error checking task status for %s: %s", task_id, exc)
+            return Response(
+                {"detail": f"Erreur lors de la récupération du statut : {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

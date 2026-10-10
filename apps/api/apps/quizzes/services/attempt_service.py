@@ -10,6 +10,12 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
+class AttemptAlreadyCompletedError(Exception):
+    """Raised when a user attempts to resubmit an already completed quiz attempt."""
+
+    pass
+
+
 class QuizAttemptService:
     """Manages quiz sessions, scoring, time tracking, and attempt evaluations."""
 
@@ -37,7 +43,15 @@ class QuizAttemptService:
 
         Returns:
             Dictionary containing evaluation summary and detailed question reviews.
+
+        Raises:
+            AttemptAlreadyCompletedError: if the attempt was already finalized.
         """
+        if attempt.completed_at is not None:
+            raise AttemptAlreadyCompletedError(
+                "Cette tentative de QCM a déjà été soumise et validée."
+            )
+
         quiz = attempt.quiz
         questions = quiz.questions.prefetch_related("answers").all()
         total_questions = len(questions)
@@ -50,7 +64,9 @@ class QuizAttemptService:
 
         for q in questions:
             q_id_str = str(q.id)
-            chosen_ans_id = submitted_answers.get(q_id_str)
+            chosen_ans_id = (
+                submitted_answers.get(q_id_str) if isinstance(submitted_answers, dict) else None
+            )
 
             # Find answers for this question
             all_answers = list(q.answers.all())
@@ -64,20 +80,22 @@ class QuizAttemptService:
             if is_q_correct:
                 correct_count += 1
 
-            questions_review.append(
-                {
-                    "question_id": q_id_str,
-                    "text": q.text,
-                    "difficulty": q.difficulty,
-                    "source": q.source,
-                    "explanation": q.explanation,
-                    "chosen_answer_id": (str(chosen_ans.id) if chosen_ans else None),
-                    "chosen_answer_text": (chosen_ans.text if chosen_ans else None),
-                    "correct_answer_id": (str(correct_ans.id) if correct_ans else None),
-                    "correct_answer_text": (correct_ans.text if correct_ans else None),
-                    "is_correct": is_q_correct,
-                }
-            )
+            review_item = {
+                "question_id": q_id_str,
+                "text": q.text,
+                "question_text": q.text,
+                "difficulty": q.difficulty,
+                "source": q.source,
+                "explanation": q.explanation,
+                "chosen_answer_id": (str(chosen_ans.id) if chosen_ans else None),
+                "selected_answer_id": (str(chosen_ans.id) if chosen_ans else None),
+                "chosen_answer_text": (chosen_ans.text if chosen_ans else None),
+                "correct_answer_id": (str(correct_ans.id) if correct_ans else None),
+                "correct_answer_text": (correct_ans.text if correct_ans else None),
+                "is_correct": is_q_correct,
+                "points_earned": 1.0 if is_q_correct else 0.0,
+            }
+            questions_review.append(review_item)
 
         # Compute score percentage
         score = round((correct_count / total_questions) * 100, 1) if total_questions > 0 else 0.0
@@ -88,10 +106,20 @@ class QuizAttemptService:
         attempt.total_questions = total_questions
         attempt.correct_answers_count = correct_count
         attempt.passed = passed
-        attempt.answers_data = submitted_answers
+        attempt.answers_data = submitted_answers or {}
         attempt.completed_at = now
         attempt.time_spent_seconds = time_spent_seconds
-        attempt.save()
+        attempt.save(
+            update_fields=[
+                "score",
+                "total_questions",
+                "correct_answers_count",
+                "passed",
+                "answers_data",
+                "completed_at",
+                "time_spent_seconds",
+            ]
+        )
 
         logger.info(
             "Attempt %s completed: score=%s%% (%s/%s correct), passed=%s",
@@ -110,10 +138,13 @@ class QuizAttemptService:
             "score": score,
             "passing_score": quiz.passing_score_percentage,
             "passed": passed,
+            "is_passed": passed,
             "total_questions": total_questions,
             "correct_answers_count": correct_count,
+            "correct_answers": correct_count,
             "time_spent_seconds": time_spent_seconds,
             "started_at": attempt.started_at.isoformat(),
             "completed_at": attempt.completed_at.isoformat(),
             "questions_review": questions_review,
+            "results_breakdown": questions_review,
         }

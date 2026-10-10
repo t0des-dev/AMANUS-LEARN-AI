@@ -33,7 +33,9 @@ class CourseAnalyticsView(APIView):
 
     def get(self, request, id: UUID):
         course = get_object_or_404(
-            Course.objects.select_related("organization", "created_by").prefetch_related("sections"),
+            Course.objects.select_related("organization", "created_by").prefetch_related(
+                "sections"
+            ),
             id=id,
         )
         self.check_object_permissions(request, course)
@@ -67,7 +69,9 @@ class QuizAnalyticsView(APIView):
 
     def get(self, request, id: UUID):
         quiz = get_object_or_404(
-            Quiz.objects.select_related("organization", "course", "created_by").prefetch_related("questions", "attempts"),
+            Quiz.objects.select_related("organization", "course", "created_by").prefetch_related(
+                "questions", "attempts"
+            ),
             id=id,
         )
         self.check_object_permissions(request, quiz)

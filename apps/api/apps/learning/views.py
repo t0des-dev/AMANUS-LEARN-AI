@@ -68,7 +68,9 @@ class SectionCompleteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id: UUID):
-        section = get_object_or_404(CourseSection.objects.select_related("course", "course__organization"), id=id)
+        section = get_object_or_404(
+            CourseSection.objects.select_related("course", "course__organization"), id=id
+        )
         if not section.course.organization.is_member(request.user):
             raise PermissionDenied("Vous n'avez pas accès à ce cours.")
 

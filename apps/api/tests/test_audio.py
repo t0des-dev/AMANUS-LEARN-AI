@@ -114,7 +114,10 @@ class PedagogicalScriptGeneratorTests(APITestCase):
         script = generator.generate_script(self.section)
 
         # Introduction should be spoken warmly
-        self.assertIn("Bonjour et bienvenue dans cette leçon audio intitulée : Les Réseaux Convolutifs", script)
+        self.assertIn(
+            "Bonjour et bienvenue dans cette leçon audio intitulée : Les Réseaux Convolutifs",
+            script,
+        )
 
         # Objectives should be mentioned
         self.assertIn("Comprendre les convolutions", script)

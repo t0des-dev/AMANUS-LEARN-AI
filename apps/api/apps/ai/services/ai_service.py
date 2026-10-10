@@ -17,8 +17,15 @@ class AIService:
     call AI providers directly.
     """
 
-    def __init__(self, generation_service: GenerationService | None = None):
-        self.generation_service = generation_service or GenerationService()
+    def __init__(
+        self,
+        generation_service: GenerationService | None = None,
+        provider: Any | None = None,
+    ):
+        if provider is not None:
+            self.generation_service = GenerationService(provider=provider)
+        else:
+            self.generation_service = generation_service or GenerationService()
 
     def generate_summary(
         self,
@@ -28,6 +35,8 @@ class AIService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
     ) -> AIGeneration:
         """Generates a structured educational summary from document RAG chunks."""
         return self.generation_service.generate_summary(
@@ -37,6 +46,8 @@ class AIService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
         )
 
     def generate_course(
@@ -47,6 +58,8 @@ class AIService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
     ) -> AIGeneration:
         """Generates a comprehensive pedagogical course / lesson from document RAG chunks."""
         return self.generation_service.generate_lesson(
@@ -56,6 +69,8 @@ class AIService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
         )
 
     def generate_objectives(
@@ -66,6 +81,8 @@ class AIService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
     ) -> AIGeneration:
         """Generates learning objectives based on educational taxonomies."""
         return self.generation_service.generate_objectives(
@@ -75,6 +92,8 @@ class AIService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
         )
 
     def generate_key_points(
@@ -85,6 +104,8 @@ class AIService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
     ) -> AIGeneration:
         """Extracts essential notions and key points from document RAG chunks."""
         return self.generation_service.generate_key_points(
@@ -94,6 +115,8 @@ class AIService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
         )
 
     def generate_revision_sheet(
@@ -104,6 +127,8 @@ class AIService:
         model: str | None = None,
         focus: str | None = None,
         top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
     ) -> AIGeneration:
         """Generates a concise exam revision sheet from document RAG chunks."""
         return self.generation_service.generate_revision_sheet(
@@ -113,6 +138,8 @@ class AIService:
             model=model,
             focus=focus,
             top_k=top_k,
+            language=language,
+            level=level,
         )
 
 

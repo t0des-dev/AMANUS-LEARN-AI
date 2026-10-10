@@ -49,9 +49,15 @@ class AnalyticsAggregationUnitTests(APITestCase):
         )
 
         self.org = Organization.objects.create(name="Univ Informatique", slug="univ-info")
-        OrganizationMember.objects.create(organization=self.org, user=self.teacher, role=RoleChoices.TEACHER)
-        OrganizationMember.objects.create(organization=self.org, user=self.student1, role=RoleChoices.STUDENT)
-        OrganizationMember.objects.create(organization=self.org, user=self.student2, role=RoleChoices.STUDENT)
+        OrganizationMember.objects.create(
+            organization=self.org, user=self.teacher, role=RoleChoices.TEACHER
+        )
+        OrganizationMember.objects.create(
+            organization=self.org, user=self.student1, role=RoleChoices.STUDENT
+        )
+        OrganizationMember.objects.create(
+            organization=self.org, user=self.student2, role=RoleChoices.STUDENT
+        )
 
         self.course = Course.objects.create(
             organization=self.org,
@@ -235,15 +241,27 @@ class AnalyticsAPIPermissionsTests(APITestCase):
     def setUp(self):
         # Org 1
         self.org1 = Organization.objects.create(name="Polytechnique", slug="polytech")
-        self.teacher1 = User.objects.create_user(email="teacher1@poly.test", password="testpassword123")
-        self.student1 = User.objects.create_user(email="student1@poly.test", password="testpassword123")
-        OrganizationMember.objects.create(organization=self.org1, user=self.teacher1, role=RoleChoices.TEACHER)
-        OrganizationMember.objects.create(organization=self.org1, user=self.student1, role=RoleChoices.STUDENT)
+        self.teacher1 = User.objects.create_user(
+            email="teacher1@poly.test", password="testpassword123"
+        )
+        self.student1 = User.objects.create_user(
+            email="student1@poly.test", password="testpassword123"
+        )
+        OrganizationMember.objects.create(
+            organization=self.org1, user=self.teacher1, role=RoleChoices.TEACHER
+        )
+        OrganizationMember.objects.create(
+            organization=self.org1, user=self.student1, role=RoleChoices.STUDENT
+        )
 
         # Org 2 (separate tenant)
         self.org2 = Organization.objects.create(name="Centrale", slug="centrale")
-        self.teacher2 = User.objects.create_user(email="teacher2@centrale.test", password="testpassword123")
-        OrganizationMember.objects.create(organization=self.org2, user=self.teacher2, role=RoleChoices.TEACHER)
+        self.teacher2 = User.objects.create_user(
+            email="teacher2@centrale.test", password="testpassword123"
+        )
+        OrganizationMember.objects.create(
+            organization=self.org2, user=self.teacher2, role=RoleChoices.TEACHER
+        )
 
         self.course1 = Course.objects.create(
             organization=self.org1,

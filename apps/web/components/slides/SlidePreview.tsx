@@ -116,6 +116,27 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
   const themeConfig = THEME_STYLES[presentation.theme] || THEME_STYLES.modern_dark;
   const isTitleSlide = currentIndex === 0;
 
+  const isArabic = (text?: string | null) => {
+    if (!text) return false;
+    return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+  };
+
+  const isSlideArabic = isArabic(currentSlide.title) || isArabic(currentSlide.content);
+
+  // Check if content has two columns
+  const isTwoColumn = (currentSlide.content || "").includes(" || ");
+  const [leftColRaw, rightColRaw] = isTwoColumn
+    ? (currentSlide.content || "").split(" || ")
+    : ["", ""];
+  const leftBullets = (leftColRaw || "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const rightBullets = (rightColRaw || "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
   // Split lines into clean pedagogical bullet points
   const bulletLines = (currentSlide.content || "")
     .split("\n")
@@ -134,7 +155,10 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
       <div className="w-full max-w-5xl aspect-[16/9] relative shadow-2xl rounded-2xl overflow-hidden border border-slate-800 transition-all">
         {/* Main Slide Board with theme background */}
         <div
-          className={`w-full h-full p-8 md:p-12 flex flex-col justify-between select-none ${themeConfig.bg}`}
+          dir={isSlideArabic ? "rtl" : "ltr"}
+          className={`w-full h-full p-8 md:p-12 flex flex-col justify-between select-none ${themeConfig.bg} ${
+            isSlideArabic ? "text-right" : "text-left"
+          }`}
         >
           {/* Top Bar: Badge & Course Title */}
           <div className="flex items-center justify-between">
@@ -146,7 +170,9 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
               </span>
             </div>
             <div className={`text-xs md:text-sm font-mono ${themeConfig.footerColor}`}>
-              Diapositive {currentIndex + 1} / {totalSlides}
+              {isSlideArabic
+                ? `الشريحة ${currentIndex + 1} / ${totalSlides}`
+                : `Diapositive ${currentIndex + 1} / ${totalSlides}`}
             </div>
           </div>
 
@@ -160,7 +186,9 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
                 className={`flex items-center gap-2 text-xs md:text-sm font-bold tracking-widest uppercase mb-4 ${themeConfig.accentColor}`}
               >
                 <BookOpen className="w-4 h-4" />
-                <span>Support de Cours Interactif</span>
+                <span>
+                  {isSlideArabic ? "دعامة تعليمية تفاعلية" : "Support de Cours Interactif"}
+                </span>
               </div>
               <h1
                 className={`text-3xl md:text-5xl font-extrabold tracking-tight mb-6 max-w-3xl ${themeConfig.titleColor}`}
@@ -175,8 +203,59 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
                 </div>
               )}
             </div>
+          ) : isTwoColumn ? (
+            /* Two-Column Side-by-Side Layout */
+            <div className="my-auto flex flex-col justify-center">
+              <h2
+                className={`text-2xl md:text-4xl font-bold tracking-tight mb-6 ${themeConfig.titleColor}`}
+              >
+                {currentSlide.title}
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  className={`rounded-2xl p-5 border ${themeConfig.cardBg} ${themeConfig.cardBorder} space-y-3`}
+                >
+                  {leftBullets.map((line, idx) => {
+                    const cleanText = line.replace(/^[•\-*]\s*/, "");
+                    return (
+                      <div key={idx} className="flex items-start gap-3">
+                        <span
+                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 bg-current ${themeConfig.accentColor}`}
+                        />
+                        <p
+                          className={`text-sm md:text-base font-normal leading-relaxed ${themeConfig.textColor}`}
+                        >
+                          {cleanText}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div
+                  className={`rounded-2xl p-5 border ${themeConfig.cardBg} ${themeConfig.cardBorder} space-y-3`}
+                >
+                  {rightBullets.map((line, idx) => {
+                    const cleanText = line.replace(/^[•\-*]\s*/, "");
+                    return (
+                      <div key={idx} className="flex items-start gap-3">
+                        <span
+                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 bg-current ${themeConfig.accentColor}`}
+                        />
+                        <p
+                          className={`text-sm md:text-base font-normal leading-relaxed ${themeConfig.textColor}`}
+                        >
+                          {cleanText}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           ) : (
-            /* Standard Content Slide Layout */
+            /* Standard Content / Summary Slide Layout */
             <div className="my-auto flex flex-col justify-center">
               <h2
                 className={`text-2xl md:text-4xl font-bold tracking-tight mb-6 ${themeConfig.titleColor}`}
@@ -189,16 +268,27 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({
               >
                 {bulletLines.length === 0 ? (
                   <p className="text-slate-500 italic text-sm">
-                    Aucun contenu pour cette diapositive. Utilisez l&apos;éditeur à droite.
+                    {isSlideArabic
+                      ? "لا يوجد محتوى لهذه الشريحة. استخدم المحرر على اليمين."
+                      : "Aucun contenu pour cette diapositive. Utilisez l'éditeur à droite."}
                   </p>
                 ) : (
                   bulletLines.map((line, idx) => {
-                    const cleanText = line.replace(/^[•\-*]\s*/, "");
+                    const cleanText = line.replace(/^[•\-*✓]\s*/, "");
+                    const isCheck = line.startsWith("✓");
                     return (
                       <div key={idx} className="flex items-start gap-3">
-                        <span
-                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 bg-current ${themeConfig.accentColor}`}
-                        />
+                        {isCheck ? (
+                          <span
+                            className={`mt-0.5 font-bold text-sm shrink-0 ${themeConfig.accentColor}`}
+                          >
+                            ✓
+                          </span>
+                        ) : (
+                          <span
+                            className={`mt-1.5 w-2 h-2 rounded-full shrink-0 bg-current ${themeConfig.accentColor}`}
+                          />
+                        )}
                         <p
                           className={`text-base md:text-xl font-normal leading-relaxed ${themeConfig.textColor}`}
                         >

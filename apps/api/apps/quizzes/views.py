@@ -23,6 +23,7 @@ from .serializers import (
     QuizSubmitPayloadSerializer,
 )
 from .services import (
+    AttemptAlreadyCompletedError,
     InvalidQuizQuestionError,
     QuizAttemptService,
     QuizGeneratorService,
@@ -137,6 +138,7 @@ class CourseQuizzesView(APIView):
                         provider_name=request.data.get("provider"),
                         model=request.data.get("model"),
                         focus=request.data.get("focus"),
+                        language=request.data.get("language") or getattr(course, "language", None),
                     )
                 except Exception as exc:
                     logger.warning("Auto-generation failed during quiz creation: %s", exc)
@@ -215,6 +217,7 @@ class QuizGenerateView(APIView):
                 count=data.get("count", 5),
                 focus=data.get("focus"),
                 top_k=data.get("top_k", 8),
+                language=data.get("language"),
             )
 
             out_serializer = QuizDetailSerializer(quiz, context={"request": request})
@@ -290,8 +293,17 @@ class QuizSubmitAttemptView(APIView):
             if not attempt:
                 attempt = service.start_attempt(quiz, request.user)
 
-        evaluation = service.submit_attempt(attempt=attempt, submitted_answers=answers_dict)
-        return Response(evaluation, status=status.HTTP_200_OK)
+        try:
+            evaluation = service.submit_attempt(attempt=attempt, submitted_answers=answers_dict)
+            return Response(evaluation, status=status.HTTP_200_OK)
+        except AttemptAlreadyCompletedError as comp_err:
+            return Response(
+                {
+                    "detail": str(comp_err),
+                    "code": "attempt_already_completed",
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
 
 
 class QuizResultsHistoryView(APIView):

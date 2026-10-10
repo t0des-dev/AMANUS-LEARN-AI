@@ -126,7 +126,9 @@ COMMAND_PATTERNS = [
 ]
 
 
-def detect_pedagogical_command(text: str, explicit_command: str | None = None) -> tuple[str | None, str]:
+def detect_pedagogical_command(
+    text: str, explicit_command: str | None = None
+) -> tuple[str | None, str]:
     """Detects pedagogical command from explicit parameter or message prefix.
 
     Returns:

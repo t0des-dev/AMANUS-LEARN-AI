@@ -25,10 +25,22 @@ class PedagogicalCommandsUnitTests(APITestCase):
 
     def test_all_eight_pedagogical_commands_detection(self):
         cases = [
-            ("Explique-moi le fonctionnement des transformateurs", "EXPLAIN", "le fonctionnement des transformateurs"),
-            ("Explique l'algorithme de descente de gradient", "EXPLAIN", "l'algorithme de descente de gradient"),
+            (
+                "Explique-moi le fonctionnement des transformateurs",
+                "EXPLAIN",
+                "le fonctionnement des transformateurs",
+            ),
+            (
+                "Explique l'algorithme de descente de gradient",
+                "EXPLAIN",
+                "l'algorithme de descente de gradient",
+            ),
             ("/explique les tenseurs", "EXPLAIN", "les tenseurs"),
-            ("Simplifie le concept de rétropropagation", "SIMPLIFY", "le concept de rétropropagation"),
+            (
+                "Simplifie le concept de rétropropagation",
+                "SIMPLIFY",
+                "le concept de rétropropagation",
+            ),
             ("/simplifie l'entropie croisée", "SIMPLIFY", "l'entropie croisée"),
             ("Résume le chapitre 3", "SUMMARY", "le chapitre 3"),
             ("Fais un résumé des notions clés", "SUMMARY", "des notions clés"),
@@ -39,10 +51,18 @@ class PedagogicalCommandsUnitTests(APITestCase):
             ("Interroge-moi sur les mécanismes d'attention", "QUIZ", "les mécanismes d'attention"),
             ("Pose-moi des questions sur le surapprentissage", "QUIZ", "le surapprentissage"),
             ("/interroge le réseau résiduel", "QUIZ", "le réseau résiduel"),
-            ("Fais-moi réviser les principes de normalisation", "REVISION", "les principes de normalisation"),
+            (
+                "Fais-moi réviser les principes de normalisation",
+                "REVISION",
+                "les principes de normalisation",
+            ),
             ("Révision de la couche softmax", "REVISION", "la couche softmax"),
             ("/revision les pondérations", "REVISION", "les pondérations"),
-            ("Compare l'optimiseur Adam et la descente SGD", "COMPARE", "l'optimiseur Adam et la descente SGD"),
+            (
+                "Compare l'optimiseur Adam et la descente SGD",
+                "COMPARE",
+                "l'optimiseur Adam et la descente SGD",
+            ),
             ("/compare RNN et LSTM", "COMPARE", "RNN et LSTM"),
             ("Définis la fonction de coût", "DEFINE", "la fonction de coût"),
             ("Donne la définition de la régularisation L2", "DEFINE", "la régularisation L2"),
@@ -55,12 +75,23 @@ class PedagogicalCommandsUnitTests(APITestCase):
             self.assertIn(expected_clean, clean_query, f"Failed clean query for: '{text}'")
 
     def test_explicit_command_parameter_override(self):
-        cmd, clean = detect_pedagogical_command("Quel est ce principe ?", explicit_command="SIMPLIFY")
+        cmd, clean = detect_pedagogical_command(
+            "Quel est ce principe ?", explicit_command="SIMPLIFY"
+        )
         self.assertEqual(cmd, "SIMPLIFY")
         self.assertEqual(clean, "Quel est ce principe ?")
 
     def test_instructions_exist_for_all_commands(self):
-        expected_keys = ["EXPLAIN", "SIMPLIFY", "SUMMARY", "EXAMPLE", "QUIZ", "REVISION", "COMPARE", "DEFINE"]
+        expected_keys = [
+            "EXPLAIN",
+            "SIMPLIFY",
+            "SUMMARY",
+            "EXAMPLE",
+            "QUIZ",
+            "REVISION",
+            "COMPARE",
+            "DEFINE",
+        ]
         for key in expected_keys:
             self.assertIn(key, PEDAGOGICAL_COMMANDS)
             instruction = get_command_instruction(key)
@@ -101,7 +132,10 @@ class ChatSessionAndRAGIntegrationTests(APITestCase):
             document=self.doc_a,
             page_number=4,
             text="Chapitre 2 : Mécanismes d'attention\nL'auto-attention pondère les relations entre tokens.",
-            metadata={"chapter": "Chapitre 2 : Mécanismes d'attention", "section": "2.1 Auto-Attention"},
+            metadata={
+                "chapter": "Chapitre 2 : Mécanismes d'attention",
+                "section": "2.1 Auto-Attention",
+            },
         )
         self.chunk_a = DocumentChunk.objects.create(
             document=self.doc_a,
@@ -183,7 +217,16 @@ class ChatSessionAndRAGIntegrationTests(APITestCase):
         commands = response.data["commands"]
         self.assertEqual(len(commands), 8)
         codes = [c["code"] for c in commands]
-        for expected in ["EXPLAIN", "SIMPLIFY", "SUMMARY", "EXAMPLE", "QUIZ", "REVISION", "COMPARE", "DEFINE"]:
+        for expected in [
+            "EXPLAIN",
+            "SIMPLIFY",
+            "SUMMARY",
+            "EXAMPLE",
+            "QUIZ",
+            "REVISION",
+            "COMPARE",
+            "DEFINE",
+        ]:
             self.assertIn(expected, codes)
 
     def test_create_and_list_chat_sessions(self):
@@ -206,7 +249,9 @@ class ChatSessionAndRAGIntegrationTests(APITestCase):
         res_list = self.client.get(url)
         self.assertEqual(res_list.status_code, status.HTTP_200_OK)
         # Should contain the newly created session
-        results = res_list.data if isinstance(res_list.data, list) else res_list.data.get("results", [])
+        results = (
+            res_list.data if isinstance(res_list.data, list) else res_list.data.get("results", [])
+        )
         self.assertTrue(any(s["id"] == session_id for s in results))
 
         # 3. Retrieve session detail

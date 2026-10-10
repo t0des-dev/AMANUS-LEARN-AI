@@ -117,6 +117,20 @@ class GenerateRequestSerializer(serializers.Serializer):
         max_value=20,
         help_text="Nombre de segments documentaires pertinents à inclure dans le contexte",
     )
+    language = serializers.ChoiceField(
+        choices=["fr", "ar", "en"],
+        required=False,
+        default="fr",
+        allow_null=True,
+        help_text="Langue de génération (fr, ar, en)",
+    )
+    level = serializers.ChoiceField(
+        choices=["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"],
+        required=False,
+        default="BEGINNER",
+        allow_null=True,
+        help_text="Niveau pédagogique ciblé",
+    )
 
 
 class AIGenerationSerializer(serializers.ModelSerializer):

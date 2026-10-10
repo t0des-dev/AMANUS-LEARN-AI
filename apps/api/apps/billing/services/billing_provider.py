@@ -60,13 +60,17 @@ class MockBillingProvider(BaseBillingProvider):
 
     def create_customer(self, organization) -> str:
         customer_id = f"mock_cus_{organization.id.hex[:12]}"
-        logger.info(f"MockBillingProvider: Created customer {customer_id} for org {organization.name}")
+        logger.info(
+            f"MockBillingProvider: Created customer {customer_id} for org {organization.name}"
+        )
         return customer_id
 
     def create_subscription(self, organization, plan: str) -> dict[str, Any]:
         sub_id = f"mock_sub_{uuid.uuid4().hex[:12]}"
         period_end = timezone.now() + timezone.timedelta(days=30)
-        logger.info(f"MockBillingProvider: Created subscription {sub_id} for org {organization.name} on plan {plan}")
+        logger.info(
+            f"MockBillingProvider: Created subscription {sub_id} for org {organization.name} on plan {plan}"
+        )
         return {
             "provider_subscription_id": sub_id,
             "status": "ACTIVE",
@@ -79,7 +83,9 @@ class MockBillingProvider(BaseBillingProvider):
         return True
 
     def change_plan(self, subscription, new_plan: str) -> dict[str, Any]:
-        logger.info(f"MockBillingProvider: Changed subscription {subscription.id} plan to {new_plan}")
+        logger.info(
+            f"MockBillingProvider: Changed subscription {subscription.id} plan to {new_plan}"
+        )
         return {
             "provider_subscription_id": subscription.provider_subscription_id,
             "status": "ACTIVE",

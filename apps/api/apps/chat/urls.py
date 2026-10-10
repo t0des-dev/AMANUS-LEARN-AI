@@ -18,6 +18,10 @@ urlpatterns = [
     path("sessions/", ChatSessionListCreateView.as_view(), name="session-list-create"),
     path("sessions/<uuid:id>", ChatSessionDetailView.as_view(), name="session-detail-no-slash"),
     path("sessions/<uuid:id>/", ChatSessionDetailView.as_view(), name="session-detail"),
-    path("sessions/<uuid:id>/messages", ChatMessageCreateView.as_view(), name="session-messages-no-slash"),
+    path(
+        "sessions/<uuid:id>/messages",
+        ChatMessageCreateView.as_view(),
+        name="session-messages-no-slash",
+    ),
     path("sessions/<uuid:id>/messages/", ChatMessageCreateView.as_view(), name="session-messages"),
 ]

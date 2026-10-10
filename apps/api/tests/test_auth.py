@@ -200,4 +200,6 @@ class AuthenticationAPITests(APITestCase):
 
         auth_classes = settings.REST_FRAMEWORK.get("DEFAULT_AUTHENTICATION_CLASSES", [])
         self.assertEqual(len(auth_classes), 1)
-        self.assertEqual(auth_classes[0], "rest_framework_simplejwt.authentication.JWTAuthentication")
+        self.assertEqual(
+            auth_classes[0], "rest_framework_simplejwt.authentication.JWTAuthentication"
+        )

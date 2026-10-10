@@ -64,4 +64,3 @@ class AIProvider(ABC):
         tokens = content.split(" ")
         for idx, token in enumerate(tokens):
             yield token + (" " if idx < len(tokens) - 1 else "")
-

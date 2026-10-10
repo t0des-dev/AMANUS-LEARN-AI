@@ -15,9 +15,7 @@ def send_notification_task(
     payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Lightweight Celery task for delivering transactional notifications."""
-    logger.info(
-        f"[Notifications] Dispatching notification to recipient {recipient_id}: {title}"
-    )
+    logger.info(f"[Notifications] Dispatching notification to recipient {recipient_id}: {title}")
     return {
         "status": "DELIVERED",
         "recipient_id": recipient_id,

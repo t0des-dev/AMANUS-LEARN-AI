@@ -4,8 +4,11 @@ import uuid
 from apps.documents.services.storage import get_storage_service
 
 from ..models import AudioContent, AudioStatus
+from .audio_assembler import AudioAssembler
 from .providers import get_tts_provider
+from .providers.base import TTSAudioResult
 from .script_generator import PedagogicalScriptGenerator
+from .text_processor import AudioTextSegmenter
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +16,7 @@ logger = logging.getLogger(__name__)
 class AudioPipelineService:
     """Orchestrates the Audio / TTS generation pipeline:
 
-    Lesson -> Pedagogical Script -> TTS Synthesis -> Audio File -> Storage Persistence.
+    Lesson -> Pedagogical Script -> Chunk Segmentation -> TTS Synthesis -> Audio Assembly -> Storage Persistence.
     """
 
     def __init__(
@@ -41,23 +44,54 @@ class AudioPipelineService:
             # 1. Lesson -> Pedagogical Script
             section = audio_content.section
             if not audio_content.script or not audio_content.script.strip():
-                script = self.script_generator.generate_script(section)
+                script = self.script_generator.generate_script(
+                    section,
+                    language=audio_content.language,
+                )
                 audio_content.script = script
             else:
                 script = audio_content.script
 
-            # 2. Script -> TTS Synthesis
+            clean_script = (script or "").strip()
+            if not clean_script:
+                raise ValueError("Le texte ou script pour la synthèse audio ne peut pas être vide.")
+
+            # 2. Text Segmentation for long texts
+            chunks = AudioTextSegmenter.segment_text(clean_script, max_chunk_chars=2500)
+            if not chunks:
+                raise ValueError("Aucun segment textuel valide à synthétiser.")
+
+            # 3. Script -> TTS Synthesis (single or multi-segment)
             tts_provider = get_tts_provider(audio_content.voice_provider)
             logger.info(
-                f"[AudioPipeline] Synthesizing audio with {tts_provider.name} (voice={audio_content.voice_id})"
-            )
-            synthesis_result = tts_provider.synthesize(
-                text=script,
-                voice_id=audio_content.voice_id,
-                language=audio_content.language,
+                f"[AudioPipeline] Synthesizing audio with {tts_provider.name} (voice={audio_content.voice_id}, chunks={len(chunks)})"
             )
 
-            # 3. Audio Bytes -> Storage Persistence
+            if len(chunks) == 1:
+                synthesis_result = tts_provider.synthesize(
+                    text=chunks[0],
+                    voice_id=audio_content.voice_id,
+                    language=audio_content.language,
+                )
+                AudioAssembler.validate_audio_bytes(synthesis_result.audio_bytes)
+            else:
+                chunk_results: list[TTSAudioResult] = []
+                for idx, chunk in enumerate(chunks):
+                    logger.debug(
+                        f"[AudioPipeline] Synthesizing chunk {idx + 1}/{len(chunks)} ({len(chunk)} chars)"
+                    )
+                    res = tts_provider.synthesize(
+                        text=chunk,
+                        voice_id=audio_content.voice_id,
+                        language=audio_content.language,
+                    )
+                    AudioAssembler.validate_audio_bytes(res.audio_bytes)
+                    chunk_results.append(res)
+
+                # Assemble chunks into a unified valid MP3 stream
+                synthesis_result = AudioAssembler.assemble_segments(chunk_results)
+
+            # 4. Audio Bytes -> Storage Persistence
             course_id_str = str(audio_content.course_id)
             section_id_str = str(audio_content.section_id)
             unique_token = uuid.uuid4().hex[:8]
@@ -71,7 +105,7 @@ class AudioPipelineService:
                 content_type="audio/mpeg",
             )
 
-            # 4. Finalize AudioContent
+            # 5. Finalize AudioContent
             audio_content.storage_key = storage_key
             audio_content.duration = synthesis_result.duration
             audio_content.status = AudioStatus.COMPLETED

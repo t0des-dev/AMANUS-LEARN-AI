@@ -83,7 +83,9 @@ class TestSSEStreamingHardening:
             yield 'data: {"type": "done"}\n\n'
 
         def simulated_slow_stream(prompt_idx):
-            with patch("apps.chat.views.AITutorService.process_message_stream", side_effect=slow_generator):
+            with patch(
+                "apps.chat.views.AITutorService.process_message_stream", side_effect=slow_generator
+            ):
                 sub_client = APIClient()
                 sub_client.force_authenticate(user=chat_setup["user"])
                 res = sub_client.post(

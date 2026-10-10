@@ -133,6 +133,13 @@ class PresentationCreateSerializer(serializers.Serializer):
         default=PresentationTheme.MODERN_DARK,
         required=False,
     )
+    language = serializers.ChoiceField(
+        choices=["fr", "ar", "en"],
+        default="fr",
+        required=False,
+    )
+    level = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    focus = serializers.CharField(max_length=255, required=False, allow_blank=True)
 
 
 class PresentationUpdateSerializer(serializers.ModelSerializer):
