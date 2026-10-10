@@ -3,6 +3,10 @@ import logging
 
 from apps.ai.services import InsufficientContextError, Retriever, get_ai_provider
 from apps.ai.services.context_builder import ContextBuilder
+from apps.ai.services.pedagogical_blueprint import (
+    PedagogicalBlueprint,
+    PedagogicalBlueprintService,
+)
 from apps.documents.models import Document
 from apps.ingestion.models import DocumentChunk
 from apps.quizzes.models import Quiz, QuizAnswer, QuizQuestion
@@ -70,6 +74,7 @@ class QuizGeneratorService:
         self.validator = validator or QuizQuestionValidator()
         self.retriever = retriever or Retriever()
         self.context_builder = context_builder or ContextBuilder()
+        self.last_warnings: list[str] = []
 
     def detect_target_language(
         self,
@@ -114,8 +119,12 @@ class QuizGeneratorService:
         focus: str | None = None,
         top_k: int = 8,
         language: str | None = None,
+        blueprint: PedagogicalBlueprint | None = None,
     ) -> list[QuizQuestion]:
         """Generates, validates, and persists QCM questions for a given Quiz."""
+        self.last_warnings = []
+        warnings: list[str] = []
+
         # 1. RAG Source Retrieval & Safeguard Check
         chunk_count = DocumentChunk.objects.filter(document=document).count()
         if chunk_count == 0:
@@ -174,13 +183,39 @@ class QuizGeneratorService:
                 f"Contexte insuffisant dans le document « {document.title} » pour générer un QCM."
             )
 
+        total_source_chars = sum(len(s.get("content", "")) for s in valid_sources)
+        if total_source_chars < 600 and count > 2:
+            warnings.append(
+                f"Contenu source restreint ({total_source_chars} caractères). "
+                "Le volume de questions a été calibré pour préserver la fidélité aux sources et éviter les hallucinations."
+            )
+
+        # Resolve blueprint if not explicitly provided
+        if not blueprint and quiz.course:
+            try:
+                blueprint = PedagogicalBlueprintService.derive_from_course(quiz.course)
+            except Exception as exc:
+                logger.debug("Could not derive blueprint from course: %s", exc)
+                blueprint = None
+
+        blueprint_context = ""
+        if blueprint:
+            objs = [f"- {o.description}" for o in blueprint.learning_objectives]
+            concepts = [c.term for c in blueprint.key_concepts]
+            blueprint_context = (
+                "\n\nOBJECTIFS PÉDAGOGIQUES CIBLÉS :\n"
+                + "\n".join(objs)
+                + f"\nCONCEPTS CLÉS : {', '.join(concepts)}\n"
+                + "Chaque question doit évaluer directement l'un des objectifs d'apprentissage et s'appuyer strictement sur les sources."
+            )
+
         context_text = self.context_builder.build_context(valid_sources)
 
         # 2. Build User Prompt depending on language
         if target_lang == "ar":
             user_prompt = (
                 f"المستند المصدر : « {document.title} »\n\n"
-                f"المقاطع المستندية المرجعية :\n{context_text}\n\n"
+                f"المقاطع المستندية المرجعية :\n{context_text}{blueprint_context}\n\n"
                 f"المهمة : قم بإنشاء {count} أسئلة اختيار من متعدد (QCM) باللغة العربية بمستوى صعوبة {quiz.difficulty} "
                 f"لوضع التقييم {quiz.get_type_display()}.\n\n"
                 "تنسيق JSON الإلزامي :\n"
@@ -204,7 +239,7 @@ class QuizGeneratorService:
         elif target_lang == "en":
             user_prompt = (
                 f"SOURCE DOCUMENT: « {document.title} »\n\n"
-                f"REFERENCED DOCUMENTARY EXCERPTS:\n{context_text}\n\n"
+                f"REFERENCED DOCUMENTARY EXCERPTS:\n{context_text}{blueprint_context}\n\n"
                 f"MISSION: Generate {count} multiple-choice questions (QCM) in English at {quiz.difficulty} level "
                 f"for {quiz.get_type_display()} mode.\n\n"
                 "MANDATORY JSON FORMAT:\n"
@@ -228,7 +263,7 @@ class QuizGeneratorService:
         else:
             user_prompt = (
                 f"DOCUMENT SOURCE : « {document.title} »\n\n"
-                f"EXTRAITS DOCUMENTAIRES RÉFÉRENCÉS :\n{context_text}\n\n"
+                f"EXTRAITS DOCUMENTAIRES RÉFÉRENCÉS :\n{context_text}{blueprint_context}\n\n"
                 f"MISSION : Générer {count} questions à choix multiples (QCM) en français de niveau {quiz.difficulty} "
                 f"pour le mode {quiz.get_type_display()}.\n\n"
                 "FORMAT JSON OBLIGATOIRE :\n"
@@ -282,6 +317,12 @@ class QuizGeneratorService:
             raw_data, default_difficulty=quiz.difficulty
         )
 
+        if len(validated_list) < count:
+            warnings.append(
+                f"Seules {len(validated_list)} questions sur {count} demandées ont pu être validées "
+                "rigoureusement à partir des sources fournies."
+            )
+
         # 5. Persist into Database
         created_questions: list[QuizQuestion] = []
         current_order = quiz.questions.count()
@@ -307,10 +348,19 @@ class QuizGeneratorService:
 
             created_questions.append(question_obj)
 
+        self.last_warnings = warnings
+
+        class QuestionList(list):
+            warnings: list[str] = []
+
+        result_questions = QuestionList(created_questions)
+        result_questions.warnings = warnings
+
         logger.info(
-            "Successfully created %s validated QCM questions for Quiz %s (language=%s)",
-            len(created_questions),
+            "Successfully created %s validated QCM questions for Quiz %s (language=%s, warnings=%s)",
+            len(result_questions),
             quiz.id,
             target_lang,
+            len(warnings),
         )
-        return created_questions
+        return result_questions

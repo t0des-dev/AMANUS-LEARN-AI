@@ -80,10 +80,49 @@ class PedagogicalScriptGenerator:
         text = re.sub(r"__([^_]+)__", r"\1", text)
         text = re.sub(r"_([^_]+)_", r"\1", text)
 
+        # Remove or reformulate markdown tables (| col | col |) into fluid spoken sentences
+        table_pattern = re.compile(r"(\|[^\n]+\|\r?\n\|[-:\s|]+\|\r?\n(?:\|[^\n]+\|\r?\n?)*)")
+
+        def _table_to_speech(match: re.Match) -> str:
+            raw_table = match.group(0).strip()
+            lines = [row_line.strip() for row_line in raw_table.split("\n") if row_line.strip()]
+            if len(lines) < 2:
+                return ""
+            body_rows = lines[2:]  # skip header and separator line
+            summarized_rows = []
+            for r in body_rows[:4]:
+                cells = [c.strip() for c in r.split("|") if c.strip()]
+                if cells:
+                    summarized_rows.append(" - ".join(cells))
+            if summarized_rows:
+                return " Notons les correspondances suivantes : " + ", ".join(summarized_rows) + ". "
+            return ""
+
+        text = table_pattern.sub(_table_to_speech, text)
+        # Remove any lingering standalone table pipes
+        text = re.sub(r"\|[-:\s|]+\|", "", text)
+        text = re.sub(r"\|", " ", text)
+
+        # Proscribe purely visual references not suitable for listening
+        visual_removals = [
+            r"\bvoir\s+(?:ci-dessus|ci-dessous|la\s+figure|le\s+sch[ée]ma|le\s+tableau|le\s+graphique)\b",
+            r"\bcomme\s+illustr[ée](?:\s+ci-(?:dessus|dessous))?\b",
+            r"\ble\s+tableau\s+ci-(?:contre|dessous|dessus)\b",
+            r"\bdans\s+le\s+sch[ée]ma\s+ci-(?:dessous|contre)\b",
+            r"\bsee\s+(?:above|below|figure|diagram|table|chart)\b",
+            r"\bas\s+(?:shown|illustrated)\s+(?:above|below)\b",
+            r"\bin\s+the\s+table\s+(?:above|below)\b",
+            r"\b(?:انظر|راجع)\s+(?:أعلاه|أدناه|الجدول|الشكل|المخطط)\b",
+            r"\bكما\s+هو\s+موضح\s+(?:أعلاه|أدناه)?\b",
+        ]
+        for pattern_str in visual_removals:
+            text = re.sub(pattern_str, "", text, flags=re.IGNORECASE)
+
         # Convert bullet points into conversational pauses
         text = re.sub(r"^\s*[-*•]\s+", "• ", text, flags=re.MULTILINE)
 
         # Clean multiple spaces and newlines
+        text = re.sub(r"[ \t]+", " ", text)
         text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip()
 

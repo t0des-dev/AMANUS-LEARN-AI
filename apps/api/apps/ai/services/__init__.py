@@ -20,6 +20,18 @@ from .generators import (
 )
 from .hybrid_search import HybridSearchService
 from .lexical_search import LexicalSearchService
+from .pedagogical_blueprint import (
+    KeyConcept,
+    LearningObjective,
+    PedagogicalBlueprint,
+    PedagogicalBlueprintService,
+    PedagogicalBlueprintValidator,
+    SectionOutline,
+)
+from .pedagogical_consistency import (
+    ConsistencyReport,
+    PedagogicalConsistencyValidator,
+)
 from .prompt_service import PromptService
 from .providers import (
     AIProvider,
@@ -79,6 +91,14 @@ __all__ = [
     "GenerationCacheService",
     "CostEstimator",
     "TaskTracker",
+    "PedagogicalBlueprint",
+    "PedagogicalBlueprintService",
+    "PedagogicalBlueprintValidator",
+    "LearningObjective",
+    "KeyConcept",
+    "SectionOutline",
+    "PedagogicalConsistencyValidator",
+    "ConsistencyReport",
 ]
 
 from .orchestration import (

@@ -18,10 +18,12 @@ class SummaryGenerator(BaseGenerator):
         *args,
         **kwargs,
     ) -> tuple[str, str, str]:
+        summary_level = kwargs.get("summary_level", "synthetic")
         return self.prompt_service.get_summary_prompt(
             document_title=document_title,
             context=context,
             language=language,
             level=level,
             focus=focus,
+            summary_level=summary_level,
         )

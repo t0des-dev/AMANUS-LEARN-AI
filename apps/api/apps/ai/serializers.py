@@ -153,6 +153,13 @@ class GenerateRequestSerializer(serializers.Serializer):
         allow_null=True,
         help_text="Niveau pédagogique ciblé",
     )
+    summary_level = serializers.ChoiceField(
+        choices=["very_short", "synthetic", "detailed"],
+        required=False,
+        default="synthetic",
+        allow_null=True,
+        help_text="Niveau de synthèse du résumé (very_short, synthetic, detailed)",
+    )
 
 
 class AIGenerationSerializer(serializers.ModelSerializer):

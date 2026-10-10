@@ -85,51 +85,51 @@ class PromptService:
         language: str = "fr",
         level: str = "BEGINNER",
         focus: str | None = None,
+        summary_level: str = "synthetic",
     ) -> tuple[str, str, str]:
-        """Generates system, user prompt, and prompt version for document summary."""
+        """Generates system, user prompt, and prompt version for multi-tier document summary.
+
+        Supports summary_level:
+        - 'very_short': Flashcard / memo summary in 1 concise paragraph (<= 100 words) and 3 core bullets.
+        - 'synthetic': Standard pedagogical synthesis in 2-3 structured paragraphs and core takeaways.
+        - 'detailed': In-depth chapter-by-chapter analytical summary with conceptual relations and limitations.
+        """
         lang = (language or "fr").lower()
         system_instruction = self._get_system_instruction(lang)
         level_directive = self._get_level_directive(level, lang)
         focus_directive = f"\nFOCUS PARTICULIER : {focus}" if focus else ""
+        norm_summary_level = str(summary_level).lower().strip()
+        if norm_summary_level not in ("very_short", "synthetic", "detailed"):
+            norm_summary_level = "synthetic"
 
-        if lang == "ar":
-            user_prompt = (
-                f"المستند المرجعي : « {document_title} »\n\n"
-                f"المصادر والفقرات المتاحة :\n{context}\n\n"
-                f"توجيه المستوى : {level_directive}{focus_directive}\n"
-                "المهمة : إعداد ملخص شامل ومنظم وموثق باللغة العربية الفصحى لهذا المستند.\n"
-                "هيكل JSON الإلزامي :\n"
+        if norm_summary_level == "very_short":
+            mission_fr = "Rédiger un résumé TRÈS COURT (fiche mémo flash) de ce document : 1 seul paragraphe concis (max 100 mots) et exactement 3 points clés essentiels."
+            format_fr = (
                 "{\n"
-                '  "overview": "خلاصة عامة في فقرتين أو 3 فقرات مركزة",\n'
-                '  "key_takeaways": ["نقطة جوهرية 1 مع الإحالة [x]", "نقطة جوهرية 2..."],\n'
-                '  "chapters_summary": [\n'
-                '    {"title": "عنوان الفصل أو المحور", "summary": "ملخص شامل للمحور"}\n'
-                "  ]\n"
+                '  "summary_level": "very_short",\n'
+                '  "overview": "Synthèse ultra-concise en un paragraphe court",\n'
+                '  "key_takeaways": ["Point essentiel 1 [x]", "Point essentiel 2 [x]", "Point essentiel 3 [x]"],\n'
+                '  "chapters_summary": []\n'
                 "}"
             )
-        elif lang == "en":
-            user_prompt = (
-                f'DOCUMENT: "{document_title}"\n\n'
-                f"AVAILABLE SOURCES:\n{context}\n\n"
-                f"LEVEL DIRECTIVE: {level_directive}{focus_directive}\n"
-                "MISSION: Write a comprehensive, well-structured educational summary of this document.\n"
-                "Mandatory JSON format:\n"
+        elif norm_summary_level == "detailed":
+            mission_fr = "Rédiger un résumé DÉTAILLÉ et approfondi de ce document, structuré par chapitre, explicitant les relations entre concepts, les définitions majeures et les limites/conditions mentionnées dans les sources."
+            format_fr = (
                 "{\n"
-                '  "overview": "Overall synthesis in 2-3 paragraphs",\n'
-                '  "key_takeaways": ["Key point 1 with source [x]", "Key point 2..."],\n'
+                '  "summary_level": "detailed",\n'
+                '  "overview": "Synthèse exhaustive en 3-4 paragraphes avec mise en perspective",\n'
+                '  "key_takeaways": ["Point clé 1 [x]", "Point clé 2 [x]", "Point clé 3 [x]", "Point clé 4 [x]"],\n'
                 '  "chapters_summary": [\n'
-                '    {"title": "Chapter or section title", "summary": "Chapter summary"}\n'
-                "  ]\n"
+                '    {"title": "Chapitre 1", "summary": "Analyse approfondie du chapitre 1 avec définitions et limites [x]"}\n'
+                "  ],\n"
+                '  "limitations_and_context": ["Condition de validité ou limite mentionnée dans les sources [x]"]\n'
                 "}"
             )
-        else:
-            user_prompt = (
-                f"DOCUMENT : « {document_title} »\n\n"
-                f"SOURCES DOCUMENTAIRES DISPONIBLES :\n{context}\n\n"
-                f"DIRECTIVE DE NIVEAU : {level_directive}{focus_directive}\n"
-                "MISSION : Rédiger un résumé exhaustif et structuré de ce document.\n"
-                "Format JSON obligatoire :\n"
+        else:  # synthetic
+            mission_fr = "Rédiger un résumé SYNTHÉTIQUE équilibré de ce document : vue d'ensemble en 2-3 paragraphes et notions pivots."
+            format_fr = (
                 "{\n"
+                '  "summary_level": "synthetic",\n'
                 '  "overview": "Synthèse globale en 2-3 paragraphes",\n'
                 '  "key_takeaways": ["Point clé 1 avec source [x]", "Point clé 2..."],\n'
                 '  "chapters_summary": [\n'
@@ -137,7 +137,91 @@ class PromptService:
                 "  ]\n"
                 "}"
             )
-        return system_instruction, user_prompt, f"summary-{self.VERSION}"
+
+        if lang == "ar":
+            user_prompt = (
+                f"المستند المرجعي : « {document_title} »\n\n"
+                f"المصادر والفقرات المتاحة :\n{context}\n\n"
+                f"توجيه المستوى : {level_directive}{focus_directive}\n"
+                f"المهمة : إعداد ملخص تعليمي بمستوى ({norm_summary_level}) موثق بالإحالات.\n"
+                f"هيكل JSON الإلزامي :\n{format_fr}"
+            )
+        elif lang == "en":
+            user_prompt = (
+                f'DOCUMENT: "{document_title}"\n\n'
+                f"AVAILABLE SOURCES:\n{context}\n\n"
+                f"LEVEL DIRECTIVE: {level_directive}{focus_directive}\n"
+                f"MISSION: Write an educational summary at level ({norm_summary_level}) strictly grounded in sources.\n"
+                f"Mandatory JSON format:\n{format_fr}"
+            )
+        else:
+            user_prompt = (
+                f"DOCUMENT : « {document_title} »\n\n"
+                f"SOURCES DOCUMENTAIRES DISPONIBLES :\n{context}\n\n"
+                f"DIRECTIVE DE NIVEAU : {level_directive}{focus_directive}\n"
+                f"MISSION : {mission_fr}\n"
+                f"Format JSON obligatoire :\n{format_fr}"
+            )
+        summary_ver = (
+            f"summary-{self.VERSION}"
+            if norm_summary_level == "synthetic"
+            else f"summary-{norm_summary_level}-{self.VERSION}"
+        )
+        return system_instruction, user_prompt, summary_ver
+
+    def get_blueprint_prompt(
+        self,
+        document_title: str,
+        context: str,
+        language: str = "fr",
+        level: str = "BEGINNER",
+        focus: str | None = None,
+    ) -> tuple[str, str, str]:
+        """Generates prompts for extracting the central Pedagogical Blueprint (Sprint 10)."""
+        lang = (language or "fr").lower()
+        system_instruction = self._get_system_instruction(lang)
+        level_directive = self._get_level_directive(level, lang)
+        focus_directive = f"\nFOCUS PARTICULIER : {focus}" if focus else ""
+
+        user_prompt = (
+            f"DOCUMENT SOURCE : « {document_title} »\n\n"
+            f"EXTRAITS DOCUMENTAIRES VALIDES :\n{context}\n\n"
+            f"NIVEAU ÉDUCATIF : {level_directive}{focus_directive}\n"
+            "MISSION : Extraire la structure pédagogique maîtresse (Base Pédagogique Commune) servant de pivot "
+            "pour dériver cours, résumés multi-niveaux, quiz alignés, diapositives et capsules audio.\n\n"
+            "RÈGLES STRICTES :\n"
+            "1. Séparez rigoureusement les faits tirés des documents sources ('source_facts') des exemples pédagogiques créés pour illustrer ('pedagogical_examples').\n"
+            "2. Formulez des objectifs d'apprentissage mesurables avec verbes d'action (Comprendre, Appliquer, Analyser).\n"
+            "3. Associez à chaque concept clé sa définition canonique et sa référence source [x].\n\n"
+            "Format JSON obligatoire :\n"
+            "{\n"
+            f'  "title": "{document_title}",\n'
+            '  "subject": "Thématique principale du document",\n'
+            '  "target_audience": "Public cible visé",\n'
+            f'  "level": "{level.upper()}",\n'
+            '  "prerequisites": ["Prérequis 1", "Prérequis 2"],\n'
+            '  "learning_objectives": [\n'
+            '    {"id": "obj_1", "taxonomy_level": "Comprendre", "description": "Objectif 1", "source_ref": "[1]"}\n'
+            '  ],\n'
+            '  "key_concepts": [\n'
+            '    {"term": "Terme clé", "canonical_definition": "Définition rigoureuse", "importance": "CORE", "source_ref": "[1]"}\n'
+            '  ],\n'
+            '  "sections_outline": [\n'
+            '    {\n'
+            '      "order": 1,\n'
+            '      "title": "Titre du chapitre ou de la section",\n'
+            '      "key_explanation": "Explication théorique centrale",\n'
+            '      "source_facts": ["Fait avéré extrait du document [1]"],\n'
+            '      "pedagogical_examples": ["Exemple concret pour faciliter l\'assimilation"],\n'
+            '      "summary": "Synthèse du chapitre",\n'
+            '      "estimated_minutes": 20\n'
+            '    }\n'
+            '  ],\n'
+            '  "key_takeaways": ["Point essentiel à retenir 1", "Point essentiel 2"],\n'
+            '  "self_assessment_checks": ["Question de vérification des acquis 1"]\n'
+            "}"
+        )
+        return system_instruction, user_prompt, f"blueprint-{self.VERSION}"
 
     def get_key_points_prompt(
         self,

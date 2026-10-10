@@ -138,6 +138,7 @@ class BaseGenerator(abc.ABC):
         top_k: int = 5,
         language: str | None = None,
         level: str | None = None,
+        **kwargs: Any,
     ) -> tuple[dict[str, Any], AIResponse, str]:
         """Executes full generation flow:
 
@@ -168,6 +169,7 @@ class BaseGenerator(abc.ABC):
             language=resolved_lang,
             level=resolved_level,
             focus=focus,
+            **kwargs,
         )
 
         # Step 3: Invoke AI Provider (Strictly structured JSON)

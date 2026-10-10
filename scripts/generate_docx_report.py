@@ -456,6 +456,26 @@ def build_document():
         "• Sécurité des Prompts : Détection proactive des tentatives de jailbreak, masquage des secrets et étanchéité du contexte source."
     )
 
+    # 3.10 Génération Pédagogique Contrôlée & Cohérence Inter-Formats (Sprint 10)
+    h3_10 = doc.add_heading("3.10 Génération Pédagogique Contrôlée & Cohérence Inter-Formats (Sprint 10)", level=2)
+    h3_10.paragraph_format.space_before = Pt(10)
+    h3_10.paragraph_format.space_after = Pt(4)
+    p_pedag = doc.add_paragraph()
+    p_pedag.paragraph_format.line_spacing = 1.15
+    p_pedag.paragraph_format.space_after = Pt(6)
+    p_pedag.add_run(
+        "Afin d'éradiquer les discordances conceptuelles et d'harmoniser l'expérience pédagogique multi-supports, "
+        "un système de génération contrôlée fondé sur un schéma pivot unifié a été déployé :\n"
+        "• Schéma Pivot & Base Pédagogique Commune (blueprint-v1.0) : Définition formelle des objectifs d'apprentissage (Bloom), "
+        "concepts clés canoniques et séquençage dissociant strictement les faits sources ('source_facts') des analogies illustratives ('pedagogical_examples').\n"
+        "• Dérivation Déterministe : Capacité de dériver instantanément le blueprint à partir d'un cours validé par un enseignant sans déclencher d'appel LLM redondant.\n"
+        "• Résumés Multi-Niveaux : Support natif de 3 niveaux de granularité (very_short en 100 mots et 3 points clés, synthetic en 2-3 paragraphes, detailed par chapitre avec conditions limites).\n"
+        "• Quiz Groundés & Alertes de Quota Source : Alignement des QCM sur les objectifs d'apprentissage, proscription des méta-distracteurs et des tautologies, "
+        "et émission d'avertissements de calibrage lorsque les sources sont trop restreintes plutôt que d'inventer des questions.\n"
+        "• Adaptation au Canal Audio : Élimination automatique des repères visuels ('voir ci-dessus', 'comme illustré', 'le tableau ci-contre') et conversion des tableaux markdown en narration parlée fluide.\n"
+        "• Validateur de Cohérence Inter-Formats & Remédiation Bornée : Mesure de couverture conceptuelle multi-formats et remédiation strictement limitée à une seule tentative (max_retries <= 1)."
+    )
+
     # =========================================================================
     # 4. INFRASTRUCTURE, DÉPLOIEMENT & DEVOPS
     # =========================================================================
@@ -526,8 +546,9 @@ def build_document():
     )
 
     qa_metrics = [
-        ("Tests Backend Django API", "Pytest / Pytest-Django", "349 tests passés avec succès (0 échec, 0 erreur)"),
+        ("Tests Backend Django API", "Pytest / Pytest-Django", "364 tests passés avec succès (0 échec, 0 erreur)"),
         ("Tests Frontend React / Next.js", "Vitest / Testing Library", "32 tests passés avec succès (8 suites de test validées)"),
+        ("Génération Pédagogique Contrôlée (Sprint 10)", "Blueprint / ConsistencyValidator", "15 tests validés (Schéma pivot blueprint-v1.0, résumés multi-niveaux, quiz groundés avec alertes, audio sans repères visuels, validateur cross-modal et remédiation bornée)"),
         ("RAG Avancé & Recherche Hybride (Sprint 09)", "RRF / pgvector / Lexical", "13 tests validés (Fusion RRF k=60, acronymes, anti-hallucination, cache isolé, fallback gracieux)"),
         ("Ingestion & Robustesse Documentaire (Sprint 08)", "Pytest / Validation Binaire", "10 tests validés (Contrôle qualité, anti-corruption, détection PDF/DOCX/PPTX, zip bombs)"),
         ("Sécurité & Quotas IA (Sprint 07)", "Pytest / Atomic Locks", "16 tests validés (Réservations 2-phases, isolation, 429 throttling, anti-injection)"),

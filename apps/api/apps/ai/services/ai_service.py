@@ -37,6 +37,7 @@ class AIService:
         top_k: int = 5,
         language: str | None = None,
         level: str | None = None,
+        summary_level: str = "synthetic",
     ) -> AIGeneration:
         """Generates a structured educational summary from document RAG chunks."""
         return self.generation_service.generate_summary(
@@ -48,6 +49,7 @@ class AIService:
             top_k=top_k,
             language=language,
             level=level,
+            summary_level=summary_level,
         )
 
     def generate_course(

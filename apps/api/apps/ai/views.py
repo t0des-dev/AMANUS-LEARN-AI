@@ -199,17 +199,21 @@ class DocumentGenerateBaseView(APIView):
         ai_service = AIService()
         generation_method = getattr(ai_service, generation_method_name)
 
+        gen_kwargs = {
+            "document": doc,
+            "user": request.user,
+            "provider_name": data.get("provider"),
+            "model": data.get("model"),
+            "focus": data.get("focus"),
+            "top_k": data.get("top_k", 5),
+            "language": data.get("language"),
+            "level": data.get("level"),
+        }
+        if generation_method_name == "generate_summary" and data.get("summary_level"):
+            gen_kwargs["summary_level"] = data.get("summary_level")
+
         try:
-            record = generation_method(
-                document=doc,
-                user=request.user,
-                provider_name=data.get("provider"),
-                model=data.get("model"),
-                focus=data.get("focus"),
-                top_k=data.get("top_k", 5),
-                language=data.get("language"),
-                level=data.get("level"),
-            )
+            record = generation_method(**gen_kwargs)
             QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.010)
 
             out_serializer = AIGenerationSerializer(record)

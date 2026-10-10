@@ -54,6 +54,7 @@ class GenerationService:
         language: str | None = None,
         level: str | None = None,
         use_cache: bool = False,
+        **kwargs: Any,
     ) -> AIGeneration:
         """Executes generation pipeline with full audit persistence in AIGeneration."""
         provider = self.default_provider or get_ai_provider(provider_name)
@@ -124,6 +125,7 @@ class GenerationService:
                 top_k=top_k,
                 language=language,
                 level=level,
+                **kwargs,
             )
 
             # 3. Persist success audit
@@ -196,6 +198,7 @@ class GenerationService:
         language: str | None = None,
         level: str | None = None,
         use_cache: bool = False,
+        summary_level: str = "synthetic",
     ) -> AIGeneration:
         return self.generate(
             document=document,
@@ -208,6 +211,7 @@ class GenerationService:
             language=language,
             level=level,
             use_cache=use_cache,
+            summary_level=summary_level,
         )
 
     def generate_key_points(
