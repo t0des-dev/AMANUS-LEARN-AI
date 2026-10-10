@@ -202,12 +202,27 @@ class CourseGenerateView(APIView):
             if cached_res:
                 return Response(cached_res, status=status.HTTP_200_OK)
 
-        # Concurrency guard
+        from apps.billing.models import UsageMetric
+        from apps.billing.services.quota_service import QuotaService
+
+        # 1. Atomic Quota Reservation
+        res_key = idempotency_key or f"course_gen_{course.id}_{uuid.uuid4().hex[:8]}"
+        reservation = QuotaService.reserve_quota(
+            organization=course.organization,
+            metric=UsageMetric.AI_GENERATIONS,
+            amount=1,
+            user=request.user,
+            idempotency_key=res_key,
+            estimated_cost_usd=0.015,
+        )
+
+        # 2. Concurrency guard
         try:
             GenerationLock.acquire(
                 "course", str(course.id), owner_id=str(request.user.id if request.user else "anon")
             )
         except ConcurrentGenerationConflictError as lock_err:
+            QuotaService.release_quota(reservation.id, reason="conflict")
             return Response(
                 {
                     "detail": str(lock_err),
@@ -233,10 +248,14 @@ class CourseGenerateView(APIView):
                 level=data.get("level"),
                 preserve_existing=data.get("preserve_existing", False),
             )
+            reservation.task_id = str(task.id)
+            reservation.save(update_fields=["task_id"])
+
             response_payload = {
                 "status": "PENDING",
                 "task_id": task.id,
                 "course_id": str(course.id),
+                "reservation_id": str(reservation.id),
                 "message": "Génération du cours initiée en arrière-plan.",
             }
             if idempotency_key:
@@ -259,12 +278,16 @@ class CourseGenerateView(APIView):
                 level=data.get("level"),
                 preserve_existing=data.get("preserve_existing", False),
             )
+            # Confirm quota consumption
+            QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.015)
+
             out_serializer = CourseDetailSerializer(updated_course)
             if idempotency_key:
                 IdempotencyManager.record_result(idempotency_key, out_serializer.data)
             return Response(out_serializer.data, status=status.HTTP_200_OK)
 
         except Exception as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
             logger.exception("Course generation failed for course %s: %s", id, exc)
             return Response(
                 {

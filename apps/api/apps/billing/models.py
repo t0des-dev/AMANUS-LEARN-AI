@@ -25,6 +25,42 @@ class UsageMetric(models.TextChoices):
     QUIZZES = "quizzes", "QCM & Examens créés"
 
 
+class ReservationStatus(models.TextChoices):
+    PENDING = "PENDING", "Réservé (en attente)"
+    COMMITTED = "COMMITTED", "Consommé et confirmé"
+    RELEASED = "RELEASED", "Libéré / Annulé"
+    TIMEOUT_UNCERTAIN = "TIMEOUT_UNCERTAIN", "Résultat fournisseur incertain"
+
+
+# Configurable per-user daily limits (-1 means unlimited)
+USER_DAILY_LIMITS: dict[str, dict[str, int]] = {
+    PlanChoices.FREE: {
+        "ai_generations": 5,
+        "audio": 5,
+        "slides": 5,
+        "quizzes": 5,
+    },
+    PlanChoices.PRO: {
+        "ai_generations": 100,
+        "audio": 50,
+        "slides": 50,
+        "quizzes": 50,
+    },
+    PlanChoices.BUSINESS: {
+        "ai_generations": 500,
+        "audio": 200,
+        "slides": 200,
+        "quizzes": 200,
+    },
+    PlanChoices.ENTERPRISE: {
+        "ai_generations": -1,
+        "audio": -1,
+        "slides": -1,
+        "quizzes": -1,
+    },
+}
+
+
 # Default Quota thresholds by plan (-1 means unlimited)
 PLAN_QUOTAS: dict[str, dict[str, int]] = {
     PlanChoices.FREE: {
@@ -211,3 +247,97 @@ class AuditLog(models.Model):
     def __str__(self) -> str:
         actor_name = self.actor.email if self.actor else "Système"
         return f"[{self.created_at:%Y-%m-%d %H:%M:%S}] {actor_name} -> {self.action} ({self.resource_type})"
+
+
+class QuotaReservation(models.Model):
+    """Tracks two-phase quota reservations to guarantee atomic consistency under concurrency.
+
+    Prevents race conditions, handles task retries via idempotency key,
+    and isolates pending, committed, and refunded resource consumptions.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="quota_reservations",
+        verbose_name="Organisation",
+        db_index=True,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="quota_reservations",
+        verbose_name="Utilisateur initiateur",
+        db_index=True,
+    )
+    metric = models.CharField(
+        max_length=50,
+        choices=UsageMetric.choices,
+        verbose_name="Métrique réservée",
+        db_index=True,
+    )
+    reserved_amount = models.BigIntegerField(default=1, verbose_name="Quantité réservée")
+    actual_amount = models.BigIntegerField(
+        null=True, blank=True, verbose_name="Quantité confirmée consommée"
+    )
+    idempotency_key = models.CharField(
+        max_length=255,
+        unique=True,
+        db_index=True,
+        verbose_name="Clé d'idempotence",
+    )
+    task_id = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="ID de tâche Celery",
+    )
+    status = models.CharField(
+        max_length=30,
+        choices=ReservationStatus.choices,
+        default=ReservationStatus.PENDING,
+        db_index=True,
+        verbose_name="Statut de la réservation",
+    )
+    estimated_cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        default=0.0,
+        verbose_name="Coût estimé (USD)",
+    )
+    actual_cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="Coût réel confirmé (USD)",
+    )
+    is_cost_estimated = models.BooleanField(
+        default=True,
+        verbose_name="Coût estimatif (non confirmé par fournisseur)",
+    )
+    error_detail = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Détail d'anomalie ou timeout",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Réservé le", db_index=True)
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Dernière mise à jour")
+
+    class Meta:
+        db_table = "billing_quotareservation"
+        verbose_name = "Réservation de quota"
+        verbose_name_plural = "Réservations de quotas"
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(fields=["organization", "metric", "status"]),
+            models.Index(fields=["organization", "created_at"]),
+            models.Index(fields=["idempotency_key"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"[{self.status}] Org {self.organization_id} - {self.metric}: {self.reserved_amount} (Key: {self.idempotency_key})"

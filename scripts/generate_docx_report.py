@@ -437,6 +437,25 @@ def build_document():
         "Un Golden Benchmark multilingue versionné (v1.0.0, 16 cas d'évaluation FR/EN/AR) et un comparateur de versions A/B préviennent toute régression."
     )
 
+    # 3.9 Sécurité, Quotas & Maîtrise des Coûts IA (Sprint 07)
+    h3_9 = doc.add_heading("3.9 Sécurité, Quotas & Maîtrise des Coûts IA (Sprint 07)", level=2)
+    h3_9.paragraph_format.space_before = Pt(10)
+    h3_9.paragraph_format.space_after = Pt(4)
+    p_sec = doc.add_paragraph()
+    p_sec.paragraph_format.line_spacing = 1.15
+    p_sec.paragraph_format.space_after = Pt(6)
+    p_sec.add_run(
+        "Afin de garantir la rentabilité opérationnelle du SaaS et d'éliminer tout risque d'épuisement de ressources, "
+        "un système de gouvernance des coûts et de quotas atomiques a été déployé :\n"
+        "• Réservations Atomiques à Deux Phases : Déploiement du modèle QuotaReservation avec verrouillage exclusif "
+        "PostgreSQL (select_for_update), empêchant tout dépassement lors de requêtes simultanées sur le dernier quota disponible.\n"
+        "• Prévention du Double Comptage & Idempotence : Les jetons idempotency_key protègent contre les retries réseau abusifs.\n"
+        "• Quarantaine des Timeouts : En cas d'interruption réseau avec un fournisseur tiers, la requête est isolée sous le statut "
+        "TIMEOUT_UNCERTAIN avec conservation du coût estimatif afin d'éviter toute surprise de facturation.\n"
+        "• Throttling & Protection Anti-Abus : Limitation de débit stricte (30 req/min et 10 req/10s) avec réponses normalisées HTTP 429.\n"
+        "• Sécurité des Prompts : Détection proactive des tentatives de jailbreak, masquage des secrets et étanchéité du contexte source."
+    )
+
     # =========================================================================
     # 4. INFRASTRUCTURE, DÉPLOIEMENT & DEVOPS
     # =========================================================================
@@ -507,9 +526,10 @@ def build_document():
     )
 
     qa_metrics = [
-        ("Tests Backend Django API", "Pytest / Pytest-Django", "310 tests passés avec succès (0 échec, 0 erreur)"),
+        ("Tests Backend Django API", "Pytest / Pytest-Django", "326 tests passés avec succès (0 échec, 0 erreur)"),
         ("Tests Frontend React / Next.js", "Vitest / Testing Library", "32 tests passés avec succès (9 fichiers de test validés)"),
         ("Évaluation Qualité IA (Sprint 06)", "Amanus Eval Suite / Pytest", "12 suites validées (Golden Benchmark, Déterministe, Sémantique, A/B)"),
+        ("Sécurité & Quotas IA (Sprint 07)", "Pytest / Atomic Locks", "16 tests validés (Réservations 2-phases, isolation, 429 throttling, anti-injection)"),
         ("Vérification Typage Statique", "TypeScript (`tsc --noEmit`)", "0 erreur de typage sur l'ensemble de la codebase web"),
         ("Linting & Qualité Code Web", "ESLint / Ruff", "0 avertissement, 0 erreur, règles de hooks respectées"),
         ("Migrations Base de Données", "Django Migrations Check", "0 migration en attente, modèles synchronisés"),

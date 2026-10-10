@@ -167,6 +167,18 @@ class DocumentGenerateBaseView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
+        from apps.billing.models import UsageMetric
+        from apps.billing.services.quota_service import QuotaService
+
+        reservation = QuotaService.reserve_quota(
+            organization=doc.organization,
+            metric=UsageMetric.AI_GENERATIONS,
+            amount=1,
+            user=request.user,
+            idempotency_key=f"doc_gen_{doc.id}_{generation_method_name}_{uuid.uuid4().hex[:8]}",
+            estimated_cost_usd=0.010,
+        )
+
         ai_service = AIService()
         generation_method = getattr(ai_service, generation_method_name)
 
@@ -181,10 +193,13 @@ class DocumentGenerateBaseView(APIView):
                 language=data.get("language"),
                 level=data.get("level"),
             )
+            QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.010)
+
             out_serializer = AIGenerationSerializer(record)
             return Response(out_serializer.data, status=status.HTTP_201_CREATED)
 
         except InsufficientContextError as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
             return Response(
                 {
                     "detail": str(exc),
@@ -194,6 +209,7 @@ class DocumentGenerateBaseView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
             logger.exception("AI generation failed for doc %s: %s", doc_id, exc)
             return Response(
                 {"detail": f"Erreur lors de la génération IA : {exc}"},

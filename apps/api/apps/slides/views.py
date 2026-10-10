@@ -73,15 +73,32 @@ class CoursePresentationsView(APIView):
         level = data.get("level")
         focus = data.get("focus")
 
-        generator = SlideGenerator()
-        presentation = generator.generate_presentation(
-            course=course,
-            title=title,
-            theme=theme,
-            language=language,
-            level=level,
-            focus=focus,
+        from apps.billing.models import UsageMetric
+        from apps.billing.services.quota_service import QuotaService
+
+        reservation = QuotaService.reserve_quota(
+            organization=course.organization,
+            metric=UsageMetric.SLIDES,
+            amount=1,
+            user=request.user,
+            idempotency_key=f"slides_gen_{course.id}_{UUID(int=0) if not request.user else request.user.id}_{title[:10]}",
+            estimated_cost_usd=0.012,
         )
+
+        try:
+            generator = SlideGenerator()
+            presentation = generator.generate_presentation(
+                course=course,
+                title=title,
+                theme=theme,
+                language=language,
+                level=level,
+                focus=focus,
+            )
+            QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.012)
+        except Exception as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
+            raise
 
         output_serializer = PresentationDetailSerializer(presentation)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)

@@ -140,12 +140,15 @@ class BillingUsageView(APIView):
         organization = get_user_organization(request.user, org_id)
 
         subscription = QuotaService.get_or_create_subscription(organization)
-        metrics_summary = QuotaService.get_usage_summary(organization)
+        summary_data = QuotaService.get_usage_summary(organization)
+        cost_audit = summary_data.get("cost_audit", {})
+        metrics_dict = {k: v for k, v in summary_data.items() if k != "cost_audit"}
 
         data = {
             "organization_id": organization.id,
             "plan": subscription.plan,
-            "metrics": metrics_summary,
+            "metrics": metrics_dict,
+            "cost_audit": cost_audit,
         }
         return Response(data, status=status.HTTP_200_OK)
 

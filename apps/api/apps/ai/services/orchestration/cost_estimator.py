@@ -4,6 +4,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# Versioned pricing catalog specification
+PRICING_CATALOG_VERSION = "2026.1"
 
 # Published provider pricing benchmarks (USD per 1,000,000 tokens)
 LLM_PRICING_PER_MILLION_TOKENS = {
@@ -100,6 +102,7 @@ class CostEstimator:
             "attempts_count": int(attempts),
             "estimated_cost_usd": estimated_cost,
             "is_cost_estimated": True,
+            "pricing_version": PRICING_CATALOG_VERSION,
             "error_category": error_category,
             "timestamp": time.time(),
         }

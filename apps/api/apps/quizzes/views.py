@@ -207,6 +207,18 @@ class QuizGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        from apps.billing.models import UsageMetric
+        from apps.billing.services.quota_service import QuotaService
+
+        reservation = QuotaService.reserve_quota(
+            organization=quiz.organization,
+            metric=UsageMetric.QUIZZES,
+            amount=1,
+            user=request.user,
+            idempotency_key=f"quiz_gen_{quiz.id}_{uuid.uuid4().hex[:8]}",
+            estimated_cost_usd=0.008,
+        )
+
         gen_service = QuizGeneratorService()
         try:
             created_questions = gen_service.generate_questions_for_quiz(
@@ -220,6 +232,8 @@ class QuizGenerateView(APIView):
                 language=data.get("language"),
             )
 
+            QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.008)
+
             out_serializer = QuizDetailSerializer(quiz, context={"request": request})
             return Response(
                 {
@@ -229,11 +243,13 @@ class QuizGenerateView(APIView):
                 status=status.HTTP_200_OK,
             )
         except InvalidQuizQuestionError as val_err:
+            QuotaService.release_quota(reservation.id, reason=str(val_err))
             return Response(
                 {"detail": str(val_err), "code": "invalid_questions"},
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         except Exception as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
             logger.exception("Quiz generation error: %s", exc)
             return Response(
                 {"detail": f"Erreur lors de la génération IA : {exc}"},

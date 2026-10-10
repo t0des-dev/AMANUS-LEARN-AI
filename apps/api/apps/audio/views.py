@@ -89,11 +89,32 @@ class SectionAudioView(APIView):
                 status=AudioStatus.PENDING,
             )
 
-        # Trigger Celery asynchronous generation
-        generate_section_audio_task.delay(str(audio_content.id))
+        from apps.billing.models import UsageMetric
+        from apps.billing.services.quota_service import QuotaService
+
+        reservation = QuotaService.reserve_quota(
+            organization=course.organization,
+            metric=UsageMetric.AUDIO_MINUTES,
+            amount=1,
+            user=request.user,
+            idempotency_key=f"audio_gen_{section.id}_{custom_script[:15] if custom_script else 'default'}",
+            estimated_cost_usd=0.015,
+        )
+
+        try:
+            # Trigger Celery asynchronous generation
+            task = generate_section_audio_task.delay(str(audio_content.id))
+            reservation.task_id = str(task.id)
+            reservation.save(update_fields=["task_id"])
+        except Exception as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
+            raise
+
+        response_data = AudioContentSerializer(audio_content).data
+        response_data["reservation_id"] = str(reservation.id)
 
         return Response(
-            AudioContentSerializer(audio_content).data,
+            response_data,
             status=status.HTTP_202_ACCEPTED,
         )
 
