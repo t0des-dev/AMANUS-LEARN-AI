@@ -29,6 +29,24 @@ class RAGSearchRequestSerializer(serializers.Serializer):
         max_value=50,
         help_text="Nombre maximum de sources retournées",
     )
+    search_mode = serializers.ChoiceField(
+        choices=["hybrid", "semantic", "lexical"],
+        default="hybrid",
+        required=False,
+        help_text="Mode de recherche (hybrid: pgvector + lexical BM25/Exact RRF, semantic: pgvector, lexical: BM25/mots-clés)",
+    )
+    min_score = serializers.FloatField(
+        required=False,
+        default=0.0,
+        min_value=0.0,
+        max_value=1.0,
+        help_text="Score minimum requis pour conserver un extrait",
+    )
+    use_cache = serializers.BooleanField(
+        required=False,
+        default=True,
+        help_text="Activer le cache de requête isolé par tenant",
+    )
 
 
 class RAGSearchResultItemSerializer(serializers.Serializer):
@@ -72,6 +90,8 @@ class RAGSearchResponseSerializer(serializers.Serializer):
     organization_id = serializers.CharField()
     document_id = serializers.CharField(allow_null=True, required=False)
     count = serializers.IntegerField()
+    search_mode = serializers.CharField(required=False)
+    latency_ms = serializers.FloatField(required=False)
     results = RAGSearchResultItemSerializer(many=True)
 
 
@@ -82,6 +102,8 @@ class RAGQueryResponseSerializer(serializers.Serializer):
     organization_id = serializers.CharField()
     document_id = serializers.CharField(allow_null=True, required=False)
     count = serializers.IntegerField()
+    search_mode = serializers.CharField(required=False)
+    latency_ms = serializers.FloatField(required=False)
     results = RAGSearchResultItemSerializer(many=True)
     citations = RAGCitationItemSerializer(many=True)
     context = serializers.CharField()

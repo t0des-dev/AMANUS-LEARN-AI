@@ -1,4 +1,5 @@
 import logging
+import time
 import uuid
 
 from django.shortcuts import get_object_or_404
@@ -73,24 +74,34 @@ class RAGSearchView(RAGBaseView):
         doc_id = str(data["document_id"]) if data.get("document_id") else None
         query = data["query"]
         top_k = data.get("top_k", 5)
+        search_mode = data.get("search_mode", "hybrid")
+        min_score = data.get("min_score", 0.0)
+        use_cache = data.get("use_cache", True)
 
         is_valid, error_response = self.validate_tenant_access(request, org_id, doc_id)
         if not is_valid:
             return error_response
 
         retriever = Retriever()
+        start_time = time.perf_counter()
         results = retriever.search_sources(
             query=query,
             organization_id=org_id,
             document_id=doc_id,
             top_k=top_k,
+            search_mode=search_mode,
+            min_score=min_score,
+            use_cache=use_cache,
         )
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         response_payload = {
             "query": query,
             "organization_id": org_id,
             "document_id": doc_id,
             "count": len(results),
+            "search_mode": search_mode,
+            "latency_ms": latency_ms,
             "results": results,
         }
         return Response(response_payload, status=status.HTTP_200_OK)
@@ -99,7 +110,7 @@ class RAGSearchView(RAGBaseView):
 class RAGQueryView(RAGBaseView):
     """POST /api/v1/rag/query/
 
-    Executes complete RAG retrieval pipeline: vector search, re-ranking,
+    Executes complete RAG retrieval pipeline: hybrid/semantic/lexical search, re-ranking,
     grounded context generation, and structured citations.
     """
 
@@ -112,6 +123,9 @@ class RAGQueryView(RAGBaseView):
         doc_id = str(data["document_id"]) if data.get("document_id") else None
         query = data["query"]
         top_k = data.get("top_k", 5)
+        search_mode = data.get("search_mode", "hybrid")
+        min_score = data.get("min_score", 0.0)
+        use_cache = data.get("use_cache", True)
 
         is_valid, error_response = self.validate_tenant_access(request, org_id, doc_id)
         if not is_valid:
@@ -123,6 +137,9 @@ class RAGQueryView(RAGBaseView):
             organization_id=org_id,
             document_id=doc_id,
             top_k=top_k,
+            search_mode=search_mode,
+            min_score=min_score,
+            use_cache=use_cache,
         )
 
         return Response(query_result, status=status.HTTP_200_OK)

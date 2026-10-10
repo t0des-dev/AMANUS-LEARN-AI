@@ -18,6 +18,8 @@ from .generators import (
     RevisionSheetGenerator,
     SummaryGenerator,
 )
+from .hybrid_search import HybridSearchService
+from .lexical_search import LexicalSearchService
 from .prompt_service import PromptService
 from .providers import (
     AIProvider,
@@ -60,6 +62,8 @@ __all__ = [
     "get_embedding_provider",
     "reset_embedding_provider",
     "VectorSearchService",
+    "LexicalSearchService",
+    "HybridSearchService",
     "Reranker",
     "ContextBuilder",
     "CitationBuilder",

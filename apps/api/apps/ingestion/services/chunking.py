@@ -178,6 +178,9 @@ class ChunkingService:
                 running_section = chunk_dict.get("section") or running_section
                 running_subsection = chunk_dict.get("subsection") or running_subsection
 
+                import hashlib
+
+                content_hash = hashlib.sha256(chunk_dict["content"].encode("utf-8")).hexdigest()
                 chunk_meta = {
                     "document_id": str(document.id),
                     "document_title": document.title,
@@ -187,6 +190,7 @@ class ChunkingService:
                     "subsection": chunk_dict.get("subsection") or running_subsection,
                     "chunk_index": chunk_idx,
                     "char_count": len(chunk_dict["content"]),
+                    "content_hash": content_hash,
                 }
 
                 chunk_obj = DocumentChunk(
@@ -201,18 +205,45 @@ class ChunkingService:
                 chunk_idx += 1
 
         if all_chunks:
+            embedding_model_name = "unknown"
+            embedding_dim = 1536
             try:
+                from datetime import datetime, timezone
+
                 from apps.ai.services.embeddings import get_embedding_provider
 
                 provider = get_embedding_provider()
+                embedding_model_name = provider.model_name
+                embedding_dim = provider.dimensions
+
                 contents = [c.content for c in all_chunks]
                 embeddings = provider.embed_batch(contents)
                 for chunk, emb in zip(all_chunks, embeddings):
                     chunk.embedding = emb
+                    if isinstance(chunk.metadata, dict):
+                        chunk.metadata["embedding_model"] = embedding_model_name
+                        chunk.metadata["embedding_dim"] = embedding_dim
+
+                # Update document index status
+                doc_meta = document.processing_metadata or {}
+                doc_meta["index_status"] = "INDEXED"
+                doc_meta["embedding_model"] = embedding_model_name
+                doc_meta["embedding_dim"] = embedding_dim
+                doc_meta["indexed_at"] = datetime.now(timezone.utc).isoformat()
+                document.processing_metadata = doc_meta
+                document.save(update_fields=["processing_metadata", "updated_at"])
             except Exception as e:
                 logger.warning(f"[ChunkingService] Could not generate embeddings: {e}")
 
             DocumentChunk.objects.bulk_create(all_chunks)
+
+        # Invalidate RAG cache for this document and tenant
+        try:
+            from apps.ai.services.retriever import Retriever
+
+            Retriever.invalidate_cache(str(document.organization_id), str(document.id))
+        except Exception as e:
+            logger.warning(f"[ChunkingService] Could not invalidate RAG cache: {e}")
 
         logger.info(
             f"[ChunkingService] Successfully generated {len(all_chunks)} chunks "

@@ -108,6 +108,15 @@ class DocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
             storage.delete_file(storage_key)
         except Exception as e:
             logger.warning(f"Error purging file from storage on delete ({storage_key}): {e}")
+
+        # Invalidate RAG query cache
+        try:
+            from apps.ai.services.retriever import Retriever
+
+            Retriever.invalidate_cache(str(instance.organization_id), str(instance.id))
+        except Exception as e:
+            logger.warning(f"Error invalidating RAG cache on document delete: {e}")
+
         instance.delete()
 
 

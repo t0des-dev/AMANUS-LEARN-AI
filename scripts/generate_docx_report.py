@@ -526,12 +526,14 @@ def build_document():
     )
 
     qa_metrics = [
-        ("Tests Backend Django API", "Pytest / Pytest-Django", "326 tests passés avec succès (0 échec, 0 erreur)"),
-        ("Tests Frontend React / Next.js", "Vitest / Testing Library", "32 tests passés avec succès (9 fichiers de test validés)"),
-        ("Évaluation Qualité IA (Sprint 06)", "Amanus Eval Suite / Pytest", "12 suites validées (Golden Benchmark, Déterministe, Sémantique, A/B)"),
+        ("Tests Backend Django API", "Pytest / Pytest-Django", "349 tests passés avec succès (0 échec, 0 erreur)"),
+        ("Tests Frontend React / Next.js", "Vitest / Testing Library", "32 tests passés avec succès (8 suites de test validées)"),
+        ("RAG Avancé & Recherche Hybride (Sprint 09)", "RRF / pgvector / Lexical", "13 tests validés (Fusion RRF k=60, acronymes, anti-hallucination, cache isolé, fallback gracieux)"),
+        ("Ingestion & Robustesse Documentaire (Sprint 08)", "Pytest / Validation Binaire", "10 tests validés (Contrôle qualité, anti-corruption, détection PDF/DOCX/PPTX, zip bombs)"),
         ("Sécurité & Quotas IA (Sprint 07)", "Pytest / Atomic Locks", "16 tests validés (Réservations 2-phases, isolation, 429 throttling, anti-injection)"),
+        ("Évaluation Qualité IA (Sprint 06)", "Amanus Eval Suite / Pytest", "12 suites validées (Golden Benchmark, Déterministe, Sémantique, A/B)"),
         ("Vérification Typage Statique", "TypeScript (`tsc --noEmit`)", "0 erreur de typage sur l'ensemble de la codebase web"),
-        ("Linting & Qualité Code Web", "ESLint / Ruff", "0 avertissement, 0 erreur, règles de hooks respectées"),
+        ("Linting & Qualité Code", "ESLint / Ruff", "0 avertissement, 0 erreur, code propre et formatté"),
         ("Migrations Base de Données", "Django Migrations Check", "0 migration en attente, modèles synchronisés"),
     ]
 
