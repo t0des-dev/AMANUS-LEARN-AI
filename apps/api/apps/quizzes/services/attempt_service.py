@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils import timezone
 
 from apps.quizzes.models import Quiz, QuizAttempt
@@ -47,104 +48,117 @@ class QuizAttemptService:
         Raises:
             AttemptAlreadyCompletedError: if the attempt was already finalized.
         """
-        if attempt.completed_at is not None:
-            raise AttemptAlreadyCompletedError(
-                "Cette tentative de QCM a déjà été soumise et validée."
+        with transaction.atomic():
+            locked_attempt = (
+                QuizAttempt.objects.select_for_update().select_related("quiz").get(id=attempt.id)
+            )
+            if locked_attempt.completed_at is not None:
+                raise AttemptAlreadyCompletedError(
+                    "Cette tentative de QCM a déjà été soumise et validée."
+                )
+
+            quiz = locked_attempt.quiz
+            questions = quiz.questions.prefetch_related("answers").all()
+            total_questions = len(questions)
+
+            correct_count = 0
+            questions_review: list[dict[str, Any]] = []
+
+            now = timezone.now()
+            time_spent_seconds = max(0, int((now - locked_attempt.started_at).total_seconds()))
+
+            for q in questions:
+                q_id_str = str(q.id)
+                chosen_ans_id = (
+                    submitted_answers.get(q_id_str) if isinstance(submitted_answers, dict) else None
+                )
+
+                # Find answers for this question
+                all_answers = list(q.answers.all())
+                correct_ans = next((a for a in all_answers if a.is_correct), None)
+                chosen_ans = next(
+                    (a for a in all_answers if str(a.id) == str(chosen_ans_id)),
+                    None,
+                )
+
+                is_q_correct = bool(chosen_ans and chosen_ans.is_correct)
+                if is_q_correct:
+                    correct_count += 1
+
+                review_item = {
+                    "question_id": q_id_str,
+                    "text": q.text,
+                    "question_text": q.text,
+                    "difficulty": q.difficulty,
+                    "source": q.source,
+                    "explanation": q.explanation,
+                    "chosen_answer_id": (str(chosen_ans.id) if chosen_ans else None),
+                    "selected_answer_id": (str(chosen_ans.id) if chosen_ans else None),
+                    "chosen_answer_text": (chosen_ans.text if chosen_ans else None),
+                    "correct_answer_id": (str(correct_ans.id) if correct_ans else None),
+                    "correct_answer_text": (correct_ans.text if correct_ans else None),
+                    "is_correct": is_q_correct,
+                    "points_earned": 1.0 if is_q_correct else 0.0,
+                }
+                questions_review.append(review_item)
+
+            # Compute score percentage
+            score = round((correct_count / total_questions) * 100, 1) if total_questions > 0 else 0.0
+            passed = score >= quiz.passing_score_percentage
+
+            # Update locked attempt
+            locked_attempt.score = score
+            locked_attempt.total_questions = total_questions
+            locked_attempt.correct_answers_count = correct_count
+            locked_attempt.passed = passed
+            locked_attempt.answers_data = submitted_answers or {}
+            locked_attempt.completed_at = now
+            locked_attempt.time_spent_seconds = time_spent_seconds
+            locked_attempt.save(
+                update_fields=[
+                    "score",
+                    "total_questions",
+                    "correct_answers_count",
+                    "passed",
+                    "answers_data",
+                    "completed_at",
+                    "time_spent_seconds",
+                ]
             )
 
-        quiz = attempt.quiz
-        questions = quiz.questions.prefetch_related("answers").all()
-        total_questions = len(questions)
-
-        correct_count = 0
-        questions_review: list[dict[str, Any]] = []
-
-        now = timezone.now()
-        time_spent_seconds = max(0, int((now - attempt.started_at).total_seconds()))
-
-        for q in questions:
-            q_id_str = str(q.id)
-            chosen_ans_id = (
-                submitted_answers.get(q_id_str) if isinstance(submitted_answers, dict) else None
+            logger.info(
+                "Attempt %s completed: score=%s%% (%s/%s correct), passed=%s",
+                locked_attempt.id,
+                score,
+                correct_count,
+                total_questions,
+                passed,
             )
 
-            # Find answers for this question
-            all_answers = list(q.answers.all())
-            correct_ans = next((a for a in all_answers if a.is_correct), None)
-            chosen_ans = next(
-                (a for a in all_answers if str(a.id) == str(chosen_ans_id)),
-                None,
-            )
+            # Sync caller in-memory instance
+            attempt.score = locked_attempt.score
+            attempt.total_questions = locked_attempt.total_questions
+            attempt.correct_answers_count = locked_attempt.correct_answers_count
+            attempt.passed = locked_attempt.passed
+            attempt.answers_data = locked_attempt.answers_data
+            attempt.completed_at = locked_attempt.completed_at
+            attempt.time_spent_seconds = locked_attempt.time_spent_seconds
 
-            is_q_correct = bool(chosen_ans and chosen_ans.is_correct)
-            if is_q_correct:
-                correct_count += 1
-
-            review_item = {
-                "question_id": q_id_str,
-                "text": q.text,
-                "question_text": q.text,
-                "difficulty": q.difficulty,
-                "source": q.source,
-                "explanation": q.explanation,
-                "chosen_answer_id": (str(chosen_ans.id) if chosen_ans else None),
-                "selected_answer_id": (str(chosen_ans.id) if chosen_ans else None),
-                "chosen_answer_text": (chosen_ans.text if chosen_ans else None),
-                "correct_answer_id": (str(correct_ans.id) if correct_ans else None),
-                "correct_answer_text": (correct_ans.text if correct_ans else None),
-                "is_correct": is_q_correct,
-                "points_earned": 1.0 if is_q_correct else 0.0,
+            return {
+                "attempt_id": str(locked_attempt.id),
+                "quiz_id": str(quiz.id),
+                "quiz_title": quiz.title,
+                "quiz_type": quiz.type,
+                "score": score,
+                "passing_score": quiz.passing_score_percentage,
+                "passed": passed,
+                "is_passed": passed,
+                "total_questions": total_questions,
+                "correct_answers_count": correct_count,
+                "correct_answers": correct_count,
+                "time_spent_seconds": time_spent_seconds,
+                "started_at": locked_attempt.started_at.isoformat(),
+                "completed_at": locked_attempt.completed_at.isoformat(),
+                "questions_review": questions_review,
+                "results_breakdown": questions_review,
             }
-            questions_review.append(review_item)
-
-        # Compute score percentage
-        score = round((correct_count / total_questions) * 100, 1) if total_questions > 0 else 0.0
-        passed = score >= quiz.passing_score_percentage
-
-        # Update attempt
-        attempt.score = score
-        attempt.total_questions = total_questions
-        attempt.correct_answers_count = correct_count
-        attempt.passed = passed
-        attempt.answers_data = submitted_answers or {}
-        attempt.completed_at = now
-        attempt.time_spent_seconds = time_spent_seconds
-        attempt.save(
-            update_fields=[
-                "score",
-                "total_questions",
-                "correct_answers_count",
-                "passed",
-                "answers_data",
-                "completed_at",
-                "time_spent_seconds",
-            ]
-        )
-
-        logger.info(
-            "Attempt %s completed: score=%s%% (%s/%s correct), passed=%s",
-            attempt.id,
-            score,
-            correct_count,
-            total_questions,
-            passed,
-        )
-
-        return {
-            "attempt_id": str(attempt.id),
-            "quiz_id": str(quiz.id),
-            "quiz_title": quiz.title,
-            "quiz_type": quiz.type,
-            "score": score,
-            "passing_score": quiz.passing_score_percentage,
-            "passed": passed,
-            "is_passed": passed,
-            "total_questions": total_questions,
-            "correct_answers_count": correct_count,
-            "correct_answers": correct_count,
-            "time_spent_seconds": time_spent_seconds,
-            "started_at": attempt.started_at.isoformat(),
-            "completed_at": attempt.completed_at.isoformat(),
-            "questions_review": questions_review,
-            "results_breakdown": questions_review,
-        }

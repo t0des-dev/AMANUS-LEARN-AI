@@ -323,7 +323,7 @@ class QuizSubmitAttemptView(APIView):
 
 
 class QuizResultsHistoryView(APIView):
-    """GET /api/v1/quizzes/{id}/results — Retrieves user attempts and best performance for this quiz."""
+    """GET /api/v1/quizzes/{id}/results — Retrieves user attempts, best and latest performance for this quiz."""
 
     permission_classes = [IsAuthenticated, IsQuizOrganizationMember]
 
@@ -331,13 +331,19 @@ class QuizResultsHistoryView(APIView):
         quiz = get_object_or_404(Quiz.objects.select_related("organization"), id=id)
         self.check_object_permissions(request, quiz)
 
-        attempts = QuizAttempt.objects.filter(
+        attempts_qs = QuizAttempt.objects.filter(
             quiz=quiz, user=request.user, completed_at__isnull=False
-        ).order_by("-started_at")
+        ).order_by("-completed_at")
+
+        attempts = list(attempts_qs)
+        best_score = max([a.score for a in attempts]) if attempts else 0.0
+        latest_score = attempts[0].score if attempts else 0.0
+        best_att = max(attempts, key=lambda a: a.score) if attempts else None
+        latest_att = attempts[0] if attempts else None
+        has_passed = any(a.passed for a in attempts)
+        avg_score = round(sum(a.score for a in attempts) / len(attempts), 1) if attempts else None
 
         serializer = QuizAttemptSerializer(attempts, many=True)
-        best_score = max([a.score for a in attempts]) if attempts.exists() else 0.0
-        has_passed = any(a.passed for a in attempts)
 
         return Response(
             {
@@ -345,9 +351,53 @@ class QuizResultsHistoryView(APIView):
                 "quiz_title": quiz.title,
                 "passing_score": quiz.passing_score_percentage,
                 "best_score": best_score,
+                "latest_score": latest_score,
+                "best_attempt_id": str(best_att.id) if best_att else None,
+                "latest_attempt_id": str(latest_att.id) if latest_att else None,
+                "average_score": avg_score,
                 "has_passed": has_passed,
                 "total_attempts": len(attempts),
                 "attempts": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class UserQuizHistoryView(APIView):
+    """GET /api/v1/quizzes/history/ — Paginated history of all quiz attempts for the authenticated user."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        attempts_qs = (
+            QuizAttempt.objects.filter(
+                user=request.user,
+                completed_at__isnull=False,
+                quiz__organization__members__user=request.user,
+            )
+            .select_related("quiz", "quiz__course")
+            .order_by("-completed_at")
+        )
+
+        try:
+            page_size = max(1, min(100, int(request.query_params.get("page_size", 20))))
+            page_num = max(1, int(request.query_params.get("page", 1)))
+        except (ValueError, TypeError):
+            page_size = 20
+            page_num = 1
+
+        total_count = attempts_qs.count()
+        start = (page_num - 1) * page_size
+        end = start + page_size
+        paginated_attempts = list(attempts_qs[start:end])
+
+        serializer = QuizAttemptSerializer(paginated_attempts, many=True)
+        return Response(
+            {
+                "total_count": total_count,
+                "page": page_num,
+                "page_size": page_size,
+                "results": serializer.data,
             },
             status=status.HTTP_200_OK,
         )

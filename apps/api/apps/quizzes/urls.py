@@ -7,12 +7,14 @@ from .views import (
     QuizResultsHistoryView,
     QuizStartAttemptView,
     QuizSubmitAttemptView,
+    UserQuizHistoryView,
 )
 
 app_name = "quizzes"
 
 urlpatterns = [
     path("", QuizListCreateView.as_view(), name="quiz-list-create"),
+    path("history/", UserQuizHistoryView.as_view(), name="quiz-user-history"),
     path("<uuid:id>/", QuizDetailView.as_view(), name="quiz-detail"),
     path(
         "<uuid:id>/generate/",

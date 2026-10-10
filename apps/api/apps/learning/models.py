@@ -82,21 +82,24 @@ class LearningPath(models.Model):
             self.save(update_fields=["progress", "status", "completed_at", "updated_at"])
             return 100.0
 
-        progresses = LearningProgress.objects.filter(user=self.user, course=self.course)
-        total_percent = sum(p.completion_percent for p in progresses)
+        progresses = list(LearningProgress.objects.filter(user=self.user, course=self.course))
+        completed_count = sum(1 for p in progresses if p.is_completed or p.completion_percent >= 100.0)
+        total_percent = sum(min(100.0, max(0.0, p.completion_percent)) for p in progresses)
         calculated = min(100.0, round(total_percent / total_sections, 1))
 
         self.progress = calculated
-        if self.progress >= 100.0:
+        if (completed_count == total_sections and total_sections > 0) or self.progress >= 100.0:
             self.status = LearningPathStatus.COMPLETED
             if not self.completed_at:
                 self.completed_at = timezone.now()
-        elif self.progress > 0.0:
+        elif self.progress > 0.0 or any(p.last_position > 0 for p in progresses):
             self.status = LearningPathStatus.IN_PROGRESS
             if not self.started_at:
                 self.started_at = timezone.now()
+            self.completed_at = None
         else:
             self.status = LearningPathStatus.NOT_STARTED
+            self.completed_at = None
 
         self.save(update_fields=["progress", "status", "started_at", "completed_at", "updated_at"])
         return self.progress
@@ -131,6 +134,20 @@ class LearningProgress(models.Model):
         default=0.0,
         verbose_name="Progression de la section (%)",
     )
+    is_completed = models.BooleanField(
+        default=False,
+        verbose_name="Section déclarée terminée",
+        db_index=True,
+    )
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de complétion",
+    )
+    last_viewed_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Dernière consultation",
+    )
     last_position = models.IntegerField(
         default=0,
         verbose_name="Dernière position de lecture / défilement",
@@ -152,6 +169,7 @@ class LearningProgress(models.Model):
         indexes = [
             models.Index(fields=["user", "course"]),
             models.Index(fields=["user", "section"]),
+            models.Index(fields=["user", "is_completed"]),
         ]
 
     def __str__(self) -> str:

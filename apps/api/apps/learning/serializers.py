@@ -42,6 +42,9 @@ class LearningProgressSerializer(serializers.ModelSerializer):
             "section_title",
             "section_order",
             "completion_percent",
+            "is_completed",
+            "completed_at",
+            "last_viewed_at",
             "last_position",
             "score",
             "created_at",
@@ -55,6 +58,11 @@ class SectionCompleteRequestSerializer(serializers.Serializer):
         min_value=0.0,
         max_value=100.0,
         required=False,
+    )
+    is_completed = serializers.BooleanField(
+        required=False,
+        default=None,
+        allow_null=True,
     )
     last_position = serializers.IntegerField(default=0, min_value=0, required=False)
     score = serializers.FloatField(

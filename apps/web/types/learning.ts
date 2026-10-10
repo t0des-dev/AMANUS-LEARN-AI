@@ -47,11 +47,25 @@ export interface RecommendedRevisionItem {
   reason: string;
 }
 
+export interface RecentQuizResultItem {
+  id: string;
+  quiz_id: string;
+  quiz_title: string;
+  course_id: string | null;
+  course_title: string | null;
+  score: number;
+  passed: boolean;
+  total_questions: number;
+  correct_answers_count: number;
+  completed_at: string | null;
+}
+
 export interface StudentDashboardData {
   stats: LearningStats;
   continue_learning: ContinueLearningItem | null;
   weak_topics: WeakTopicItem[];
   recent_activity: RecentActivityItem[];
+  recent_quiz_results?: RecentQuizResultItem[];
   recommended_revision: RecommendedRevisionItem[];
 }
 
@@ -101,6 +115,7 @@ export interface SectionCompletePayload {
   completion_percent?: number;
   last_position?: number;
   score?: number;
+  is_completed?: boolean;
 }
 
 export interface StudySessionItem {

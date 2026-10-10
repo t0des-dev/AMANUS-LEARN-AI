@@ -476,6 +476,29 @@ def build_document():
         "• Validateur de Cohérence Inter-Formats & Remédiation Bornée : Mesure de couverture conceptuelle multi-formats et remédiation strictement limitée à une seule tentative (max_retries <= 1)."
     )
 
+    # 3.11 Parcours d'Apprentissage, Progression & Personnalisation (Sprint 11)
+    h3_11 = doc.add_heading("3.11 Parcours d'Apprentissage, Progression & Personnalisation (Sprint 11)", level=2)
+    h3_11.paragraph_format.space_before = Pt(10)
+    h3_11.paragraph_format.space_after = Pt(4)
+    p_prog = doc.add_paragraph()
+    p_prog.paragraph_format.line_spacing = 1.15
+    p_prog.paragraph_format.space_after = Pt(6)
+    p_prog.add_run(
+        "Afin d'offrir à chaque apprenant un accompagnement sur mesure, persistant et rigoureux, "
+        "un ensemble complet de services de progression et de personnalisation a été implémenté :\n"
+        "• Modèle de Progression Étanche : Distinction nette entre contenu disponible, consulté (scroll/position mémorisée), "
+        "déclaré terminé (is_completed avec horodatage completed_at) et évalué. Une simple consultation ne valide jamais une leçon à tort.\n"
+        "• Calcul Déterministe de Complétion : Progression globale du cours calculée à partir des sections réelles avec transitions d'état "
+        "strictes (NOT_STARTED → IN_PROGRESS → COMPLETED) sans états impossibles ni pourcentages arbitraires.\n"
+        "• Reprise Intelligente de l'Apprentissage (Continue Learning) : Détection dynamique du premier chapitre non terminé sur les cours actifs, "
+        "restitution exacte de la dernière position de lecture, résilience aux contenus modifiés/supprimés et absence de boucle infinie sur les cours terminés.\n"
+        "• Évaluation & Scoring Strictement Serveur : Calcul des scores de quiz 100% côté backend avec verrouillage transactionnel "
+        "(select_for_update) prévenant les attaques par rejeu ou soumissions concurrentes. "
+        "Distinction explicite entre le meilleur score ('best_score'), le dernier score ('latest_score') et l'historique complet paginé.\n"
+        "• Recommandations Déterministes & Explicables : Détection des notions nécessitant remédiation (score < 60%) avec rattachement aux "
+        "citations sources et objectifs pédagogiques du blueprint, propositions ciblées de révision et respect des états vides sans fabrication de lacunes imaginaires."
+    )
+
     # =========================================================================
     # 4. INFRASTRUCTURE, DÉPLOIEMENT & DEVOPS
     # =========================================================================
@@ -546,8 +569,9 @@ def build_document():
     )
 
     qa_metrics = [
-        ("Tests Backend Django API", "Pytest / Pytest-Django", "364 tests passés avec succès (0 échec, 0 erreur)"),
+        ("Tests Backend Django API", "Pytest / Pytest-Django", "376 tests passés avec succès (0 échec, 0 erreur)"),
         ("Tests Frontend React / Next.js", "Vitest / Testing Library", "32 tests passés avec succès (8 suites de test validées)"),
+        ("Progression & Personnalisation (Sprint 11)", "Pytest / LearningEngine / Quizzes", "12 tests validés (Complétion explicite vs consultation, reprise continue_learning, scoring serveur, distinction best/latest score, historique paginé, verrouillage atomique concurrent, recommandations déterministes, résilience orphelins)"),
         ("Génération Pédagogique Contrôlée (Sprint 10)", "Blueprint / ConsistencyValidator", "15 tests validés (Schéma pivot blueprint-v1.0, résumés multi-niveaux, quiz groundés avec alertes, audio sans repères visuels, validateur cross-modal et remédiation bornée)"),
         ("RAG Avancé & Recherche Hybride (Sprint 09)", "RRF / pgvector / Lexical", "13 tests validés (Fusion RRF k=60, acronymes, anti-hallucination, cache isolé, fallback gracieux)"),
         ("Ingestion & Robustesse Documentaire (Sprint 08)", "Pytest / Validation Binaire", "10 tests validés (Contrôle qualité, anti-corruption, détection PDF/DOCX/PPTX, zip bombs)"),

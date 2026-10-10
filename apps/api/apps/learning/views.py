@@ -78,13 +78,28 @@ class SectionCompleteView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
+        raw_pct = data.get("completion_percent")
+        is_completed = data.get("is_completed")
+
+        if is_completed is True:
+            comp_pct = 100.0
+        elif raw_pct is not None:
+            comp_pct = raw_pct
+        elif is_completed is False:
+            comp_pct = 0.0
+        else:
+            # Default when called with empty payload
+            comp_pct = 100.0
+            is_completed = True
+
         engine = LearningEngine()
         progress, path = engine.record_section_progress(
             user=request.user,
             section=section,
-            completion_percent=data.get("completion_percent", 100.0),
+            completion_percent=comp_pct,
             last_position=data.get("last_position", 0),
             score=data.get("score"),
+            is_completed=is_completed,
         )
 
         return Response(

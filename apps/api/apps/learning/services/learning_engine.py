@@ -33,10 +33,29 @@ class LearningEngine:
         completion_percent: float = 100.0,
         last_position: int = 0,
         score: float | None = None,
+        is_completed: bool | None = None,
     ) -> tuple[LearningProgress, LearningPath]:
-        """Marks or updates a section's learning progress and syncs parent course path."""
+        """Marks or updates a section's learning progress and syncs parent course path.
+
+        Distinguishes viewed/scrolled lessons from explicitly completed lessons.
+        """
         course = section.course
         percent = max(0.0, min(100.0, float(completion_percent)))
+        now = timezone.now()
+
+        # Determine completion flag and percentage
+        if is_completed is True or percent >= 100.0:
+            flag_completed = True
+            final_percent = 100.0
+            comp_at = now
+        elif is_completed is False:
+            flag_completed = False
+            final_percent = min(99.0, percent)
+            comp_at = None
+        else:
+            flag_completed = percent >= 100.0
+            final_percent = percent
+            comp_at = now if flag_completed else None
 
         with transaction.atomic():
             # Ensure LearningPath exists
@@ -45,7 +64,7 @@ class LearningEngine:
                 course=course,
                 defaults={
                     "status": LearningPathStatus.IN_PROGRESS,
-                    "started_at": timezone.now(),
+                    "started_at": now,
                 },
             )
 
@@ -55,30 +74,65 @@ class LearningEngine:
                 section=section,
                 defaults={
                     "course": course,
-                    "completion_percent": percent,
-                    "last_position": last_position,
+                    "completion_percent": final_percent,
+                    "is_completed": flag_completed,
+                    "completed_at": comp_at,
+                    "last_viewed_at": now,
+                    "last_position": max(0, int(last_position)),
                     "score": score,
                 },
             )
 
             if not created:
-                # Update with latest / max values
-                progress.completion_percent = max(progress.completion_percent, percent)
-                progress.last_position = last_position
+                progress.last_viewed_at = now
+                progress.last_position = max(0, int(last_position))
+
+                if is_completed is True:
+                    progress.is_completed = True
+                    progress.completion_percent = 100.0
+                    if not progress.completed_at:
+                        progress.completed_at = now
+                elif is_completed is False:
+                    progress.is_completed = False
+                    progress.completed_at = None
+                    progress.completion_percent = max(progress.completion_percent, min(99.0, percent))
+                else:
+                    if percent >= 100.0:
+                        progress.is_completed = True
+                        progress.completion_percent = 100.0
+                        if not progress.completed_at:
+                            progress.completed_at = now
+                    else:
+                        progress.completion_percent = max(progress.completion_percent, percent)
+                        if progress.completion_percent >= 100.0:
+                            progress.is_completed = True
+                            if not progress.completed_at:
+                                progress.completed_at = now
+
                 if score is not None:
                     progress.score = score
+
                 progress.save(
-                    update_fields=["completion_percent", "last_position", "score", "updated_at"]
+                    update_fields=[
+                        "completion_percent",
+                        "is_completed",
+                        "completed_at",
+                        "last_viewed_at",
+                        "last_position",
+                        "score",
+                        "updated_at",
+                    ]
                 )
 
             # Recalculate parent course progress
             learning_path.recalculate_progress()
 
             logger.info(
-                "Recorded progress for user %s on section %s: %.1f%% (Path: %.1f%%)",
+                "Recorded progress for user %s on section %s: %.1f%% (Completed: %s, Path: %.1f%%)",
                 user.id,
                 section.id,
                 progress.completion_percent,
+                progress.is_completed,
                 learning_path.progress,
             )
             return progress, learning_path
@@ -86,7 +140,6 @@ class LearningEngine:
     def start_study_session(self, user: Any, course: Course) -> StudySession:
         """Starts a new study session for tracking active study duration."""
         with transaction.atomic():
-            # Ensure learning path is marked as in progress
             path, _ = LearningPath.objects.get_or_create(
                 user=user,
                 course=course,
@@ -141,8 +194,9 @@ class LearningEngine:
             comp_pct = p.completion_percent if p else 0.0
             pos = p.last_position if p else 0
             sc = p.score if p else None
+            is_comp = (p.is_completed or comp_pct >= 100.0) if p else False
 
-            if comp_pct >= 100.0:
+            if is_comp:
                 completed_count += 1
 
             is_weak = sc is not None and sc < 60.0
@@ -153,7 +207,9 @@ class LearningEngine:
                 "completion_percent": comp_pct,
                 "last_position": pos,
                 "score": sc,
-                "is_completed": comp_pct >= 100.0,
+                "is_completed": is_comp,
+                "completed_at": p.completed_at.isoformat() if (p and p.completed_at) else None,
+                "last_viewed_at": p.last_viewed_at.isoformat() if (p and p.last_viewed_at) else None,
                 "is_weak": is_weak,
             }
             sections_data.append(sec_info)
@@ -186,16 +242,18 @@ class LearningEngine:
 
         # 2. Enrolled / In-progress / Completed paths
         paths = list(
-            LearningPath.objects.filter(user=user).select_related("course").order_by("-updated_at")
+            LearningPath.objects.filter(user=user, course__isnull=False)
+            .select_related("course")
+            .order_by("-updated_at")
         )
         total_enrolled = len(paths)
         in_progress_count = sum(1 for p in paths if p.status == LearningPathStatus.IN_PROGRESS)
         completed_count = sum(1 for p in paths if p.status == LearningPathStatus.COMPLETED)
 
         # 3. Average score calculation across QuizAttempts and LearningProgress
-        quiz_avg = QuizAttempt.objects.filter(user=user).aggregate(models.Avg("score"))[
-            "score__avg"
-        ]
+        quiz_avg = QuizAttempt.objects.filter(user=user, completed_at__isnull=False).aggregate(
+            models.Avg("score")
+        )["score__avg"]
         progress_avg = LearningProgress.objects.filter(user=user, score__isnull=False).aggregate(
             models.Avg("score")
         )["score__avg"]
@@ -207,18 +265,22 @@ class LearningEngine:
 
         # 4. Total completed sections count
         completed_sections_count = LearningProgress.objects.filter(
-            user=user, completion_percent__gte=100.0
+            user=user, is_completed=True
         ).count()
+        if completed_sections_count == 0:
+            completed_sections_count = LearningProgress.objects.filter(
+                user=user, completion_percent__gte=100.0
+            ).count()
 
         # 5. Continue Learning (Next / Most recent active chapter)
         continue_learning = self._find_continue_learning(user, paths)
 
-        # 6. Weak Topics (Chapters with score < 60%)
+        # 6. Weak Topics (Chapters/Quizzes with score < 60%)
         weak_topics = self._find_weak_topics(user)
 
         # 7. Recent Activity (Last 5 study sessions)
         recent_sessions = list(
-            StudySession.objects.filter(user=user)
+            StudySession.objects.filter(user=user, course__isnull=False)
             .select_related("course")
             .order_by("-started_at")[:5]
         )
@@ -234,7 +296,29 @@ class LearningEngine:
             for s in recent_sessions
         ]
 
-        # 8. Recommended Revision
+        # 8. Recent Quiz Results (Last 5 completed attempts)
+        recent_quizzes = list(
+            QuizAttempt.objects.filter(user=user, completed_at__isnull=False, quiz__isnull=False)
+            .select_related("quiz", "quiz__course")
+            .order_by("-completed_at")[:5]
+        )
+        recent_quiz_results = [
+            {
+                "id": str(att.id),
+                "quiz_id": str(att.quiz.id),
+                "quiz_title": att.quiz.title,
+                "course_id": str(att.quiz.course.id) if att.quiz.course else None,
+                "course_title": att.quiz.course.title if att.quiz.course else None,
+                "score": att.score,
+                "passed": att.passed,
+                "total_questions": att.total_questions,
+                "correct_answers_count": att.correct_answers_count,
+                "completed_at": att.completed_at,
+            }
+            for att in recent_quizzes
+        ]
+
+        # 9. Recommended Revision
         recommended_revision = self._build_recommended_revisions(user, weak_topics, paths)
 
         return {
@@ -249,73 +333,104 @@ class LearningEngine:
             "continue_learning": continue_learning,
             "weak_topics": weak_topics,
             "recent_activity": recent_activity,
+            "recent_quiz_results": recent_quiz_results,
             "recommended_revision": recommended_revision,
         }
 
     def _find_continue_learning(
         self, user: Any, paths: list[LearningPath]
     ) -> dict[str, Any] | None:
-        """Determines the exact course and chapter the student should continue."""
-        # Check active paths first
-        active_paths = [p for p in paths if p.status == LearningPathStatus.IN_PROGRESS] or paths
-        if not active_paths:
+        """Determines the exact course and chapter the student should continue.
+
+        Avoids looping endlessly on completed courses and properly handles deleted content.
+        """
+        valid_paths = [p for p in paths if p.course_id]
+        if not valid_paths:
             return None
 
-        target_path = active_paths[0]
-        course = target_path.course
-        all_sections = list(course.sections.all().order_by("order", "created_at"))
-        if not all_sections:
-            return {
-                "course_id": str(course.id),
-                "course_title": course.title,
-                "section_id": None,
-                "section_title": None,
-                "progress": target_path.progress,
-                "last_position": 0,
-            }
+        # Check in-progress paths first, then not-started paths
+        active_paths = [p for p in valid_paths if p.status == LearningPathStatus.IN_PROGRESS]
+        candidate_paths = active_paths if active_paths else [
+            p for p in valid_paths if p.status != LearningPathStatus.COMPLETED
+        ]
 
-        # Check section progresses
-        completed_ids = set(
-            LearningProgress.objects.filter(
-                user=user, course=course, completion_percent__gte=100.0
-            ).values_list("section_id", flat=True)
-        )
+        if not candidate_paths:
+            # All courses are completed! Do not return an infinite loop of finished sections
+            return None
 
-        # Find first non-completed section
-        next_section = next((s for s in all_sections if s.id not in completed_ids), None)
-        if not next_section:
-            next_section = all_sections[-1]
+        for path in candidate_paths:
+            course = path.course
+            if not course:
+                continue
 
-        # Fetch last known position
-        lp = LearningProgress.objects.filter(user=user, section=next_section).first()
-        last_pos = lp.last_position if lp else 0
-        comp_pct = lp.completion_percent if lp else 0.0
+            all_sections = list(course.sections.all().order_by("order", "created_at"))
+            if not all_sections:
+                continue
 
-        return {
-            "course_id": str(course.id),
-            "course_title": course.title,
-            "section_id": str(next_section.id),
-            "section_title": next_section.title,
-            "section_order": next_section.order,
-            "progress": target_path.progress,
-            "section_completion_percent": comp_pct,
-            "last_position": last_pos,
-        }
+            # Completed section IDs for this user & course
+            completed_ids = set(
+                LearningProgress.objects.filter(
+                    user=user,
+                    course=course,
+                    is_completed=True,
+                ).values_list("section_id", flat=True)
+            )
+            # Fallback to completion_percent >= 100 for legacy records
+            if not completed_ids:
+                completed_ids = set(
+                    LearningProgress.objects.filter(
+                        user=user,
+                        course=course,
+                        completion_percent__gte=100.0,
+                    ).values_list("section_id", flat=True)
+                )
+
+            # Find first non-completed section
+            next_section = next((s for s in all_sections if s.id not in completed_ids), None)
+
+            if next_section:
+                lp = LearningProgress.objects.filter(user=user, section=next_section).first()
+                last_pos = lp.last_position if lp else 0
+                comp_pct = lp.completion_percent if lp else 0.0
+
+                return {
+                    "course_id": str(course.id),
+                    "course_title": course.title,
+                    "section_id": str(next_section.id),
+                    "section_title": next_section.title,
+                    "section_order": next_section.order,
+                    "progress": path.progress,
+                    "section_completion_percent": comp_pct,
+                    "last_position": last_pos,
+                    "is_completed": False,
+                }
+            else:
+                # All sections in this path are finished; ensure path is marked COMPLETED
+                path.recalculate_progress()
+
+        return None
 
     def _find_weak_topics(self, user: Any) -> list[dict[str, Any]]:
-        """Identifies chapters where learner struggled (score < 60%)."""
+        """Identifies chapters and quizzes where learner struggled (score < 60%)."""
         weak_list = []
-        seen_sections = set()
+        seen_keys = set()
 
         # 1. From LearningProgress records with score < 60
         progress_weak = (
-            LearningProgress.objects.filter(user=user, score__lt=60.0, score__isnull=False)
+            LearningProgress.objects.filter(
+                user=user,
+                score__lt=60.0,
+                score__isnull=False,
+                course__isnull=False,
+                section__isnull=False,
+            )
             .select_related("course", "section")
             .order_by("score")
         )
         for p in progress_weak:
-            if p.section_id not in seen_sections:
-                seen_sections.add(p.section_id)
+            key = f"sec_{p.section_id}"
+            if key not in seen_keys:
+                seen_keys.add(key)
                 weak_list.append(
                     {
                         "section_id": str(p.section.id),
@@ -324,26 +439,30 @@ class LearningEngine:
                         "course_title": p.course.title,
                         "score": round(p.score, 1),
                         "source": "section_score",
+                        "learning_objective": f"Maîtrise du chapitre : {p.section.title}",
                     }
                 )
 
-        # 2. From QuizAttempts with score < 60% linked to courses
+        # 2. From QuizAttempts with score < 60%
         failed_attempts = (
-            QuizAttempt.objects.filter(user=user, score__lt=60.0)
+            QuizAttempt.objects.filter(user=user, score__lt=60.0, quiz__isnull=False)
             .select_related("quiz", "quiz__course")
             .order_by("score")
         )
         for att in failed_attempts:
-            if att.quiz.course and att.quiz.course.id not in seen_sections:
-                seen_sections.add(att.quiz.course.id)
+            key = f"quiz_{att.quiz.id}"
+            if key not in seen_keys:
+                seen_keys.add(key)
                 weak_list.append(
                     {
                         "section_id": None,
                         "section_title": att.quiz.title,
-                        "course_id": str(att.quiz.course.id),
-                        "course_title": att.quiz.course.title,
+                        "quiz_id": str(att.quiz.id),
+                        "course_id": str(att.quiz.course.id) if att.quiz.course else None,
+                        "course_title": att.quiz.course.title if att.quiz.course else None,
                         "score": round(att.score, 1),
                         "source": "quiz_attempt",
+                        "learning_objective": f"Évaluation : {att.quiz.title}",
                     }
                 )
 
@@ -355,7 +474,7 @@ class LearningEngine:
         weak_topics: list[dict[str, Any]],
         paths: list[LearningPath],
     ) -> list[dict[str, Any]]:
-        """Generates targeted revision recommendations."""
+        """Generates targeted, explainable revision recommendations."""
         recs = []
 
         # High priority: weak topics
@@ -364,10 +483,11 @@ class LearningEngine:
                 {
                     "type": "weak_topic",
                     "title": f"Révision prioritaire : {item['section_title']}",
-                    "course_id": item["course_id"],
-                    "course_title": item["course_title"],
+                    "course_id": item.get("course_id"),
+                    "course_title": item.get("course_title"),
                     "section_id": item.get("section_id"),
-                    "reason": f"Score inférieur au seuil de maîtrise ({item['score']}%)",
+                    "quiz_id": item.get("quiz_id"),
+                    "reason": f"Score inférieur au seuil de validation ({item['score']}%)",
                 }
             )
 
@@ -375,7 +495,11 @@ class LearningEngine:
         for path in paths:
             if len(recs) >= 5:
                 break
-            if path.status == LearningPathStatus.IN_PROGRESS and path.progress < 100.0:
+            if (
+                path.course
+                and path.status == LearningPathStatus.IN_PROGRESS
+                and path.progress < 100.0
+            ):
                 recs.append(
                     {
                         "type": "in_progress",
@@ -384,6 +508,26 @@ class LearningEngine:
                         "course_title": path.course.title,
                         "section_id": None,
                         "reason": f"Cours complété à {path.progress:.0f}%",
+                    }
+                )
+
+        # Low priority: enrolled courses not yet started
+        for path in paths:
+            if len(recs) >= 5:
+                break
+            if (
+                path.course
+                and path.status == LearningPathStatus.NOT_STARTED
+                and path.progress == 0.0
+            ):
+                recs.append(
+                    {
+                        "type": "not_started",
+                        "title": f"Démarrer : {path.course.title}",
+                        "course_id": str(path.course.id),
+                        "course_title": path.course.title,
+                        "section_id": None,
+                        "reason": "Nouveau cours inscrit au programme",
                     }
                 )
 
