@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, use, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, AlertCircle, Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -9,10 +9,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { quizService } from "@/services/quizService";
 import { Quiz, QuizAttempt } from "@/types/quiz";
 import { QuizResult } from "@/features/quiz/QuizResult";
-
-interface QuizResultsPageProps {
-  params: Promise<{ id: string }>;
-}
 
 function QuizResultsContent({ quizId }: { quizId: string }) {
   const router = useRouter();
@@ -123,8 +119,9 @@ function QuizResultsContent({ quizId }: { quizId: string }) {
   );
 }
 
-export default function QuizResultsPage({ params }: QuizResultsPageProps) {
-  const unwrappedParams = use(params);
+export default function QuizResultsPage() {
+  const routeParams = useParams();
+  const quizId = (routeParams?.id as string) || "";
   return (
     <ProtectedRoute>
       <Suspense
@@ -134,7 +131,7 @@ export default function QuizResultsPage({ params }: QuizResultsPageProps) {
           </div>
         }
       >
-        <QuizResultsContent quizId={unwrappedParams.id} />
+        <QuizResultsContent quizId={quizId} />
       </Suspense>
     </ProtectedRoute>
   );

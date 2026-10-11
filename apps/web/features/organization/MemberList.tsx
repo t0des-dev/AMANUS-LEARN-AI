@@ -184,15 +184,17 @@ export function MemberList({ organization }: MemberListProps) {
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 font-bold text-white text-xs">
                         {member.user.first_name && member.user.last_name
                           ? `${member.user.first_name[0]}${member.user.last_name[0]}`.toUpperCase()
-                          : member.user.email.slice(0, 2).toUpperCase()}
+                          : member.user.email
+                          ? member.user.email.slice(0, 2).toUpperCase()
+                          : "U"}
                       </div>
                       <div>
                         <p className="font-medium text-white truncate max-w-[160px] sm:max-w-none">
                           {member.user.first_name && member.user.last_name
                             ? `${member.user.first_name} ${member.user.last_name}`
-                            : member.user.email}
+                            : member.user.email || "Utilisateur"}
                         </p>
-                        <p className="text-[11px] text-slate-400">{member.user.email}</p>
+                        <p className="text-[11px] text-slate-400">{member.user.email || "—"}</p>
                       </div>
                     </div>
                   </td>

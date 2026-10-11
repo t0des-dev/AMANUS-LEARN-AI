@@ -405,30 +405,54 @@ class PromptService:
                 f"المستند : « {document_title} »\n\n"
                 f"المصادر والفقرات المتاحة :\n{context}\n\n"
                 f"توجيه المستوى : {level_directive}{focus_directive}\n"
-                "المهمة : تحويل هذا المحتوى إلى مقرر تعليمي متكامل، مقسم إلى فصول ودروس تدريجية غنية بالشروحات والأمثلة.\n"
+                "المهمة الإلزامية :\n"
+                "1. تغطية كامل محتوى الوثيقة عبر توليد جميع الفصول التعليمية اللازمة (من 4 إلى 6 فصول كاملة).\n"
+                "2. يجب أن يتضمن كل فصل من 2 إلى 3 دروس تفصيلية متدرجة وشاملة تغطي كافة المفاهيم.\n"
+                "3. في كل درس، يجب كتابة محتوى تعليمي غني ومنظم بتنسيق Markdown متقن (عناوين فرعية ## و ###، نقاط رئيسية، أمثلة توضيحية، تنبيهات، وإحالات المصادر [1] و [2]).\n\n"
                 "هيكل JSON الإلزامي :\n"
                 "{\n"
-                '  "title": "عنوان الدورة أو المقرر",\n'
-                '  "description": "مقدمة شاملة وأهداف عامة للدورة",\n'
+                '  "title": "عنوان الدورة أو المقرر الكامل",\n'
+                '  "description": "مقدمة شاملة وأهداف عامة للدورة مستخلصة من الوثيقة",\n'
                 f'  "level": "{level.upper()}",\n'
-                '  "learning_objectives": ["هدف عام 1", "هدف عام 2"],\n'
+                '  "learning_objectives": ["هدف عام 1", "هدف عام 2", "هدف عام 3"],\n'
                 '  "chapters": [\n'
                 "    {\n"
-                '      "title": "عنوان الفصل 1",\n'
-                '      "summary": "ملخص المحور الأول",\n'
-                '      "estimated_minutes": 30,\n'
+                '      "title": "الفصل 1 : المقدمة والمفاهيم الأساسية",\n'
+                '      "summary": "ملخص شامل للمحور الأول",\n'
+                '      "estimated_minutes": 35,\n'
                 '      "sections": [\n'
                 "        {\n"
-                '          "title": "عنوان الدرس 1.1",\n'
-                '          "content": "شرح مفصل وواضح مع أمثلة وتوثيق من المصدر [1]",\n'
+                '          "title": "الدرس 1.1 : الإطار العام والمفاهيم الجوهرية",\n'
+                '          "content": "## المفاهيم الأساسية\\n\\nشرح تفصيلي وغني في عدة فقرات...\\n\\n### النقاط الرئيسية\\n- نقطة أولى مع توثيق المصدر [1]\\n- نقطة ثانية مع شرح موسع [2]\\n\\n> **ملاحظة مهمة :** قاعدة أو تعريف دقيق.",\n'
                 '          "summary": "خلاصة الدرس",\n'
-                '          "objectives": ["الهدف الإجرائي من الدرس"],\n'
+                '          "objectives": ["استيعاب المفاهيم الأولية بدقة"],\n'
                 '          "estimated_minutes": 15\n'
+                "        },\n"
+                "        {\n"
+                '          "title": "الدرس 1.2 : التعاريف والمحددات التقنية",\n'
+                '          "content": "## المعايير والمحددات\\n\\nتحليل معمق للمحددات المستخرجة من الوثيقة [1]...",\n'
+                '          "summary": "خلاصة الدرس الثاني",\n'
+                '          "objectives": ["التمييز بين المعايير والمحددات"],\n'
+                '          "estimated_minutes": 20\n'
+                "        }\n"
+                "      ]\n"
+                "    },\n"
+                "    {\n"
+                '      "title": "الفصل 2 : الهيكلية والآليات التأسيسية",\n'
+                '      "summary": "دراسة المكونات والآليات",\n'
+                '      "estimated_minutes": 40,\n'
+                '      "sections": [\n'
+                "        {\n"
+                '          "title": "الدرس 2.1 : تحليل المكونات",\n'
+                '          "content": "## البنية الهيكلية\\n\\nشرح منهجي للمكونات مع استشهادات...",\n'
+                '          "summary": "خلاصة تحليل المكونات",\n'
+                '          "objectives": ["تحليل العلاقات بين المكونات"],\n'
+                '          "estimated_minutes": 20\n'
                 "        }\n"
                 "      ]\n"
                 "    }\n"
                 "  ],\n"
-                '  "conclusion": "خاتمة وتقييم شامل للمكتسبات"\n'
+                '  "conclusion": "خاتمة وتقييم شامل للمكتسبات المعرفية للمقرر"\n'
                 "}"
             )
         elif lang == "en":
@@ -436,30 +460,40 @@ class PromptService:
                 f'DOCUMENT: "{document_title}"\n\n'
                 f"AVAILABLE SOURCES:\n{context}\n\n"
                 f"LEVEL DIRECTIVE: {level_directive}{focus_directive}\n"
-                "MISSION: Transform this document content into a comprehensive educational course with chapters and lessons.\n"
+                "MANDATORY MISSION:\n"
+                "1. Cover the entire document breadth by generating all necessary chapters (generate 4 to 6 full chapters).\n"
+                "2. Each chapter must contain 2 to 3 detailed, progressive lessons.\n"
+                "3. In each lesson, provide rich, substantive educational text in Markdown (subheadings ## and ###, bullet points, concrete examples, notes, and citations [1], [2]).\n\n"
                 "Mandatory JSON format:\n"
                 "{\n"
-                '  "title": "Course Title",\n'
-                '  "description": "Course introduction and pedagogical context",\n'
+                '  "title": "Comprehensive Course Title",\n'
+                '  "description": "Course introduction and pedagogical context grounded in sources",\n'
                 f'  "level": "{level.upper()}",\n'
-                '  "learning_objectives": ["Overall objective 1", "Overall objective 2"],\n'
+                '  "learning_objectives": ["Overall objective 1", "Overall objective 2", "Overall objective 3"],\n'
                 '  "chapters": [\n'
                 "    {\n"
-                '      "title": "Chapter 1 Title",\n'
+                '      "title": "Chapter 1: Foundations & Core Concepts",\n'
                 '      "summary": "Summary of chapter 1",\n'
-                '      "estimated_minutes": 30,\n'
+                '      "estimated_minutes": 35,\n'
                 '      "sections": [\n'
                 "        {\n"
-                '          "title": "Lesson 1.1 Title",\n'
-                '          "content": "Detailed educational explanation with practical examples and source citations [1]",\n'
+                '          "title": "Lesson 1.1: Theoretical Overview",\n'
+                '          "content": "## Foundational Overview\\n\\nDetailed educational explanation across several paragraphs...\\n\\n### Key Principles\\n- Core takeaway with source citation [1]\\n- Second key element [2]\\n\\n> **Important Note:** Crucial definition or rule.",\n'
                 '          "summary": "Lesson summary",\n'
-                '          "objectives": ["Target objective for this lesson"],\n'
+                '          "objectives": ["Understand foundational concepts"],\n'
                 '          "estimated_minutes": 15\n'
+                "        },\n"
+                "        {\n"
+                '          "title": "Lesson 1.2: Technical Terminology & Rules",\n'
+                '          "content": "## Definitions & Methodological Rules\\n\\nDetailed breakdown of terms with citations [1]...",\n'
+                '          "summary": "Summary of lesson 1.2",\n'
+                '          "objectives": ["Master technical terminology"],\n'
+                '          "estimated_minutes": 20\n'
                 "        }\n"
                 "      ]\n"
                 "    }\n"
                 "  ],\n"
-                '  "conclusion": "Summary of learning outcomes and key takeaways"\n'
+                '  "conclusion": "Synthesis of learning outcomes and key takeaways"\n'
                 "}"
             )
         else:
@@ -467,30 +501,40 @@ class PromptService:
                 f"DOCUMENT : « {document_title} »\n\n"
                 f"SOURCES DOCUMENTAIRES DISPONIBLES :\n{context}\n\n"
                 f"DIRECTIVE DE NIVEAU : {level_directive}{focus_directive}\n"
-                "MISSION : Transformer le contenu documentaire en un cours d'apprentissage fluide, progressif et structuré en chapitres et leçons.\n"
+                "MISSION OBLIGATOIRE :\n"
+                "1. Couvrir l'INTÉGRALITÉ du document source en générant TOUS les chapitres nécessaires (générer 4 à 6 chapitres complets structurés).\n"
+                "2. Chaque chapitre doit comporter 2 à 3 leçons détaillées et progressives pour approfondir le sujet.\n"
+                "3. Chaque leçon doit fournir un contenu didactique riche et complet rédigé en Markdown structuré (titres ## et ###, puces didactiques, exemples concrets, encadrés de synthèse et citations de sources [1], [2]).\n\n"
                 "Format JSON obligatoire :\n"
                 "{\n"
-                '  "title": "Titre du cours",\n'
-                '  "description": "Introduction et contexte pédagogique",\n'
+                '  "title": "Titre complet du cours",\n'
+                '  "description": "Introduction et contexte pédagogique basés rigoureusement sur le document",\n'
                 f'  "level": "{level.upper()}",\n'
-                '  "learning_objectives": ["Objectif global 1", "Objectif global 2"],\n'
+                '  "learning_objectives": ["Objectif global 1", "Objectif global 2", "Objectif global 3"],\n'
                 '  "chapters": [\n'
                 "    {\n"
-                '      "title": "Titre du Chapitre 1",\n'
-                '      "summary": "Synthèse du chapitre 1",\n'
-                '      "estimated_minutes": 30,\n'
+                '      "title": "Chapitre 1 : Introduction & Fondements Théoriques",\n'
+                '      "summary": "Synthèse du premier axe thématique",\n'
+                '      "estimated_minutes": 35,\n'
                 '      "sections": [\n'
                 "        {\n"
-                '          "title": "Titre de la Leçon 1.1",\n'
-                '          "content": "Contenu pédagogique détaillé avec exemples concrets et citations [1]",\n'
-                '          "summary": "Résumé de la leçon",\n'
-                '          "objectives": ["Objectif d\'apprentissage de cette leçon"],\n'
+                '          "title": "Leçon 1.1 : Cadre Conceptuel et Notions Clés",\n'
+                '          "content": "## Fondements et Concepts Clés\\n\\nExplication pédagogique détaillée en plusieurs paragraphes...\\n\\n### Principes directeurs\\n- Premier élément majeur appuyé sur les sources [1]\\n- Second principe fondamental [2]\\n\\n> **Définition clé :** Énoncé précis tiré du document.",\n'
+                '          "summary": "Synthèse de la leçon 1.1",\n'
+                '          "objectives": ["Assimiler les notions de base"],\n'
                 '          "estimated_minutes": 15\n'
+                "        },\n"
+                "        {\n"
+                '          "title": "Leçon 1.2 : Terminologie et Règles Fondamentales",\n'
+                '          "content": "## Vocabulaire et Règles Métier\\n\\nPrésentation approfondie des règles extraites du document [1]...",\n'
+                '          "summary": "Synthèse de la leçon 1.2",\n'
+                '          "objectives": ["Maîtriser la terminologie spécifique"],\n'
+                '          "estimated_minutes": 20\n'
                 "        }\n"
                 "      ]\n"
                 "    }\n"
                 "  ],\n"
-                '  "conclusion": "Synthèse et bilan des acquis"\n'
+                '  "conclusion": "Synthèse générale et bilan des compétences acquises"\n'
                 "}"
             )
         return system_instruction, user_prompt, f"lesson-{self.VERSION}"

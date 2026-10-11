@@ -74,13 +74,14 @@ class CourseBuilderService:
         target_level = level or getattr(course, "level", None) or CourseLevel.BEGINNER
 
         # 1. Trigger AI Course generation using AIService facade
+        effective_top_k = max(top_k, 25)
         ai_generation = self.ai_service.generate_course(
             document=document,
             user=user,
             provider_name=provider_name,
             model=model,
             focus=focus,
-            top_k=top_k,
+            top_k=effective_top_k,
             language=target_lang,
             level=target_level,
         )
@@ -88,21 +89,74 @@ class CourseBuilderService:
         result_data = ai_generation.result or {}
 
         # 2. Extract document chunk metadata to identify existing chapters/sections
-        doc_chunks = (
+        doc_chunks = list(
             DocumentChunk.objects.filter(document=document)
             .order_by("chunk_index")
             .values("content", "metadata")
         )
+
+        from apps.ingestion.parsers.structure_detector import detect_structure
 
         identified_chapters: dict[str, list[dict[str, Any]]] = {}
         for c in doc_chunks:
             meta = c.get("metadata") or {}
             chap = meta.get("chapter")
             sec = meta.get("section") or "Généralités"
+            if not chap:
+                detected = detect_structure(c.get("content", ""))
+                chap = detected.get("chapter")
+                if detected.get("section"):
+                    sec = detected["section"]
             if chap:
                 if chap not in identified_chapters:
                     identified_chapters[chap] = []
                 identified_chapters[chap].append({"section": sec, "content": c.get("content", "")})
+
+        # If document has multiple chunks but fewer than 2 distinct chapters detected,
+        # partition chunks into 4 to 6 logical thematic modules covering the whole document
+        if len(doc_chunks) >= 3 and len(identified_chapters) <= 1:
+            total_chunks = len(doc_chunks)
+            num_modules = min(6, max(3, (total_chunks + 2) // 3))
+            chunks_per_mod = max(1, (total_chunks + num_modules - 1) // num_modules)
+
+            thematic_titles = {
+                "fr": [
+                    "Chapitre 1 : Introduction & Fondements Théoriques",
+                    "Chapitre 2 : Notions Clés & Principes Directeurs",
+                    "Chapitre 3 : Approfondissement Technique & Méthodologie",
+                    "Chapitre 4 : Mise en Œuvre Pratique & Cas d'Usage",
+                    "Chapitre 5 : Bonnes Pratiques & Points de Vigilance",
+                    "Chapitre 6 : Synthèse Globale & Perspectives",
+                ],
+                "ar": [
+                    "الفصل 1 : المقدمة والأسس النظرية والمفاهيمية",
+                    "الفصل 2 : المبادئ الجوهرية والآليات التأسيسية",
+                    "الفصل 3 : التحليل المنهجي والتقني المعمق",
+                    "الفصل 4 : التطبيقات العملية ودراسات الحالة",
+                    "الفصل 5 : أفضل الممارسات ونقاط اليقظة",
+                    "الفصل 6 : الخلاصة الشاملة وآفاق التطوير",
+                ],
+                "en": [
+                    "Chapter 1: Introduction & Foundational Concepts",
+                    "Chapter 2: Core Principles & Theoretical Framework",
+                    "Chapter 3: Technical Deep Dive & Methodology",
+                    "Chapter 4: Practical Implementation & Case Studies",
+                    "Chapter 5: Best Practices & Key Insights",
+                    "Chapter 6: Synthesis & Future Perspectives",
+                ],
+            }
+            lang_titles = thematic_titles.get(target_lang, thematic_titles["fr"])
+            identified_chapters = {}
+            for m_idx in range(num_modules):
+                m_title = lang_titles[m_idx] if m_idx < len(lang_titles) else f"Chapitre {m_idx + 1}"
+                start_c = m_idx * chunks_per_mod
+                end_c = min(total_chunks, start_c + chunks_per_mod)
+                mod_chunks = doc_chunks[start_c:end_c]
+                if mod_chunks:
+                    identified_chapters[m_title] = [
+                        {"section": f"Section {m_idx + 1}.{s_i + 1}", "content": c.get("content", "")}
+                        for s_i, c in enumerate(mod_chunks)
+                    ]
 
         # 3. Validate and normalize the course blueprint
         validated_blueprint = self.validator.validate_and_normalize(
@@ -140,7 +194,7 @@ class CourseBuilderService:
             else:
                 chapter_order = course.sections.filter(parent__isnull=True).count()
 
-            # 5. Materialize hierarchical Chapters -> Lessons
+            # 5. Materialize hierarchical Chapters -> Sections / Lessons
             chapters_data = validated_blueprint.get("chapters", [])
             for ch_idx, ch_data in enumerate(chapters_data):
                 chap_obj = CourseSection.objects.create(
@@ -155,7 +209,7 @@ class CourseBuilderService:
 
                 lessons_data = ch_data.get("sections", [])
                 for l_idx, l_data in enumerate(lessons_data):
-                    CourseSection.objects.create(
+                    sec_obj = CourseSection.objects.create(
                         course=course,
                         parent=chap_obj,
                         title=l_data["title"],
@@ -165,6 +219,22 @@ class CourseBuilderService:
                         objectives=l_data.get("objectives", []),
                         estimated_minutes=l_data.get("estimated_minutes", 15),
                     )
+
+                    # Also persist sub-lessons if present in data
+                    sub_lessons = l_data.get("sections") or l_data.get("lessons") or []
+                    if isinstance(sub_lessons, list) and sub_lessons:
+                        for sub_idx, sub_data in enumerate(sub_lessons):
+                            if isinstance(sub_data, dict):
+                                CourseSection.objects.create(
+                                    course=course,
+                                    parent=sec_obj,
+                                    title=sub_data.get("title", f"Leçon {l_idx + 1}.{sub_idx + 1}"),
+                                    order=sub_idx,
+                                    content=sub_data.get("content", ""),
+                                    summary=sub_data.get("summary", ""),
+                                    objectives=sub_data.get("objectives", []),
+                                    estimated_minutes=sub_data.get("estimated_minutes", 15),
+                                )
 
         logger.info(
             "Course %s successfully populated with %s total hierarchical sections",

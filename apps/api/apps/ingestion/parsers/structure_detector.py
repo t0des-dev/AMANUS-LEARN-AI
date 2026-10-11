@@ -3,29 +3,33 @@ from typing import Any
 
 CHAPTER_PATTERNS = [
     re.compile(
-        r"^(?:#\s+|chapitre\s+[\d\.]+|chapter\s+[\d\.]+|module\s+[\d\.]+|partie\s+[ivxlcdm\d\.]+|part\s+[ivxlcdm\d\.]+)(?:\s*[:\-–]\s*|\s+)(.+)$",
+        r"^(?:#\s+|chapitre\s+[\d\.]+|chapter\s+[\d\.]+|module\s+[\d\.]+|partie\s+[ivxlcdm\d\.]+|part\s+[ivxlcdm\d\.]+|الفصل\s+[\d\.]+|الوحدة\s+[\d\.]+|الباب\s+[\d\.]+|المحور\s+[\d\.]+|الجزء\s+[\d\.]+)(?:\s*[:\-–]\s*|\s+)(.+)$",
         re.IGNORECASE,
     ),
-    re.compile(r"^(?:chapitre|chapter|module|partie|part)\s+[\d\.]+.*$", re.IGNORECASE),
+    re.compile(
+        r"^(?:chapitre|chapter|module|partie|part|الفصل|الوحدة|الباب|المحور|الجزء)\s+[\d\.]+.*$",
+        re.IGNORECASE,
+    ),
     re.compile(r"^#\s+(.+)$"),
 ]
 
 SECTION_PATTERNS = [
     re.compile(
-        r"^(?:##\s+|section\s+[\d\.]+|partie\s+[\d\.]+)(?:\s*[:\-–]\s*|\s+)(.+)$", re.IGNORECASE
+        r"^(?:##\s+|section\s+[\d\.]+|partie\s+[\d\.]+|المبحث\s+[\d\.]+|القسم\s+[\d\.]+|المطلب\s+[\d\.]+|الدرس\s+[\d\.]+)(?:\s*[:\-–]\s*|\s+)(.+)$",
+        re.IGNORECASE,
     ),
-    re.compile(r"^section\s+[\d\.]+.*$", re.IGNORECASE),
-    re.compile(r"^(\d+\.\d+)(?:\s*[:\-–]\s*|\s+)([A-ZÀ-ÿ].*)$"),
+    re.compile(r"^(?:section|المبحث|القسم|المطلب|الدرس)\s+[\d\.]+.*$", re.IGNORECASE),
+    re.compile(r"^(\d+\.\d+)(?:\s*[:\-–]\s*|\s+)([A-ZÀ-ÿ\u0600-\u06FF].*)$"),
     re.compile(r"^##\s+(.+)$"),
 ]
 
 SUBSECTION_PATTERNS = [
     re.compile(
-        r"^(?:###\s+|sous-section\s+[\d\.]+|subsection\s+[\d\.]+)(?:\s*[:\-–]\s*|\s+)(.+)$",
+        r"^(?:###\s+|sous-section\s+[\d\.]+|subsection\s+[\d\.]+|الفرع\s+[\d\.]+|الفقرة\s+[\d\.]+)(?:\s*[:\-–]\s*|\s+)(.+)$",
         re.IGNORECASE,
     ),
-    re.compile(r"^(?:sous-section|subsection)\s+[\d\.]+.*$", re.IGNORECASE),
-    re.compile(r"^(\d+\.\d+\.\d+)(?:\s*[:\-–]\s*|\s+)([A-ZÀ-ÿ].*)$"),
+    re.compile(r"^(?:sous-section|subsection|الفرع|الفقرة)\s+[\d\.]+.*$", re.IGNORECASE),
+    re.compile(r"^(\d+\.\d+\.\d+)(?:\s*[:\-–]\s*|\s+)([A-ZÀ-ÿ\u0600-\u06FF].*)$"),
     re.compile(r"^###\s+(.+)$"),
 ]
 

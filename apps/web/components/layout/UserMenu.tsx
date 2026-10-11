@@ -29,7 +29,9 @@ export function UserMenu() {
   const initials =
     user.first_name && user.last_name
       ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
-      : user.email.slice(0, 2).toUpperCase();
+      : user.email
+      ? user.email.slice(0, 2).toUpperCase()
+      : "U";
 
   const handleLogout = async () => {
     setIsOpen(false);
@@ -48,7 +50,7 @@ export function UserMenu() {
           {initials}
         </div>
         <span className="max-w-[120px] truncate font-medium text-slate-200">
-          {user.first_name || user.email.split("@")[0]}
+          {user.first_name || (user.email ? user.email.split("@")[0] : "Utilisateur")}
         </span>
         <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
       </button>

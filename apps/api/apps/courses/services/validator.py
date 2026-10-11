@@ -29,27 +29,36 @@ class CoursePayloadValidator:
 
     DEFAULT_HEADINGS = {
         "fr": {
-            "chap1": "Chapitre 1 : Introduction & Fondements",
-            "chap2": "Chapitre 2 : Approfondissement & Études de cas",
-            "chap3": "Chapitre 3 : Synthèse & Validation des Compétences",
+            "chap1": "Chapitre 1 : Introduction & Fondements Théoriques",
+            "chap2": "Chapitre 2 : Notions Clés & Principes Directeurs",
+            "chap3": "Chapitre 3 : Approfondissement & Méthodologie",
+            "chap4": "Chapitre 4 : Mise en Œuvre Pratique & Études de Cas",
+            "chap5": "Chapitre 5 : Bonnes Pratiques & Points de Vigilance",
+            "chap6": "Chapitre 6 : Synthèse Globale & Validation",
             "sec1": "Vue d'ensemble et concepts clés",
             "sec2": "Mise en œuvre et cas pratiques",
             "lesson_prefix": "Leçon",
             "default_objective": "Comprendre et appliquer les concepts clés du chapitre",
         },
         "ar": {
-            "chap1": "الفصل 1 : المقدمة والأسس النظرية",
-            "chap2": "الفصل 2 : التعمق والدراسات التطبيقية",
-            "chap3": "الفصل 3 : الخلاصة والتقييم النهائي",
+            "chap1": "الفصل 1 : المقدمة والأسس النظرية والمفاهيمية",
+            "chap2": "الفصل 2 : المبادئ الجوهرية والآليات التأسيسية",
+            "chap3": "الفصل 3 : التحليل المنهجي والتقني المعمق",
+            "chap4": "الفصل 4 : التطبيقات العملية ودراسات الحالة",
+            "chap5": "الفصل 5 : أفضل الممارسات ونقاط اليقظة",
+            "chap6": "الفصل 6 : الخلاصة الشاملة وآفاق التطوير",
             "sec1": "نظرة عامة والمفاهيم الأساسية",
             "sec2": "التطبيق العملي ودراسة الحالات",
             "lesson_prefix": "الدرس",
             "default_objective": "فهم وتطبيق المفاهيم الأساسية للفصل",
         },
         "en": {
-            "chap1": "Chapter 1: Introduction & Core Foundations",
-            "chap2": "Chapter 2: Deep Dive & Practical Applications",
-            "chap3": "Chapter 3: Summary & Skills Assessment",
+            "chap1": "Chapter 1: Introduction & Foundational Concepts",
+            "chap2": "Chapter 2: Core Principles & Theoretical Framework",
+            "chap3": "Chapter 3: Technical Deep Dive & Methodology",
+            "chap4": "Chapter 4: Practical Implementation & Case Studies",
+            "chap5": "Chapter 5: Best Practices & Key Insights",
+            "chap6": "Chapter 6: Synthesis & Future Perspectives",
             "sec1": "Overview and Key Concepts",
             "sec2": "Practical Implementation and Case Studies",
             "lesson_prefix": "Lesson",
@@ -186,9 +195,9 @@ class CoursePayloadValidator:
             for ch_idx, ch in enumerate(chapters_input):
                 if not isinstance(ch, dict):
                     continue
-                ch_title = self._clean_heading(
-                    ch.get("title") or f"{headings['chap1'].split(':')[0]} {ch_idx + 1}"
-                )
+                ch_key = f"chap{ch_idx + 1}"
+                default_title = headings.get(ch_key, f"{headings['chap1'].split(':')[0]} {ch_idx + 1}")
+                ch_title = self._clean_heading(ch.get("title") or default_title)
                 if ch_title in seen_titles:
                     continue
                 seen_titles.add(ch_title)
@@ -226,6 +235,40 @@ class CoursePayloadValidator:
                     }
                 )
 
+            # Check if any identified chapters from document were omitted by the AI
+            if identified_chapters:
+                for chap_name, chunk_items in identified_chapters.items():
+                    clean_name = self._clean_heading(chap_name)
+                    # If this chapter was not included in AI output, add it
+                    if not any(clean_name.lower() in existing["title"].lower() or existing["title"].lower() in clean_name.lower() for existing in normalized_chapters):
+                        chunk_text = "\n\n".join(c.get("content", "") for c in chunk_items[:3] if c.get("content"))
+                        sec_items = [
+                            {
+                                "title": c.get("section") or f"{headings['lesson_prefix']} 1",
+                                "summary": (c.get("content", "")[:180] if c.get("content") else "") or headings["sec1"],
+                                "content": c.get("content", "") or f"Contenu du module {clean_name}.",
+                                "objectives": [headings["default_objective"]],
+                                "estimated_minutes": 15,
+                            }
+                            for c in chunk_items[:3]
+                        ] if chunk_items else [
+                            {
+                                "title": headings["sec1"],
+                                "summary": f"Module dédié à : {clean_name}",
+                                "content": chunk_text or f"Contenu du module {clean_name}.",
+                                "objectives": [headings["default_objective"]],
+                                "estimated_minutes": 15,
+                            }
+                        ]
+                        normalized_chapters.append(
+                            {
+                                "title": clean_name,
+                                "summary": f"Module thématique : {clean_name}",
+                                "estimated_minutes": len(sec_items) * 20,
+                                "sections": sec_items,
+                            }
+                        )
+
             if normalized_chapters:
                 return normalized_chapters
 
@@ -242,14 +285,33 @@ class CoursePayloadValidator:
                 # If document chunks contained chapter boundaries, group by them
                 if identified_chapters and len(identified_chapters) > 1:
                     grouped_chapters = []
-                    sec_cursor = 0
+                    chap_keys = list(identified_chapters.keys())
+                    total_chaps = len(chap_keys)
                     total_secs = len(valid_sections)
-                    for chap_name in identified_chapters.keys():
-                        if sec_cursor >= total_secs:
-                            break
-                        # Take 1-2 sections per chapter
-                        batch = valid_sections[sec_cursor : sec_cursor + 2]
+
+                    secs_per_chap = max(1, total_secs // total_chaps)
+                    sec_cursor = 0
+
+                    for c_idx, chap_name in enumerate(chap_keys):
+                        if c_idx == total_chaps - 1:
+                            batch = valid_sections[sec_cursor:]
+                        else:
+                            batch = valid_sections[sec_cursor : sec_cursor + secs_per_chap]
                         sec_cursor += len(batch)
+
+                        if not batch:
+                            chunk_items = identified_chapters[chap_name]
+                            chunk_text = "\n\n".join(c.get("content", "") for c in chunk_items[:2] if c.get("content"))
+                            batch = [
+                                {
+                                    "title": f"{headings['sec1']}",
+                                    "summary": f"Axe : {chap_name}",
+                                    "content": chunk_text or f"Contenu pédagogique dédié à {chap_name}.",
+                                    "objectives": [headings["default_objective"]],
+                                    "estimated_minutes": 15,
+                                }
+                            ]
+
                         grouped_chapters.append(
                             {
                                 "title": self._clean_heading(chap_name),
@@ -258,53 +320,59 @@ class CoursePayloadValidator:
                                 "sections": batch,
                             }
                         )
-                    # Add any remaining sections
-                    if sec_cursor < total_secs and grouped_chapters:
-                        grouped_chapters[-1]["sections"].extend(valid_sections[sec_cursor:])
+
                     if grouped_chapters:
                         return grouped_chapters
 
-                # Otherwise, partition flat sections into two logical chapters
-                midpoint = max(1, len(valid_sections) // 2)
-                chap1_lessons = valid_sections[:midpoint]
-                chap2_lessons = valid_sections[midpoint:] or valid_sections[:1]
+                # Otherwise, partition flat sections into multiple logical chapters (3 to 6)
+                num_chapters = min(6, max(3, (len(valid_sections) + 1) // 2))
+                secs_per_chap = max(1, (len(valid_sections) + num_chapters - 1) // num_chapters)
+                grouped_chapters = []
 
-                return [
-                    {
-                        "title": headings["chap1"],
-                        "summary": raw_data.get("introduction", "Fondements et cadre théorique."),
-                        "estimated_minutes": len(chap1_lessons) * 20,
-                        "sections": chap1_lessons,
-                    },
-                    {
-                        "title": headings["chap2"],
-                        "summary": raw_data.get(
-                            "conclusion", "Applications et approfondissements."
-                        ),
-                        "estimated_minutes": len(chap2_lessons) * 25,
-                        "sections": chap2_lessons,
-                    },
-                ]
+                for ch_i in range(num_chapters):
+                    ch_key = f"chap{ch_i + 1}"
+                    ch_title = headings.get(ch_key, f"{headings['chap1'].split(':')[0]} {ch_i + 1}")
+                    start_i = ch_i * secs_per_chap
+                    end_i = min(len(valid_sections), start_i + secs_per_chap)
+                    batch = valid_sections[start_i:end_i]
+                    if not batch:
+                        continue
+                    grouped_chapters.append(
+                        {
+                            "title": ch_title,
+                            "summary": batch[0].get("summary", ""),
+                            "estimated_minutes": len(batch) * 20,
+                            "sections": batch,
+                        }
+                    )
+                if grouped_chapters:
+                    return grouped_chapters
 
-        # Scenario C: Minimal fallback if text content exists in introduction
+        # Scenario C: Fallback if text content exists in introduction or overview
         intro = str(raw_data.get("introduction") or raw_data.get("overview") or "").strip()
         if intro:
-            return [
-                {
-                    "title": headings["chap1"],
-                    "summary": intro[:300],
-                    "estimated_minutes": 30,
-                    "sections": [
-                        {
-                            "title": headings["sec1"],
-                            "summary": intro[:150],
-                            "content": intro,
-                            "objectives": [headings["default_objective"]],
-                            "estimated_minutes": 15,
-                        }
-                    ],
-                }
-            ]
+            num_fallback_chaps = 3
+            fallback_chapters = []
+            for ch_i in range(num_fallback_chaps):
+                ch_key = f"chap{ch_i + 1}"
+                ch_title = headings.get(ch_key, f"{headings['chap1'].split(':')[0]} {ch_i + 1}")
+                fallback_chapters.append(
+                    {
+                        "title": ch_title,
+                        "summary": intro[:250],
+                        "estimated_minutes": 25,
+                        "sections": [
+                            {
+                                "title": f"{headings['sec1']} - {ch_i + 1}",
+                                "summary": intro[:120],
+                                "content": intro,
+                                "objectives": [headings["default_objective"]],
+                                "estimated_minutes": 15,
+                            }
+                        ],
+                    }
+                )
+            return fallback_chapters
 
         return []
 

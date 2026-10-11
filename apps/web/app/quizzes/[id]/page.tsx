@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, use } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   HelpCircle,
   Clock,
@@ -22,10 +22,6 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { quizService } from "@/services/quizService";
 import { Quiz, QuizAttempt } from "@/types/quiz";
-
-interface QuizDetailPageProps {
-  params: Promise<{ id: string }>;
-}
 
 function QuizDetailContent({ quizId }: { quizId: string }) {
   const router = useRouter();
@@ -381,11 +377,12 @@ function QuizDetailContent({ quizId }: { quizId: string }) {
   );
 }
 
-export default function QuizDetailPage({ params }: QuizDetailPageProps) {
-  const unwrappedParams = use(params);
+export default function QuizDetailPage() {
+  const routeParams = useParams();
+  const quizId = (routeParams?.id as string) || "";
   return (
     <ProtectedRoute>
-      <QuizDetailContent quizId={unwrappedParams.id} />
+      <QuizDetailContent quizId={quizId} />
     </ProtectedRoute>
   );
 }

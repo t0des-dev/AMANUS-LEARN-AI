@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, use, useRef } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -20,10 +20,6 @@ import { Quiz, QuizAttempt, QuizQuestion } from "@/types/quiz";
 import { QuizTimer } from "@/features/quiz/QuizTimer";
 import { QuizProgress } from "@/features/quiz/QuizProgress";
 import { QuestionCard } from "@/features/quiz/QuestionCard";
-
-interface QuizPlayPageProps {
-  params: Promise<{ id: string }>;
-}
 
 function QuizPlayContent({ quizId }: { quizId: string }) {
   const router = useRouter();
@@ -312,11 +308,12 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
   );
 }
 
-export default function QuizPlayPage({ params }: QuizPlayPageProps) {
-  const unwrappedParams = use(params);
+export default function QuizPlayPage() {
+  const routeParams = useParams();
+  const quizId = (routeParams?.id as string) || "";
   return (
     <ProtectedRoute>
-      <QuizPlayContent quizId={unwrappedParams.id} />
+      <QuizPlayContent quizId={quizId} />
     </ProtectedRoute>
   );
 }

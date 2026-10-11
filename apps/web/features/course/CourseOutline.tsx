@@ -235,35 +235,114 @@ export function CourseOutline({
               {!isCollapsed && (
                 <div className="p-4 space-y-3.5 bg-slate-950/20">
                   {hasSubsections ? (
-                    chapter.children!.map((section, sIdx) => (
-                      <div
-                        key={section.id}
-                        className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
-                            <span className="text-indigo-400 font-mono text-[11px]">
-                              {cIdx + 1}.{sIdx + 1}
-                            </span>
-                            <span>{section.title}</span>
-                          </h4>
-                          {section.estimated_minutes > 0 && (
-                            <span className="text-[11px] text-slate-500 font-mono">
-                              {section.estimated_minutes} {t("dashboard.minutes")}
-                            </span>
+                    chapter.children!.map((section, sIdx) => {
+                      const hasSubLessons = section.children && section.children.length > 0;
+
+                      if (!hasSubLessons) {
+                        // Direct lesson under chapter (2-tier hierarchy)
+                        return (
+                          <div
+                            key={section.id}
+                            className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-4 hover:border-indigo-500/40 hover:bg-slate-900/60 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                          >
+                            <div className="flex items-start gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-indigo-500 group-hover:text-white transition">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[11px] text-indigo-400 font-mono font-semibold">
+                                    {cIdx + 1}.{sIdx + 1}
+                                  </span>
+                                  <h4 className="text-sm font-semibold text-white group-hover:text-indigo-300 transition truncate">
+                                    {section.title}
+                                  </h4>
+                                </div>
+                                {section.summary && (
+                                  <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                    {section.summary}
+                                  </p>
+                                )}
+                                {section.objectives && section.objectives.length > 0 && (
+                                  <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 mt-1.5">
+                                    <Target className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate">
+                                      {section.objectives[0]}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+                              {section.estimated_minutes > 0 && (
+                                <span className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
+                                  {section.estimated_minutes} {t("dashboard.minutes")}
+                                </span>
+                              )}
+
+                              {onSelectLesson ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onSelectLesson(section)}
+                                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-950 transition"
+                                >
+                                  <PlayCircle className="w-4 h-4" />
+                                  <span>{t("courses.read")}</span>
+                                </button>
+                              ) : (
+                                <Link
+                                  href={`/courses/${course.id}/learn?lesson=${section.id}`}
+                                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-950 transition"
+                                >
+                                  <PlayCircle className="w-4 h-4" />
+                                  <span>{t("courses.read")}</span>
+                                </Link>
+                              )}
+
+                              {isTeacher && (
+                                <Link
+                                  href={`/courses/${course.id}/edit?section=${section.id}`}
+                                  className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                                  title={t("courses.editCourse")}
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Nested sub-lessons inside section (3-tier hierarchy)
+                      return (
+                        <div
+                          key={section.id}
+                          className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4 space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="text-xs font-semibold text-slate-200 flex items-center gap-2">
+                              <span className="text-indigo-400 font-mono text-[11px]">
+                                {cIdx + 1}.{sIdx + 1}
+                              </span>
+                              <span>{section.title}</span>
+                            </h4>
+                            {section.estimated_minutes > 0 && (
+                              <span className="text-[11px] text-slate-500 font-mono">
+                                {section.estimated_minutes} {t("dashboard.minutes")}
+                              </span>
+                            )}
+                          </div>
+
+                          {section.summary && (
+                            <p className="text-xs text-slate-400 pl-4 border-l border-slate-800">
+                              {section.summary}
+                            </p>
                           )}
-                        </div>
 
-                        {section.summary && (
-                          <p className="text-xs text-slate-400 pl-4 border-l border-slate-800">
-                            {section.summary}
-                          </p>
-                        )}
-
-                        {/* Lessons list */}
-                        {section.children && section.children.length > 0 && (
+                          {/* Lessons list */}
                           <div className="space-y-2 pt-1">
-                            {section.children.map((lesson, lIdx) => (
+                            {section.children!.map((lesson, lIdx) => (
                               <div
                                 key={lesson.id}
                                 className="rounded-xl border border-slate-800/60 bg-slate-950/50 p-3 hover:border-indigo-500/40 hover:bg-slate-900/60 transition-all flex items-center justify-between gap-3 group"
@@ -329,9 +408,9 @@ export function CourseOutline({
                               </div>
                             ))}
                           </div>
-                        )}
-                      </div>
-                    ))
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="text-xs text-slate-500 italic py-2 pl-2">
                       {t("courses.noSubsections")}
