@@ -51,10 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // Try refreshing access token
         try {
-          const { access } = await authService.refresh(tokens.refresh);
-          authStorage.setAccessToken(access);
-          setToken(access);
-          const profile = await authService.getMe(access);
+          const res = await authService.refresh(tokens.refresh);
+          authStorage.setTokens({
+            access: res.access,
+            refresh: res.refresh || tokens.refresh,
+          });
+          setToken(res.access);
+          const profile = await authService.getMe(res.access);
           setUser(profile);
           authStorage.setCachedUser(profile);
         } catch {

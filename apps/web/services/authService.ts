@@ -58,8 +58,8 @@ export const authService = {
     });
   },
 
-  async refresh(refreshToken: string): Promise<{ access: string }> {
-    return authFetch<{ access: string }>("auth/refresh", {
+  async refresh(refreshToken: string): Promise<{ access: string; refresh?: string }> {
+    return authFetch<{ access: string; refresh?: string }>("auth/refresh", {
       method: "POST",
       body: JSON.stringify({ refresh: refreshToken }),
     });

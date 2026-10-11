@@ -23,12 +23,13 @@ export function OrganizationProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrg, setCurrentOrgState] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const refreshOrganizations = useCallback(async () => {
+    if (isAuthLoading) return;
     const token = authStorage.getAccessToken();
     if (!token || !isAuthenticated) {
       setOrganizations([]);

@@ -8,6 +8,8 @@ import {
 } from "../types/organization";
 
 import { getApiBaseUrl } from "./apiClient";
+import { authStorage } from "../lib/authTokens";
+import { authService } from "./authService";
 
 interface PaginatedResponse<T> {
   count: number;
@@ -23,14 +25,39 @@ async function orgFetch<T>(
 ): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
-  const response = await fetch(url, {
+  let currentToken = token;
+  let response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${currentToken}`,
       ...options.headers,
     },
   });
+
+  if (response.status === 401) {
+    const tokens = authStorage.getTokens();
+    if (tokens?.refresh) {
+      try {
+        const res = await authService.refresh(tokens.refresh);
+        authStorage.setTokens({
+          access: res.access,
+          refresh: res.refresh || tokens.refresh,
+        });
+        currentToken = res.access;
+        response = await fetch(url, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentToken}`,
+            ...options.headers,
+          },
+        });
+      } catch {
+        authStorage.clear();
+      }
+    }
+  }
 
   const data = await response.json().catch(() => ({}));
 
