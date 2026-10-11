@@ -56,15 +56,19 @@ export const audioService = {
     token: string,
     sectionId: string
   ): Promise<AudioContent | null> {
+    if (!sectionId || sectionId === "null" || sectionId === "undefined") {
+      return null;
+    }
     try {
-      return await audioFetch<AudioContent>(
+      const data = await audioFetch<any>(
         `sections/${sectionId}/audio/`,
         token
       );
-    } catch (err: any) {
-      if (err.message?.includes("404") || err.message?.includes("Aucun")) {
+      if (!data || !data.id || data.status === "NONE") {
         return null;
       }
+      return data as AudioContent;
+    } catch {
       return null;
     }
   },

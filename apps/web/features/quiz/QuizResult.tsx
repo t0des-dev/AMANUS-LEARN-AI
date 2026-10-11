@@ -149,7 +149,7 @@ export function QuizResult({
             Tous les quiz
           </Link>
 
-          {quiz?.course && (
+          {quiz?.course && quiz.course !== "null" && (
             <Link
               href={`/courses/${quiz.course}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition"

@@ -77,7 +77,10 @@ function CourseLearnPageContent() {
   };
 
   const fetchCourse = useCallback(async () => {
-    if (!token || !courseId) return;
+    if (!token || !courseId || courseId === "null" || courseId === "undefined") {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
 

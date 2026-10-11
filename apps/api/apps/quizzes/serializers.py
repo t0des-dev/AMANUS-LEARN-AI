@@ -199,13 +199,32 @@ class QuizGenerateRequestSerializer(serializers.Serializer):
 
 
 class QuizSubmitPayloadSerializer(serializers.Serializer):
-    """Payload submitted by user when answering a quiz."""
+    """Payload submitted by user when answering a quiz. Supports both Dict and List formats."""
 
-    answers = serializers.DictField(
-        child=serializers.CharField(),
+    answers = serializers.JSONField(
         required=True,
-        help_text="Dictionnaire associant l'UUID de la question à l'UUID de la réponse choisie : {question_id: answer_id}",
+        help_text="Dictionnaire {question_id: answer_id} ou liste [{'question_id': ..., 'selected_answer_id': ...}]",
     )
+
+    def validate_answers(self, value):
+        if isinstance(value, dict):
+            return {str(k): str(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            res = {}
+            for item in value:
+                if isinstance(item, dict):
+                    q_id = item.get("question_id") or item.get("id")
+                    a_id = (
+                        item.get("selected_answer_id")
+                        or item.get("answer_id")
+                        or item.get("answer")
+                    )
+                    if q_id and a_id:
+                        res[str(q_id)] = str(a_id)
+            return res
+        raise serializers.ValidationError(
+            "Le champ answers doit être un dictionnaire ou une liste de réponses."
+        )
 
 
 class QuizAttemptSerializer(serializers.ModelSerializer):

@@ -102,16 +102,9 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
     setError(null);
 
     try {
-      const answersPayload = Object.entries(selectedAnswers).map(
-        ([question_id, selected_answer_id]) => ({
-          question_id,
-          selected_answer_id,
-        })
-      );
-
       const submittedAttempt = await quizService.submitQuiz(token, quizId, {
         attempt_id: attempt.id,
-        answers: answersPayload,
+        answers: selectedAnswers,
       });
 
       // Redirect to results

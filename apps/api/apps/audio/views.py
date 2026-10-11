@@ -131,8 +131,14 @@ class SectionAudioView(APIView):
         )
         if not audio_content:
             return Response(
-                {"detail": "Aucun contenu audio disponible pour cette section."},
-                status=status.HTTP_404_NOT_FOUND,
+                {
+                    "id": None,
+                    "section_id": str(section.id),
+                    "status": "NONE",
+                    "detail": "Aucun contenu audio disponible pour cette section.",
+                    "audio_url": None,
+                },
+                status=status.HTTP_200_OK,
             )
 
         return Response(

@@ -66,6 +66,9 @@ export const courseService = {
   },
 
   async get(token: string, courseId: string): Promise<CourseItem> {
+    if (!courseId || courseId === "null" || courseId === "undefined") {
+      throw new Error("Identifiant de cours invalide.");
+    }
     return courseFetch<CourseItem>(`courses/${courseId}/`, token);
   },
 
