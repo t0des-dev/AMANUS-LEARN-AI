@@ -61,7 +61,7 @@ export function OrganizationProvider({
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isAuthLoading]);
 
   useEffect(() => {
     refreshOrganizations();

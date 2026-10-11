@@ -52,3 +52,25 @@ export const authStorage = {
     localStorage.removeItem(USER_KEY);
   },
 };
+
+export function isJwtExpired(token: string, skewSeconds = 10): boolean {
+  if (!token) return true;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return true;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(json);
+    if (typeof payload.exp === "number") {
+      return Date.now() >= (payload.exp - skewSeconds) * 1000;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}

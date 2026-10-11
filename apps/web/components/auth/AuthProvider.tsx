@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { authStorage } from "../../lib/authTokens";
+import { authStorage, isJwtExpired } from "../../lib/authTokens";
 import { authService } from "../../services/authService";
 import {
   AuthContextType,
@@ -43,13 +43,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      let activeAccessToken = tokens.access;
+
+      // Proactively refresh if access token has expired according to its JWT timestamp
+      if (isJwtExpired(tokens.access)) {
+        if (isJwtExpired(tokens.refresh)) {
+          authStorage.clear();
+          setUser(null);
+          setToken(null);
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          const res = await authService.refresh(tokens.refresh);
+          authStorage.setTokens({
+            access: res.access,
+            refresh: res.refresh || tokens.refresh,
+          });
+          activeAccessToken = res.access;
+          setToken(res.access);
+        } catch {
+          authStorage.clear();
+          setUser(null);
+          setToken(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       try {
-        const profile = await authService.getMe(tokens.access);
+        const profile = await authService.getMe(activeAccessToken);
         setUser(profile);
-        setToken(tokens.access);
+        setToken(activeAccessToken);
         authStorage.setCachedUser(profile);
       } catch {
-        // Try refreshing access token
+        // Fallback refresh attempt if token was invalidated server-side
         try {
           const res = await authService.refresh(tokens.refresh);
           authStorage.setTokens({
