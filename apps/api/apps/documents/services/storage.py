@@ -177,7 +177,7 @@ class S3StorageService(BaseStorageService):
 
     def _ensure_bucket_exists(self) -> None:
         try:
-            from botocore.exceptions import ClientError
+            from botocore.exceptions import ClientError, EndpointConnectionError
 
             try:
                 self.s3_client.head_bucket(Bucket=self.bucket_name)
@@ -186,7 +186,11 @@ class S3StorageService(BaseStorageService):
                 if error_code in ("404", "NoSuchBucket"):
                     logger.info(f"Creating S3 bucket: {self.bucket_name}")
                     self.s3_client.create_bucket(Bucket=self.bucket_name)
+            except (EndpointConnectionError, ConnectionError, OSError) as e:
+                raise RuntimeError(f"S3/MinIO endpoint unreachable ({self.endpoint_url}): {e}") from e
         except Exception as e:
+            if "unreachable" in str(e).lower() or "endpoint" in str(e).lower():
+                raise
             logger.warning(f"Could not verify or create S3 bucket {self.bucket_name}: {e}")
 
     def save_file(
@@ -206,30 +210,43 @@ class S3StorageService(BaseStorageService):
         else:
             raise TypeError("Unsupported content format for S3 upload")
 
-        self.s3_client.upload_fileobj(
-            file_obj,
-            self.bucket_name,
-            storage_key,
-            ExtraArgs=extra_args,
-        )
-        logger.info(f"Uploaded file to S3 ({self.bucket_name}): {storage_key}")
-        return storage_key
+        try:
+            self.s3_client.upload_fileobj(
+                file_obj,
+                self.bucket_name,
+                storage_key,
+                ExtraArgs=extra_args,
+            )
+            logger.info(f"Uploaded file to S3 ({self.bucket_name}): {storage_key}")
+            return storage_key
+        except Exception as e:
+            logger.warning(f"S3 upload failed ({e}), falling back to LocalStorageService for {storage_key}")
+            return LocalStorageService().save_file(storage_key, content, content_type)
 
     def get_file(self, storage_key: str) -> io.BytesIO:
-        response = self.s3_client.get_object(Bucket=self.bucket_name, Key=storage_key)
-        body = response["Body"].read()
-        return io.BytesIO(body)
+        try:
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=storage_key)
+            body = response["Body"].read()
+            return io.BytesIO(body)
+        except Exception as e:
+            local = LocalStorageService()
+            if local.file_exists(storage_key):
+                return local.get_file(storage_key)
+            raise
 
     def delete_file(self, storage_key: str) -> bool:
         try:
             self.s3_client.delete_object(Bucket=self.bucket_name, Key=storage_key)
             logger.info(f"Deleted S3 object: {storage_key}")
+            LocalStorageService().delete_file(storage_key)
             return True
         except Exception as e:
             logger.error(f"Error deleting S3 object {storage_key}: {e}")
-            return False
+            return LocalStorageService().delete_file(storage_key)
 
     def file_exists(self, storage_key: str) -> bool:
+        if LocalStorageService().file_exists(storage_key):
+            return True
         from botocore.exceptions import ClientError
 
         try:
@@ -237,8 +254,13 @@ class S3StorageService(BaseStorageService):
             return True
         except ClientError:
             return False
+        except Exception:
+            return False
 
     def get_url(self, storage_key: str, expires_in: int = 3600) -> str:
+        local = LocalStorageService()
+        if local.file_exists(storage_key):
+            return local.get_url(storage_key)
         try:
             url = self.s3_client.generate_presigned_url(
                 "get_object",
@@ -248,7 +270,7 @@ class S3StorageService(BaseStorageService):
             return url
         except Exception as e:
             logger.warning(f"Failed to generate presigned S3 URL for {storage_key}: {e}")
-            return f"{self.endpoint_url or ''}/{self.bucket_name}/{storage_key}"
+            return local.get_url(storage_key)
 
 
 _storage_instance: BaseStorageService | None = None

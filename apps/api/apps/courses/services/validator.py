@@ -235,8 +235,8 @@ class CoursePayloadValidator:
                     }
                 )
 
-            # Check if any identified chapters from document were omitted by the AI
-            if identified_chapters:
+            # Supplement from identified chapters only if AI output was insufficient (< 2 chapters)
+            if identified_chapters and len(normalized_chapters) < 2:
                 for chap_name, chunk_items in identified_chapters.items():
                     clean_name = self._clean_heading(chap_name)
                     # If this chapter was not included in AI output, add it

@@ -40,9 +40,68 @@ export function AudioPlayer({
   const [playbackRate, setPlaybackRate] = useState(1);
   const [showScript, setShowScript] = useState(false);
   const [bufferedPercent, setBufferedPercent] = useState(0);
+  const [useWebSpeech, setUseWebSpeech] = useState(false);
+  const [speechAvailable, setSpeechAvailable] = useState(false);
 
   // Fallback direct URL if relative media path
-  const audioSrc = audio.audio_url || "";
+  const getResolvedAudioUrl = (url?: string | null): string => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("blob:") || url.startsWith("data:")) {
+      return url;
+    }
+    if (typeof window !== "undefined") {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      if (apiUrl.startsWith("http")) {
+        try {
+          const origin = new URL(apiUrl).origin;
+          return `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
+        } catch {
+          return url;
+        }
+      }
+    }
+    return url;
+  };
+
+  const audioSrc = getResolvedAudioUrl(audio.audio_url);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      setSpeechAvailable(true);
+    }
+  }, []);
+
+  const speakWithWebSpeech = () => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const textToRead = audio.script || title || "Pas de texte disponible.";
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.rate = playbackRate;
+    const langCode = audio.language === "ar" ? "ar-SA" : audio.language === "en" ? "en-US" : "fr-FR";
+    utterance.lang = langCode;
+
+    const voices = window.speechSynthesis.getVoices();
+    const matchedVoice = voices.find((v) =>
+      v.lang.toLowerCase().startsWith(audio.language.toLowerCase())
+    );
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
+
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const el = audioRef.current;
@@ -80,10 +139,26 @@ export function AudioPlayer({
     };
   }, [audio.duration]);
 
-  // Support Play / Pause (Resume / Pause)
+  // Support Play / Pause (Resume / Pause) with seamless Web Speech fallback
   const togglePlay = () => {
+    if (useWebSpeech) {
+      if (isPlaying) {
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+      } else {
+        speakWithWebSpeech();
+      }
+      return;
+    }
+
     const el = audioRef.current;
-    if (!el) return;
+    if (!el || !audioSrc) {
+      if (speechAvailable) {
+        setUseWebSpeech(true);
+        speakWithWebSpeech();
+      }
+      return;
+    }
 
     if (isPlaying) {
       el.pause();
@@ -91,7 +166,15 @@ export function AudioPlayer({
     } else {
       el.play()
         .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+        .catch(() => {
+          // Playback failed (e.g. invalid stream format), fall back gracefully to browser SpeechSynthesis
+          if (speechAvailable) {
+            setUseWebSpeech(true);
+            speakWithWebSpeech();
+          } else {
+            setIsPlaying(false);
+          }
+        });
     }
   };
 
@@ -116,6 +199,9 @@ export function AudioPlayer({
     setPlaybackRate(nextRate);
     if (audioRef.current) {
       audioRef.current.playbackRate = nextRate;
+    }
+    if (useWebSpeech && isPlaying) {
+      speakWithWebSpeech();
     }
   };
 
@@ -145,6 +231,11 @@ export function AudioPlayer({
         src={audioSrc}
         autoPlay={autoPlay}
         preload="metadata"
+        onError={() => {
+          if (speechAvailable && !useWebSpeech) {
+            setUseWebSpeech(true);
+          }
+        }}
       />
 
       {/* Header Info */}
@@ -162,9 +253,34 @@ export function AudioPlayer({
               <span className="rounded-full bg-indigo-950/80 border border-indigo-800/60 px-2 py-0.5 text-[10px] font-semibold text-indigo-300 shrink-0">
                 Voix : {audio.voice_id}
               </span>
+              {speechAvailable && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                      window.speechSynthesis.cancel();
+                    }
+                    if (audioRef.current) {
+                      audioRef.current.pause();
+                    }
+                    setIsPlaying(false);
+                    setUseWebSpeech(!useWebSpeech);
+                  }}
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition border shrink-0 ${
+                    useWebSpeech
+                      ? "bg-emerald-950/80 border-emerald-500/50 text-emerald-300"
+                      : "bg-slate-900 border-slate-700 text-slate-300 hover:text-white"
+                  }`}
+                  title="Basculer entre le flux MP3 et la voix naturelle du navigateur"
+                >
+                  {useWebSpeech ? "Voix Navigateur" : "Audio MP3"}
+                </button>
+              )}
             </div>
             <p className="text-[11px] text-slate-400 truncate">
-              Synthèse vocale pédagogique • {audio.language.toUpperCase()}
+              {useWebSpeech
+                ? `Synthèse vocale directe du navigateur • ${audio.language.toUpperCase()}`
+                : `Synthèse vocale pédagogique • ${audio.language.toUpperCase()}`}
             </p>
           </div>
         </div>
