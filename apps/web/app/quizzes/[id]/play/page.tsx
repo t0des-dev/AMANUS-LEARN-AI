@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   HelpCircle,
   X,
+  Sparkles,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -29,6 +30,7 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Player state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,6 +52,12 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
       const quizData = await quizService.getQuiz(token, quizId);
       setQuiz(quizData);
 
+      // Guard: If quiz contains 0 questions, do not trigger an invalid start attempt
+      if (!quizData.questions || quizData.questions.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
       // 2. Start attempt
       const attemptData = await quizService.startQuiz(token, quizId);
       setAttempt(attemptData);
@@ -63,6 +71,21 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
   useEffect(() => {
     initQuizSession();
   }, [initQuizSession]);
+
+  // Handler to generate questions automatically on the fly if empty
+  const handleAutoGenerate = async () => {
+    if (!token) return;
+    setIsGenerating(true);
+    setError(null);
+    try {
+      await quizService.generateQuestions(token, quizId, { count: 5 });
+      await initQuizSession();
+    } catch (genErr: any) {
+      setError(genErr.message || "Erreur lors de la génération des questions par l'IA.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Answer selection handler
   const handleSelectAnswer = (questionId: string, answerId: string) => {
@@ -116,22 +139,57 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
   }
 
   if (error || !quiz || !quiz.questions || quiz.questions.length === 0) {
+    const isEmptyQuiz = !error && (!quiz?.questions || quiz.questions.length === 0);
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 text-center">
-          <AlertCircle className="h-10 w-10 text-rose-500 mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-            Impossible de jouer
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 text-center shadow-sm">
+          {isEmptyQuiz ? (
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 mb-4">
+              <Sparkles className="h-7 w-7" />
+            </div>
+          ) : (
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-500 mb-4">
+              <AlertCircle className="h-7 w-7" />
+            </div>
+          )}
+
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            {isEmptyQuiz ? "Ce QCM ne contient aucune question" : "Impossible de démarrer le quiz"}
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-            {error || "Ce quiz ne contient aucune question pour le moment."}
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+            {error ||
+              "Aucune question n'est configurée pour ce quiz. Vous pouvez lancer la génération automatique par l'IA à partir du document ou retourner aux détails."}
           </p>
-          <Link
-            href={`/quizzes/${quizId}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 transition"
-          >
-            Retour au quiz
-          </Link>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            {isEmptyQuiz && (
+              <button
+                type="button"
+                onClick={handleAutoGenerate}
+                disabled={isGenerating}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition shadow-sm"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Génération en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>Générer avec l'IA</span>
+                  </>
+                )}
+              </button>
+            )}
+            <Link
+              href={`/quizzes/${quizId}`}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750 transition"
+            >
+              Retour aux détails
+            </Link>
+          </div>
         </div>
       </div>
     );

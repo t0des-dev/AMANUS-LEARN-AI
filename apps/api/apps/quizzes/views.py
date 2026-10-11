@@ -263,13 +263,33 @@ class QuizStartAttemptView(APIView):
     permission_classes = [IsAuthenticated, IsQuizOrganizationMember]
 
     def post(self, request, id: uuid.UUID):
-        quiz = get_object_or_404(Quiz.objects.select_related("organization"), id=id)
+        quiz = get_object_or_404(
+            Quiz.objects.select_related("organization", "course", "document"),
+            id=id,
+        )
         self.check_object_permissions(request, quiz)
+
+        # If the quiz has 0 questions, attempt automatic generation from document if available
+        if quiz.questions.count() == 0:
+            doc = quiz.document or (quiz.course.document if quiz.course else None)
+            if doc and doc.chunks.count() > 0:
+                try:
+                    from apps.quizzes.services.generator import QuizGeneratorService
+
+                    gen_service = QuizGeneratorService()
+                    gen_service.generate_questions_for_quiz(
+                        quiz=quiz,
+                        document=doc,
+                        count=5,
+                        language=getattr(quiz.course, "language", None) if quiz.course else None,
+                    )
+                except Exception as exc:
+                    logger.warning("Auto-generation of questions on quiz start failed: %s", exc)
 
         if quiz.questions.count() == 0:
             return Response(
                 {
-                    "detail": "Ce QCM ne contient aucune question pour le moment.",
+                    "detail": "Ce QCM ne contient aucune question pour le moment. Veuillez en générer avec l'IA ou les configurer avant de démarrer.",
                     "code": "empty_quiz",
                 },
                 status=status.HTTP_400_BAD_REQUEST,

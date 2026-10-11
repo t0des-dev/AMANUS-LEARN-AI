@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { BookOpen, Clock, Award, Play, ChevronRight, HelpCircle } from "lucide-react";
+import { BookOpen, Clock, Award, Play, ChevronRight, HelpCircle, Sparkles } from "lucide-react";
 import { Quiz } from "../../types/quiz";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 
@@ -114,13 +114,24 @@ export function QuizCard({ quiz, className = "" }: QuizCardProps) {
             {t("quizzes.details", "Détails")}
             <ChevronRight className="h-4 w-4" />
           </Link>
-          <Link
-            href={`/quizzes/${quiz.id}/play`}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition"
-          >
-            <Play className="h-3.5 w-3.5 fill-current" />
-            {t("quizzes.play", "Jouer")}
-          </Link>
+          {questionCount > 0 ? (
+            <Link
+              href={`/quizzes/${quiz.id}/play`}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition"
+            >
+              <Play className="h-3.5 w-3.5 fill-current" />
+              {t("quizzes.play", "Jouer")}
+            </Link>
+          ) : (
+            <Link
+              href={`/quizzes/${quiz.id}`}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition"
+              title={t("quizzes.generateFirst", "Générer des questions")}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+              {t("quizzes.generate", "Générer")}
+            </Link>
+          )}
         </div>
       </div>
     </div>
