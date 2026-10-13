@@ -25,6 +25,7 @@ import { ChatSession, PedagogicalCommandCode } from "../../types/chat";
 import { DocumentItem } from "../../types/document";
 import { SuggestedPrompt } from "../../components/chat/SuggestedPrompt";
 import { useToast } from "../../components/toast/ToastProvider";
+import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
 
 function ChatHubContent() {
   const router = useRouter();
@@ -32,6 +33,7 @@ function ChatHubContent() {
   const { currentOrg } = useOrganization();
   const { t } = useTranslation();
   const toast = useToast();
+  const { confirm } = useConfirm();
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -97,7 +99,14 @@ function ChatHubContent() {
     e.stopPropagation();
     e.preventDefault();
     if (!token) return;
-    if (!confirm("Voulez-vous vraiment supprimer cette conversation ?")) return;
+    const ok = await confirm({
+      title: "Supprimer la conversation",
+      message: "Voulez-vous vraiment supprimer définitivement cette conversation ? Tous les échanges associés seront effacés.",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+    if (!ok) return;
 
     try {
       await chatService.deleteSession(token, sessionId);

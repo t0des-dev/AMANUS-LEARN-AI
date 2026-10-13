@@ -36,6 +36,7 @@ import { documentService } from "../../services/documentService";
 import { podcastService } from "../../services/podcastService";
 import { CitationViewerDrawer } from "../../components/citation/CitationViewerDrawer";
 import { useToast } from "../../components/toast/ToastProvider";
+import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
 import {
   DocumentItem,
   DocumentPageItem,
@@ -66,6 +67,7 @@ export function DocumentDetails({
   const { token } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const { confirm } = useConfirm();
 
   const [doc, setDoc] = useState<DocumentItem>(initialDoc);
   const [currentStage, setCurrentStage] = useState<DocumentProcessingStage | "Failed">(
@@ -249,12 +251,19 @@ export function DocumentDetails({
 
   const handleDelete = async () => {
     if (!token) return;
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement ce document ?")) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Supprimer définitivement ce document",
+      message: `Êtes-vous sûr de vouloir supprimer définitivement "${doc.title}" ?\nToutes les pages, fragments et podcasts associés seront également effacés.`,
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+    if (!ok) return;
+
     setIsDeleting(true);
     try {
       await documentService.delete(token, doc.id);
+      toast.success("Document supprimé avec succès.");
       router.push("/documents");
     } catch (err: any) {
       setMessage({

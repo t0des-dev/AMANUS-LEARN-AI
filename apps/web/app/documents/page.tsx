@@ -18,11 +18,13 @@ import { DocumentItem } from "../../types/document";
 import { DocumentList } from "../../features/document/DocumentList";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { useToast } from "../../components/toast/ToastProvider";
+import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
 
 function DocumentsPageContent() {
   const { t } = useTranslation();
   const { token } = useAuth();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const { currentOrg, organizations, isLoading: isOrgLoading } = useOrganization();
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -66,12 +68,19 @@ function DocumentsPageContent() {
 
   const handleDelete = async (doc: DocumentItem) => {
     if (!token) return;
-    if (!window.confirm(`Supprimer le document "${doc.title}" ?`)) return;
+    const ok = await confirm({
+      title: "Supprimer le document",
+      message: `Voulez-vous vraiment supprimer définitivement "${doc.title}" ?\nCette action supprimera également les fragments et indexations associés.`,
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+    if (!ok) return;
 
     try {
       await documentService.delete(token, doc.id);
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
-      toast.success(`Document "${doc.title}" supprimé.`);
+      toast.success(`Document "${doc.title}" supprimé avec succès.`);
     } catch (err: any) {
       toast.error(err.message || "Erreur lors de la suppression.", "Erreur");
     }

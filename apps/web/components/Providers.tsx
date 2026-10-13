@@ -6,6 +6,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { OrganizationProvider } from "./organization/OrganizationContext";
 import { LanguageProvider } from "../lib/i18n/LanguageContext";
 import { ToastProvider } from "./toast/ToastProvider";
+import { ConfirmDialogProvider } from "./dialog/ConfirmDialogProvider";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -25,7 +26,9 @@ export function Providers({ children }: { children: ReactNode }) {
       <AuthProvider>
         <OrganizationProvider>
           <LanguageProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+            </ToastProvider>
           </LanguageProvider>
         </OrganizationProvider>
       </AuthProvider>

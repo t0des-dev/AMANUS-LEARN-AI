@@ -16,6 +16,7 @@ import { organizationService } from "../../services/organizationService";
 import { Organization, OrganizationPlan } from "../../types/organization";
 import { useOrganization } from "../../components/organization/OrganizationContext";
 import { useToast } from "../../components/toast/ToastProvider";
+import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
 
 interface OrganizationSettingsProps {
   organization: Organization;
@@ -28,6 +29,7 @@ export function OrganizationSettings({
 }: OrganizationSettingsProps) {
   const router = useRouter();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const { refreshOrganizations, setCurrentOrg } = useOrganization();
 
   const [name, setName] = useState(organization.name);
@@ -69,14 +71,17 @@ export function OrganizationSettings({
   };
 
   const handleDelete = async () => {
-    const confirmation = prompt(
-      `Pour confirmer la suppression définitive de l'organisation et de toutes ses données, tapez le nom exact : "${organization.name}"`
-    );
+    const ok = await confirm({
+      title: "Supprimer définitivement l'organisation",
+      message: `Cette action est irréversible et supprimera l'ensemble des documents, cours et membres associés.\nPour confirmer, veuillez saisir le nom exact de l'organisation ci-dessous :`,
+      confirmText: "Supprimer définitivement",
+      cancelText: "Annuler",
+      variant: "danger",
+      inputMatch: organization.name,
+      inputPlaceholder: organization.name,
+    });
 
-    if (confirmation !== organization.name) {
-      toast.warning("Le nom saisi ne correspond pas. Suppression annulée.", "Annulation");
-      return;
-    }
+    if (!ok) return;
 
     const token = authStorage.getAccessToken();
     if (!token) return;

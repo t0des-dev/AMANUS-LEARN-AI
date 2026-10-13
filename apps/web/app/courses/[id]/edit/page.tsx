@@ -29,6 +29,7 @@ import {
 } from "../../../../types/course";
 import { LessonEditor } from "../../../../features/course/LessonEditor";
 import { useToast } from "../../../../components/toast/ToastProvider";
+import { useConfirm } from "../../../../components/dialog/ConfirmDialogProvider";
 
 function findSectionById(
   sections: CourseSectionItem[],
@@ -65,6 +66,7 @@ function CourseEditPageContent() {
   const router = useRouter();
   const { token } = useAuth();
   const toast = useToast();
+  const { confirm } = useConfirm();
 
   const [course, setCourse] = useState<CourseItem | null>(null);
   const [selectedSection, setSelectedSection] =
@@ -164,8 +166,14 @@ function CourseEditPageContent() {
 
   const handleDeleteSection = async (sectionId: string) => {
     if (!token) return;
-    if (!confirm("Voulez-vous supprimer cette section et son sous-contenu ?"))
-      return;
+    const ok = await confirm({
+      title: "Supprimer la section",
+      message: "Voulez-vous vraiment supprimer cette section et son sous-contenu ?",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+    if (!ok) return;
 
     try {
       await courseService.deleteSection(token, sectionId);
@@ -200,12 +208,14 @@ function CourseEditPageContent() {
 
   const handleTriggerAIGenerate = async () => {
     if (!token || !course) return;
-    if (
-      !confirm(
-        "Régénérer le cours via l'IA va restructurer les chapitres à partir du document. Continuer ?"
-      )
-    )
-      return;
+    const ok = await confirm({
+      title: "Régénérer le cours avec l'IA",
+      message: "Régénérer le cours via l'IA va restructurer et remplacer les chapitres à partir du document.\nSouhaitez-vous continuer ?",
+      confirmText: "Générer avec l'IA",
+      cancelText: "Annuler",
+      variant: "warning",
+    });
+    if (!ok) return;
 
     setIsGeneratingAI(true);
     try {

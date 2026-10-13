@@ -3,6 +3,7 @@
 import React from "react";
 import { Plus, ChevronUp, ChevronDown, Trash2, Layout, Layers } from "lucide-react";
 import { PresentationSlide } from "../../types/presentation";
+import { useConfirm } from "../dialog/ConfirmDialogProvider";
 
 interface SlideNavigatorProps {
   slides: PresentationSlide[];
@@ -23,6 +24,7 @@ export const SlideNavigator: React.FC<SlideNavigatorProps> = ({
   onMoveSlide,
   isSaving = false,
 }) => {
+  const { confirm } = useConfirm();
   return (
     <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-full select-none">
       {/* Header */}
@@ -111,9 +113,16 @@ export const SlideNavigator: React.FC<SlideNavigatorProps> = ({
                     </button>
                     {slides.length > 1 && (
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (confirm(`Supprimer la slide #${slide.slide_number} : "${slide.title}" ?`)) {
+                          const ok = await confirm({
+                            title: "Supprimer la diapositive",
+                            message: `Supprimer la diapositive #${slide.slide_number} : "${slide.title || "Sans titre"}" ?`,
+                            confirmText: "Supprimer",
+                            cancelText: "Annuler",
+                            variant: "danger",
+                          });
+                          if (ok) {
                             onDeleteSlide(slide.id);
                           }
                         }}

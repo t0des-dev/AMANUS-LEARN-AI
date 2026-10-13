@@ -25,10 +25,12 @@ import { documentService } from "../../services/documentService";
 import { CourseItem, CourseLevel } from "../../types/course";
 import { DocumentItem } from "../../types/document";
 import { useToast } from "../../components/toast/ToastProvider";
+import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
 
 function CoursesPageContent() {
   const { token } = useAuth();
   const toast = useToast();
+  const { confirm } = useConfirm();
   const { currentOrg } = useOrganization();
   const { t, isRTL } = useTranslation();
 
@@ -120,7 +122,14 @@ function CoursesPageContent() {
 
   const handleDeleteCourse = async (courseId: string) => {
     if (!token) return;
-    if (!confirm(t("courses.confirmDelete"))) return;
+    const ok = await confirm({
+      title: "Supprimer ce cours",
+      message: t("courses.confirmDelete") || "Voulez-vous vraiment supprimer définitivement ce cours et l'ensemble de ses chapitres ?",
+      confirmText: "Supprimer le cours",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+    if (!ok) return;
 
     try {
       await courseService.delete(token, courseId);

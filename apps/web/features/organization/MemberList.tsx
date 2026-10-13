@@ -18,6 +18,7 @@ import {
 } from "../../types/organization";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { useToast } from "../../components/toast/ToastProvider";
+import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
 
 interface MemberListProps {
   organization: Organization;
@@ -25,6 +26,7 @@ interface MemberListProps {
 
 export function MemberList({ organization }: MemberListProps) {
   const toast = useToast();
+  const { confirm } = useConfirm();
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,13 +87,14 @@ export function MemberList({ organization }: MemberListProps) {
   };
 
   const handleRemoveMember = async (member: OrganizationMember) => {
-    if (
-      !confirm(
-        `Êtes-vous sûr de vouloir retirer ${member.user.email} de l'organisation ?`
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Retirer un membre",
+      message: `Êtes-vous sûr de vouloir retirer ${member.user.email} de l'organisation ?\nL'utilisateur perdra l'accès aux documents et cours de cette organisation.`,
+      confirmText: "Retirer",
+      cancelText: "Annuler",
+      variant: "danger",
+    });
+    if (!ok) return;
 
     const token = authStorage.getAccessToken();
     if (!token) return;
