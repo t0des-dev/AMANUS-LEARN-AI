@@ -65,7 +65,7 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DEBUG=${DEBUG:-True}
       - SECRET_KEY=${SECRET_KEY:-django-insecure-dev-key}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,api,web,nginx}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
       - DATABASE_URL=postgresql://${POSTGRES_USER:-amanus_user}:${POSTGRES_PASSWORD:-amanus_password_secure}@postgres:5432/${POSTGRES_DB:-amanus_learn_db}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
@@ -171,10 +171,6 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
       - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-Amanus Learn AI}
       - PORT=3000
-    volumes:
-      - ./apps/web:/app
-      - /app/node_modules
-      - /app/.next
     depends_on:
       - api
     networks:
