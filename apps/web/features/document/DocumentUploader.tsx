@@ -63,19 +63,14 @@ export function DocumentUploader({
 
     if (!ACCEPTED_EXTENSIONS.includes(extension)) {
       setErrorMessage(
-        `Format '${extension}' non supporté. Veuillez sélectionner un fichier ${ACCEPTED_EXTENSIONS.join(
-          ", "
-        )}.`
+        t("docs.unsupportedFormat", `Format '${extension}' non supporté. Veuillez sélectionner un fichier ${ACCEPTED_EXTENSIONS.join(", ")}.`)
       );
       return false;
     }
 
     if (file.size > MAX_FILE_SIZE) {
       setErrorMessage(
-        `Le fichier dépasse la taille maximale autorisée de 50 Mo (${(
-          file.size /
-          (1024 * 1024)
-        ).toFixed(1)} Mo).`
+        t("docs.fileTooLarge", `Le fichier dépasse la taille maximale autorisée de 50 Mo (${(file.size / (1024 * 1024)).toFixed(1)} Mo).`)
       );
       return false;
     }
@@ -117,19 +112,19 @@ export function DocumentUploader({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (uploadMode === "file" && !selectedFile) {
-      setErrorMessage("Veuillez sélectionner un document.");
+      setErrorMessage(t("docs.selectDocument", "Veuillez sélectionner un document."));
       return;
     }
     if (uploadMode === "url" && (!webUrl.trim() || !webUrl.startsWith("http"))) {
-      setErrorMessage("Veuillez renseigner une URL valide (commençant par http:// ou https://).");
+      setErrorMessage(t("docs.validUrlRequired", "Veuillez renseigner une URL valide (commençant par http:// ou https://)."));
       return;
     }
     if (!selectedOrgId) {
-      setErrorMessage("Veuillez sélectionner une organisation pour ce document.");
+      setErrorMessage(t("docs.selectOrgRequired", "Veuillez sélectionner une organisation pour ce document."));
       return;
     }
     if (!token) {
-      setErrorMessage("Session expirée. Veuillez vous reconnecter.");
+      setErrorMessage(t("docs.sessionExpired", "Session expirée. Veuillez vous reconnecter."));
       return;
     }
 
@@ -177,7 +172,7 @@ export function DocumentUploader({
         }, 800);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Échec du téléversement du document.");
+      setErrorMessage(err.message || t("docs.uploadFailed", "Échec du téléversement du document."));
       setIsUploading(false);
     }
   };
@@ -223,7 +218,7 @@ export function DocumentUploader({
           }`}
         >
           <UploadCloud className="h-4 w-4" />
-          <span>Fichier (PDF, Word, PPTX)</span>
+          <span>{t("docs.modeFile", "Fichier (PDF, Word, PPTX)")}</span>
         </button>
         <button
           type="button"
@@ -238,7 +233,7 @@ export function DocumentUploader({
           }`}
         >
           <Globe className="h-4 w-4" />
-          <span>Lien Web (Article, URL)</span>
+          <span>{t("docs.modeUrl", "Lien Web (Article, URL)")}</span>
         </button>
       </div>
 
@@ -270,7 +265,7 @@ export function DocumentUploader({
         {uploadMode === "url" ? (
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-slate-300">
-              URL de l'article ou page web
+              {t("docs.urlLabel", "URL de l'article ou page web")}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -286,7 +281,7 @@ export function DocumentUploader({
               />
             </div>
             <p className="text-[11px] text-slate-500">
-              L'article sera automatiquement aspiré, nettoyé de toute publicité et découpé en notions clés.
+              {t("docs.urlDesc", "L'article sera automatiquement aspiré, nettoyé de toute publicité et découpé en notions clés.")}
             </p>
           </div>
         ) : !selectedFile ? (
@@ -357,7 +352,7 @@ export function DocumentUploader({
                   type="button"
                   onClick={clearSelectedFile}
                   className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                  title="Changer de fichier"
+                  title={t("docs.changeFile", "Changer de fichier")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -456,7 +451,7 @@ export function DocumentUploader({
           ) : (
             <span className="flex items-center gap-1.5">
               {uploadMode === "url" ? <Globe className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
-              {uploadMode === "url" ? "Importer et analyser l'URL" : t("docs.submitUpload")}
+              {uploadMode === "url" ? t("docs.importUrl", "Importer et analyser l'URL") : t("docs.submitUpload", "Importer le document")}
             </span>
           )}
         </button>

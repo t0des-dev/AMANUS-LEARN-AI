@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FileUp, CheckCircle, AlertCircle } from "lucide-react";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface UploadProgressProps {
   fileName: string;
@@ -18,6 +19,7 @@ export function UploadProgress({
   isError = false,
   errorMessage,
 }: UploadProgressProps) {
+  const { t } = useTranslation();
   const isComplete = progress >= 100 && !isError;
 
   return (
@@ -46,7 +48,7 @@ export function UploadProgress({
               {fileName}
             </p>
             <p className="text-[11px] text-slate-400">
-              {fileSizeHuman || "Téléversement en cours..."}
+              {fileSizeHuman || t("docs.uploadRunning", "Téléversement en cours...")}
             </p>
           </div>
         </div>
@@ -60,7 +62,7 @@ export function UploadProgress({
               : "text-indigo-400"
           }`}
         >
-          {isError ? "Échec" : `${progress}%`}
+          {isError ? t("docs.failed", "Échec") : `${progress}%`}
         </span>
       </div>
 
@@ -87,7 +89,7 @@ export function UploadProgress({
 
       {isComplete && !errorMessage && (
         <p className="mt-2 text-[11px] text-emerald-400 font-medium">
-          Fichier transféré avec succès dans le coffre-fort de l'organisation.
+          {t("docs.uploadVaultSuccess", "Fichier transféré avec succès dans le coffre-fort de l'organisation.")}
         </p>
       )}
     </div>

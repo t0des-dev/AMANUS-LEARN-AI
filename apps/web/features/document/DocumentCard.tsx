@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { DocumentItem } from "../../types/document";
 import { DocumentStatus } from "./DocumentStatus";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface DocumentCardProps {
   document: DocumentItem;
@@ -29,6 +30,7 @@ export function DocumentCard({
   onProcess,
   onDelete,
 }: DocumentCardProps) {
+  const { t, language } = useTranslation();
   const getFormatIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case "pdf":
@@ -64,11 +66,14 @@ export function DocumentCard({
   const formatMeta = getFormatIcon(document.file_type);
   const Icon = formatMeta.icon;
 
-  const formattedDate = new Date(document.created_at).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const formattedDate = new Date(document.created_at).toLocaleDateString(
+    language === "ar" ? "ar-SA" : language === "en" ? "en-US" : "fr-FR",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  );
 
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50 p-5 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-slate-700 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-indigo-500/10">
@@ -132,7 +137,7 @@ export function DocumentCard({
           {document.page_count > 0 && (
             <div className="flex items-center gap-1">
               <Layers className="h-3.5 w-3.5 text-slate-500" />
-              <span>{document.page_count} pages estimées</span>
+              <span>{document.page_count} {t("documents.estimatedPages", "pages estimées")}</span>
             </div>
           )}
         </div>
@@ -143,8 +148,8 @@ export function DocumentCard({
             href={`/documents/${document.id}`}
             className="flex items-center gap-1 text-xs font-semibold text-indigo-400 transition hover:text-indigo-300"
           >
-            <span>Détails</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <span>{t("documents.details", "Détails")}</span>
+            <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
           </Link>
 
           <div className="flex items-center gap-1.5">
@@ -155,7 +160,7 @@ export function DocumentCard({
                 rel="noreferrer"
                 download
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-850 text-slate-400 transition hover:border-slate-700 hover:text-white"
-                title="Télécharger le fichier"
+                title={t("documents.downloadFile", "Télécharger le fichier")}
               >
                 <Download className="h-3.5 w-3.5" />
               </a>
@@ -166,10 +171,10 @@ export function DocumentCard({
                 type="button"
                 onClick={() => onProcess(document)}
                 className="flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1.5 text-xs font-medium text-indigo-300 transition hover:bg-indigo-600 hover:text-white"
-                title="Préparer le pipeline de traitement"
+                title={t("documents.process", "Préparer le pipeline de traitement")}
               >
                 <Play className="h-3 w-3" />
-                <span>Traiter</span>
+                <span>{t("documents.process", "Traiter")}</span>
               </button>
             )}
 
@@ -178,7 +183,7 @@ export function DocumentCard({
                 type="button"
                 onClick={() => onDelete(document)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-850 text-slate-400 transition hover:border-rose-900/50 hover:bg-rose-500/10 hover:text-rose-400"
-                title="Supprimer le document"
+                title={t("documents.delete", "Supprimer le document")}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>

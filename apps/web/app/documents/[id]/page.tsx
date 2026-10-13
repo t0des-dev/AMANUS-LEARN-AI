@@ -10,12 +10,14 @@ import { useOrganization } from "../../../components/organization/OrganizationCo
 import { documentService } from "../../../services/documentService";
 import { DocumentItem } from "../../../types/document";
 import { DocumentDetails } from "../../../features/document/DocumentDetails";
+import { useTranslation } from "../../../lib/i18n/LanguageContext";
 
 function DocumentDetailPageContent() {
   const params = useParams();
   const id = params?.id as string;
   const { token } = useAuth();
   const { currentOrg } = useOrganization();
+  const { t } = useTranslation();
   const router = useRouter();
 
   const [document, setDocument] = useState<DocumentItem | null>(null);
@@ -33,12 +35,12 @@ function DocumentDetailPageContent() {
     } catch (err: any) {
       setError(
         err.message ||
-          "Document introuvable ou vous n'avez pas les autorisations nécessaires pour y accéder."
+          t("documents.notFoundOrForbidden", "Document introuvable ou vous n'avez pas les autorisations nécessaires pour y accéder.")
       );
     } finally {
       setIsLoading(false);
     }
-  }, [token, id]);
+  }, [token, id, t]);
 
   useEffect(() => {
     fetchDocument();
@@ -54,24 +56,24 @@ function DocumentDetailPageContent() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 text-slate-400">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-3" />
-          <p className="text-xs">Chargement des données du document...</p>
+          <p className="text-xs">{t("documents.loadingData", "Chargement des données du document...")}</p>
         </div>
       ) : error || !document ? (
         <div className="rounded-3xl border border-rose-500/20 bg-rose-500/10 p-8 text-center backdrop-blur-xl">
           <AlertCircle className="mx-auto h-10 w-10 text-rose-400 mb-3" />
           <h2 className="text-base font-semibold text-white">
-            Accès au document impossible
+            {t("documents.accessDenied", "Accès au document impossible")}
           </h2>
           <p className="mt-1 text-xs text-rose-300 max-w-md mx-auto">
-            {error || "Ce document est introuvable ou appartient à une autre organisation."}
+            {error || t("documents.notFoundOrForbidden", "Ce document est introuvable ou appartient à une autre organisation.")}
           </p>
           <div className="mt-6">
             <Link
               href="/documents"
               className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 border border-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Retour à la liste des documents</span>
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+              <span>{t("documents.backToList", "Retour à la liste des documents")}</span>
             </Link>
           </div>
         </div>

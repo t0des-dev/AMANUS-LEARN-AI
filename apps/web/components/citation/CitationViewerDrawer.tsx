@@ -16,6 +16,7 @@ import {
 import { documentService } from "../../services/documentService";
 import { DocumentChunkItem } from "../../types/document";
 import { useAuth } from "../auth/AuthProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface CitationViewerDrawerProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
   highlightIndex,
 }) => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [chunks, setChunks] = useState<DocumentChunkItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,11 +117,11 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-indigo-400" />
               <h2 className="text-sm font-bold text-white">
-                Sources & Citations Documentaires
+                {t("documents.citationsTitle", "Sources & Citations Documentaires")}
               </h2>
             </div>
             <p className="text-xs text-slate-400 truncate max-w-sm">
-              {documentTitle || "Inspection des segments RAG indexés"}
+              {documentTitle || t("documents.citationsDesc", "Inspection des segments RAG indexés")}
             </p>
           </div>
 
@@ -135,13 +137,13 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
         {/* Search bar */}
         <div className="p-4 border-b border-slate-800/80 bg-slate-950/20">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 rtl:left-auto rtl:right-3" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher dans les extraits du document..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              placeholder={t("documents.searchChunks", "Rechercher dans les extraits du document...")}
+              className="w-full pl-9 pr-4 rtl:pl-4 rtl:pr-9 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>
@@ -151,7 +153,7 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
-              <p className="text-xs">Chargement des extraits authentifiés...</p>
+              <p className="text-xs">{t("documents.loadingData", "Chargement des extraits authentifiés...")}</p>
             </div>
           ) : error ? (
             <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-5 text-center">
@@ -160,7 +162,7 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
             </div>
           ) : filteredChunks.length === 0 ? (
             <div className="text-center py-16 text-slate-500 text-xs">
-              Aucun segment documentaire trouvé.
+              {t("documents.noChunksFound", "Aucun segment documentaire trouvé.")}
             </div>
           ) : (
             filteredChunks.map((chunk, idx) => {
@@ -185,7 +187,7 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
                       </span>
                       {chunk.page_number && (
                         <span className="text-[11px] text-slate-400 font-mono">
-                          Page {chunk.page_number}
+                          {t("documents.pageNumber", "Page")} {chunk.page_number}
                         </span>
                       )}
                     </div>
@@ -220,8 +222,8 @@ export const CitationViewerDrawer: React.FC<CitationViewerDrawerProps> = ({
 
         {/* Footer info */}
         <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
-          <span>{chunks.length} segments indexés</span>
-          <span className="font-mono text-emerald-400">Zéro Hallucination</span>
+          <span>{chunks.length} {t("documents.pagesIndexed", "segments indexés")}</span>
+          <span className="font-mono text-emerald-400">RAG Grounded</span>
         </div>
       </div>
     </div>

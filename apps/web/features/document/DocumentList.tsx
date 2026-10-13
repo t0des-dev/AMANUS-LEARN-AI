@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { DocumentItem, DocumentStatus as StatusType } from "../../types/document";
 import { DocumentCard } from "./DocumentCard";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface DocumentListProps {
   documents: DocumentItem[];
@@ -29,6 +30,7 @@ export function DocumentList({
   onProcess,
   onDelete,
 }: DocumentListProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFormat, setSelectedFormat] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
@@ -66,7 +68,7 @@ export function DocumentList({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher par titre, nom de fichier..."
+            placeholder={t("documents.searchPlaceholder", "Rechercher par titre, nom de fichier...")}
             className="w-full rounded-xl border border-slate-800 bg-slate-900/80 pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
@@ -79,7 +81,7 @@ export function DocumentList({
             onChange={(e) => setSelectedFormat(e.target.value)}
             className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
           >
-            <option value="ALL">Tous les formats</option>
+            <option value="ALL">{t("documents.allFormats", "Tous les formats")}</option>
             <option value="pdf">PDF</option>
             <option value="docx">Word (.docx)</option>
             <option value="pptx">PowerPoint (.pptx)</option>
@@ -92,12 +94,12 @@ export function DocumentList({
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
           >
-            <option value="ALL">Tous les statuts</option>
-            <option value="UPLOADED">Uploadé</option>
-            <option value="PROCESSING">En traitement</option>
-            <option value="READY">Prêt</option>
-            <option value="FAILED">Échoué</option>
-            <option value="ARCHIVED">Archivé</option>
+            <option value="ALL">{t("documents.allStatuses", "Tous les statuts")}</option>
+            <option value="UPLOADED">{t("documents.statusUploaded", "Uploadé")}</option>
+            <option value="PROCESSING">{t("documents.statusProcessing", "En traitement")}</option>
+            <option value="READY">{t("documents.statusReady", "Prêt")}</option>
+            <option value="FAILED">{t("documents.statusFailed", "Échoué")}</option>
+            <option value="ARCHIVED">{t("documents.statusArchived", "Archivé")}</option>
           </select>
 
           {/* Upload Button */}
@@ -107,7 +109,7 @@ export function DocumentList({
               className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
             >
               <PlusCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">Importer</span>
+              <span className="hidden sm:inline">{t("documents.importBtn", "Importer")}</span>
             </Link>
           )}
         </div>
@@ -129,12 +131,12 @@ export function DocumentList({
             <FileQuestion className="h-7 w-7" />
           </div>
           <h3 className="text-base font-semibold text-white">
-            Aucun document trouvé
+            {t("documents.noDocsFound", "Aucun document trouvé")}
           </h3>
           <p className="mt-1 text-xs text-slate-400 max-w-sm mx-auto">
             {searchTerm || selectedFormat !== "ALL" || selectedStatus !== "ALL"
-              ? "Aucun résultat ne correspond à vos filtres actuels."
-              : "Importez vos cours, manuels ou présentations pour commencer la génération pédagogique."}
+              ? t("documents.noDocsFiltered", "Aucun résultat ne correspond à vos filtres actuels.")
+              : t("documents.noDocsEmpty", "Importez vos cours, manuels ou présentations pour commencer la génération pédagogique.")}
           </p>
 
           {canManage && (
@@ -144,7 +146,7 @@ export function DocumentList({
                 className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
               >
                 <PlusCircle className="h-4 w-4" />
-                <span>Importer un premier document</span>
+                <span>{t("documents.importFirst", "Importer un premier document")}</span>
               </Link>
             </div>
           )}

@@ -17,8 +17,8 @@ function DocumentUploadPageContent() {
           href="/documents"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 transition hover:text-white mb-4"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span>{t("docs.backToDocs")}</span>
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+          <span>{t("documents.backToDocs", t("docs.backToDocs", "Retour aux documents"))}</span>
         </Link>
       </div>
 

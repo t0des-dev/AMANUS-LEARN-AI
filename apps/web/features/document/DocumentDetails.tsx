@@ -37,6 +37,7 @@ import { podcastService } from "../../services/podcastService";
 import { CitationViewerDrawer } from "../../components/citation/CitationViewerDrawer";
 import { useToast } from "../../components/toast/ToastProvider";
 import { useConfirm } from "../../components/dialog/ConfirmDialogProvider";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 import {
   DocumentItem,
   DocumentPageItem,
@@ -50,15 +51,6 @@ interface DocumentDetailsProps {
   onRefresh?: () => void;
 }
 
-const PIPELINE_STEPS: { stage: DocumentProcessingStage; label: string; icon: React.ElementType }[] = [
-  { stage: "Uploading", label: "Uploading", icon: UploadCloud },
-  { stage: "Extracting", label: "Extracting", icon: FileText },
-  { stage: "OCR", label: "OCR", icon: Scan },
-  { stage: "Structuring", label: "Structuring", icon: Layers },
-  { stage: "Chunking", label: "Chunking", icon: Scissors },
-  { stage: "Completed", label: "Completed", icon: CheckCircle2 },
-];
-
 export function DocumentDetails({
   document: initialDoc,
   canManage = true,
@@ -68,6 +60,16 @@ export function DocumentDetails({
   const router = useRouter();
   const toast = useToast();
   const { confirm } = useConfirm();
+  const { t, language: appLang } = useTranslation();
+
+  const pipelineSteps: { stage: DocumentProcessingStage; label: string; icon: React.ElementType }[] = [
+    { stage: "Uploading", label: t("documents.stepUploading", "Uploading"), icon: UploadCloud },
+    { stage: "Extracting", label: t("documents.stepExtracting", "Extracting"), icon: FileText },
+    { stage: "OCR", label: t("documents.stepOcr", "OCR"), icon: Scan },
+    { stage: "Structuring", label: t("documents.stepStructuring", "Structuring"), icon: Layers },
+    { stage: "Chunking", label: t("documents.stepChunking", "Chunking"), icon: Scissors },
+    { stage: "Completed", label: t("documents.stepCompleted", "Completed"), icon: CheckCircle2 },
+  ];
 
   const [doc, setDoc] = useState<DocumentItem>(initialDoc);
   const [currentStage, setCurrentStage] = useState<DocumentProcessingStage | "Failed">(
@@ -243,19 +245,19 @@ export function DocumentDetails({
       });
       setDoc(updated);
       setIsEditing(false);
-      setMessage({ text: "Métadonnées mises à jour avec succès.", type: "success" });
+      setMessage({ text: t("documents.updatedSuccess", "Métadonnées mises à jour avec succès."), type: "success" });
     } catch (err: any) {
-      setMessage({ text: err.message || "Erreur de mise à jour.", type: "error" });
+      setMessage({ text: err.message || t("documents.updateFailed", "Erreur de mise à jour."), type: "error" });
     }
   };
 
   const handleDelete = async () => {
     if (!token) return;
     const ok = await confirm({
-      title: "Supprimer définitivement ce document",
-      message: `Êtes-vous sûr de vouloir supprimer définitivement "${doc.title}" ?\nToutes les pages, fragments et podcasts associés seront également effacés.`,
-      confirmText: "Supprimer",
-      cancelText: "Annuler",
+      title: t("documents.confirmDeleteTitle", "Supprimer définitivement ce document"),
+      message: `${t("documents.confirmDeleteMsg", `Êtes-vous sûr de vouloir supprimer définitivement ce document ?\nToutes les pages, fragments et podcasts associés seront également effacés.`)} (${doc.title})`,
+      confirmText: t("documents.delete", "Supprimer"),
+      cancelText: t("documents.cancel", "Annuler"),
       variant: "danger",
     });
     if (!ok) return;
@@ -263,11 +265,11 @@ export function DocumentDetails({
     setIsDeleting(true);
     try {
       await documentService.delete(token, doc.id);
-      toast.success("Document supprimé avec succès.");
+      toast.success(t("documents.deletedSuccess", "Document supprimé avec succès."));
       router.push("/documents");
     } catch (err: any) {
       setMessage({
-        text: err.message || "Impossible de supprimer le document.",
+        text: err.message || t("documents.deleteFailed", "Impossible de supprimer le document."),
         type: "error",
       });
       setIsDeleting(false);
@@ -316,8 +318,8 @@ export function DocumentDetails({
           href="/documents"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Retour aux documents</span>
+          <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+          <span>{t("documents.backToDocs", "Retour aux documents")}</span>
         </Link>
       </div>
 
@@ -372,14 +374,14 @@ export function DocumentDetails({
                       onClick={handleUpdate}
                       className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-500"
                     >
-                      <Check className="h-3.5 w-3.5" /> Enregistrer
+                      <Check className="h-3.5 w-3.5" /> {t("documents.save", "Enregistrer")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
                       className="inline-flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-slate-800"
                     >
-                      <X className="h-3.5 w-3.5" /> Annuler
+                      <X className="h-3.5 w-3.5" /> {t("documents.cancel", "Annuler")}
                     </button>
                   </div>
                 </div>
@@ -394,14 +396,14 @@ export function DocumentDetails({
                         type="button"
                         onClick={() => setIsEditing(true)}
                         className="rounded-lg p-1 text-slate-500 transition hover:bg-slate-900 hover:text-white"
-                        title="Modifier les informations"
+                        title={t("documents.editInfo", "Modifier les informations")}
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
                   <p className="mt-1 text-xs text-slate-400">
-                    {doc.description || "Aucune description fournie pour ce document."}
+                    {doc.description || t("documents.noDescription", "Aucune description fournie pour ce document.")}
                   </p>
                 </div>
               )}
@@ -419,7 +421,7 @@ export function DocumentDetails({
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-700 hover:bg-slate-800 hover:text-white"
               >
                 <Download className="h-4 w-4" />
-                <span>Télécharger</span>
+                <span>{t("documents.download", "Télécharger")}</span>
               </a>
             )}
 
@@ -431,7 +433,7 @@ export function DocumentDetails({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 disabled:opacity-50"
               >
                 <Play className="h-4 w-4" />
-                <span>{isProcessing ? "Ingestion en cours..." : "Lancer l'Ingestion"}</span>
+                <span>{isProcessing ? t("documents.ingestionInProgress", "Ingestion en cours...") : t("documents.startIngestion", "Lancer l'Ingestion")}</span>
               </button>
             )}
 
@@ -441,10 +443,10 @@ export function DocumentDetails({
               onClick={handleGeneratePodcast}
               disabled={isGeneratingPodcast || doc.status !== "READY"}
               className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/40 px-3.5 py-2 text-xs font-semibold text-purple-300 transition hover:bg-purple-950/70 hover:text-white disabled:opacity-50"
-              title="Générer un épisode de podcast pédagogique à deux voix (Camille & Alex)"
+              title={t("documents.podcastTooltip", "Générer un épisode de podcast pédagogique à deux voix (Camille & Alex)")}
             >
               <Radio className={`h-3.5 w-3.5 text-purple-400 ${isGeneratingPodcast ? "animate-pulse" : ""}`} />
-              <span>{isGeneratingPodcast ? "Génération..." : "Podcast (2 Voix)"}</span>
+              <span>{isGeneratingPodcast ? t("common.loading", "Génération...") : t("documents.podcast", "Podcast (2 Voix)")}</span>
             </button>
 
             {/* Citation & Chunks Drawer */}
@@ -452,10 +454,10 @@ export function DocumentDetails({
               type="button"
               onClick={() => setIsCitationDrawerOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-xs font-semibold text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-white"
-              title="Inspecter les extraits RAG et citations vérifiées"
+              title={t("documents.citationsTooltip", "Inspecter les extraits RAG et citations vérifiées")}
             >
               <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Citations & Chunks</span>
+              <span>{t("documents.citationsChunks", "Citations & Chunks")}</span>
             </button>
 
             <button
@@ -463,10 +465,10 @@ export function DocumentDetails({
               onClick={handleCheckStatus}
               disabled={isCheckingStatus}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-xs font-semibold text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 disabled:opacity-50"
-              title="Vérifier le statut du pipeline"
+              title={t("documents.status", "Vérifier le statut du pipeline")}
             >
               <RotateCw className={`h-3.5 w-3.5 ${isCheckingStatus ? "animate-spin" : ""}`} />
-              <span>Statut</span>
+              <span>{t("documents.status", "Statut")}</span>
             </button>
 
             {canManage && (
@@ -477,7 +479,7 @@ export function DocumentDetails({
                 className="inline-flex items-center gap-1.5 rounded-xl border border-rose-900/40 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-400 transition hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>{isDeleting ? "Suppression..." : "Supprimer"}</span>
+                <span>{isDeleting ? t("documents.deleting", "Suppression...") : t("documents.delete", "Supprimer")}</span>
               </button>
             )}
           </div>
@@ -487,15 +489,15 @@ export function DocumentDetails({
         <div className="mt-8 rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Pipeline d'Ingestion Documentaire
+              {t("documents.pipelineTitle", "Pipeline d'Ingestion Documentaire")}
             </span>
             <span className="text-xs font-semibold text-indigo-400">
-              {currentStage === "Failed" ? "Échec du pipeline" : currentStage}
+              {currentStage === "Failed" ? t("documents.pipelineFailed", "Échec du pipeline") : currentStage}
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-            {PIPELINE_STEPS.map((step, idx) => {
+            {pipelineSteps.map((step, idx) => {
               const isPast = currentStepIdx > idx;
               const isCurrent = currentStepIdx === idx && currentStage !== "Failed";
               const isFailed = currentStage === "Failed" && currentStepIdx === idx;
@@ -526,7 +528,7 @@ export function DocumentDetails({
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold">Erreur d'ingestion :</p>
+                <p className="font-semibold">{t("documents.ingestionError", "Erreur d'ingestion :")}</p>
                 <p className="mt-0.5 text-rose-400/90">{doc.error_message}</p>
               </div>
             </div>
@@ -538,13 +540,13 @@ export function DocumentDetails({
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
               <div className="space-y-1">
                 <p className="font-semibold text-amber-200">
-                  Extraction partielle : Le document a été indexé avec des avertissements de qualité.
+                  {t("documents.partialWarning", "Extraction partielle : Le document a été indexé avec des avertissements de qualité.")}
                 </p>
                 {Array.isArray(doc.processing_metadata.quality_warnings) &&
                   doc.processing_metadata.quality_warnings.length > 0 && (
                     <ul className="list-disc list-inside space-y-0.5 text-amber-300/80">
                       {doc.processing_metadata.quality_warnings.map((w: string, idx: number) => (
-                        <li key={idx}>Avertissement : {w}</li>
+                        <li key={idx}>{t("documents.warningPrefix", "Avertissement :")} {w}</li>
                       ))}
                     </ul>
                   )}
@@ -571,7 +573,7 @@ export function DocumentDetails({
           <div className="rounded-2xl border border-slate-850 bg-slate-900/40 p-4">
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <HardDrive className="h-4 w-4 text-indigo-400" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Fichier source</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider">{t("documents.sourceFile", "Fichier source")}</span>
             </div>
             <p className="text-sm font-semibold text-white truncate">{doc.file_name}</p>
             <p className="text-xs text-slate-400">{doc.file_size_human} • {doc.file_type.toUpperCase()}</p>
@@ -580,20 +582,20 @@ export function DocumentDetails({
           <div className="rounded-2xl border border-slate-850 bg-slate-900/40 p-4">
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Layers className="h-4 w-4 text-violet-400" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Pages extraites</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider">{t("documents.extractedPages", "Pages extraites")}</span>
             </div>
             <p className="text-sm font-semibold text-white">
-              {doc.page_count > 0 ? `${doc.page_count} page(s)` : "En attente d'ingestion"}
+              {doc.page_count > 0 ? `${doc.page_count} ${t("documents.estimatedPages", "page(s)")}` : t("documents.waitingIngestion", "En attente d'ingestion")}
             </p>
             <p className="text-xs text-slate-400">
-              {pages.length > 0 ? `${pages.length} pages indexées` : "Prêt pour chunking"}
+              {pages.length > 0 ? `${pages.length} ${t("documents.pagesIndexed", "pages indexées")}` : t("documents.readyChunking", "Prêt pour chunking")}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-850 bg-slate-900/40 p-4">
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Globe className="h-4 w-4 text-emerald-400" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Langue du contenu</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider">{t("documents.contentLanguage", "Langue du contenu")}</span>
             </div>
             <p className="text-sm font-semibold text-white">
               {doc.language === "ar"
@@ -608,26 +610,32 @@ export function DocumentDetails({
                 ? "Deutsch (DE)"
                 : doc.language.toUpperCase()}
             </p>
-            <p className="text-xs text-slate-400">Langue principale détectée</p>
+            <p className="text-xs text-slate-400">{t("documents.mainLangDetected", "Langue principale détectée")}</p>
           </div>
 
           <div className="rounded-2xl border border-slate-850 bg-slate-900/40 p-4">
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Calendar className="h-4 w-4 text-amber-400" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Date d'importation</span>
+              <span className="text-[11px] font-semibold uppercase tracking-wider">{t("documents.importDate", "Date d'importation")}</span>
             </div>
             <p className="text-sm font-semibold text-white">
-              {new Date(doc.created_at).toLocaleDateString("fr-FR", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
+              {new Date(doc.created_at).toLocaleDateString(
+                appLang === "ar" ? "ar-SA" : appLang === "en" ? "en-US" : "fr-FR",
+                {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }
+              )}
             </p>
             <p className="text-xs text-slate-400">
-              {new Date(doc.created_at).toLocaleTimeString("fr-FR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              {new Date(doc.created_at).toLocaleTimeString(
+                appLang === "ar" ? "ar-SA" : appLang === "en" ? "en-US" : "fr-FR",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              )}
             </p>
           </div>
         </div>
@@ -639,10 +647,10 @@ export function DocumentDetails({
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-indigo-400" />
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Pages Extraites & Structure ({pages.length})
+                  {t("documents.extractedStructure", "Pages Extraites & Structure")} ({pages.length})
                 </h3>
               </div>
-              <span className="text-xs text-slate-400">Structure hiérarchique préservée</span>
+              <span className="text-xs text-slate-400">{t("documents.hierarchyPreserved", "Structure hiérarchique préservée")}</span>
             </div>
 
             <div className="space-y-3">
@@ -659,7 +667,7 @@ export function DocumentDetails({
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-lg bg-indigo-500/10 px-2.5 py-1 text-xs font-bold text-indigo-300 border border-indigo-500/20">
-                          Page {p.page_number}
+                          {t("documents.pageNumber", "Page")} {p.page_number}
                         </span>
                         {p.ocr_used && (
                           <span className="rounded-lg bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold text-violet-300 border border-violet-500/20">
@@ -694,11 +702,11 @@ export function DocumentDetails({
                       <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2">
                         {p.metadata?.subsection && (
                           <p className="text-xs text-indigo-400 font-medium">
-                            Sous-section : {p.metadata.subsection}
+                            {t("documents.subsection", "Sous-section :")} {p.metadata.subsection}
                           </p>
                         )}
                         <pre className="max-h-48 overflow-y-auto whitespace-pre-wrap font-sans text-xs text-slate-300 bg-slate-950/50 p-3 rounded-xl border border-slate-850">
-                          {p.text || "Aucun contenu textuel extrait sur cette page."}
+                          {p.text || t("documents.noTextPage", "Aucun contenu textuel extrait sur cette page.")}
                         </pre>
                       </div>
                     )}
@@ -714,21 +722,21 @@ export function DocumentDetails({
           <div className="flex items-center gap-2 text-slate-400 mb-2">
             <Shield className="h-4 w-4 text-indigo-400" />
             <span className="text-xs font-semibold text-slate-300">
-              Sécurité & Isolation Multi-Tenant
+              {t("documents.securityIsolation", "Sécurité & Isolation Multi-Tenant")}
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
             <div className="truncate">
-              <span className="text-slate-500">ID Unique :</span>{" "}
+              <span className="text-slate-500">{t("documents.uniqueId", "ID Unique :")}</span>{" "}
               <span className="font-mono text-slate-300">{doc.id}</span>
             </div>
             <div className="truncate">
-              <span className="text-slate-500">Organisation :</span>{" "}
+              <span className="text-slate-500">{t("documents.organization", "Organisation :")}</span>{" "}
               <span className="font-mono text-slate-300">{doc.organization}</span>
             </div>
             {doc.storage_key && (
               <div className="md:col-span-2 truncate">
-                <span className="text-slate-500">Clé de stockage (S3/MinIO) :</span>{" "}
+                <span className="text-slate-500">{t("documents.storageKey", "Clé de stockage (S3/MinIO) :")}</span>{" "}
                 <span className="font-mono text-slate-400">{doc.storage_key}</span>
               </div>
             )}

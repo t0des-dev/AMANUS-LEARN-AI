@@ -16,6 +16,7 @@ import {
   DocumentProcessingStage,
   DocumentStatus as StatusType,
 } from "../../types/document";
+import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface DocumentStatusProps {
   status: StatusType | string;
@@ -30,8 +31,39 @@ export function DocumentStatus({
   size = "md",
   showIcon = true,
 }: DocumentStatusProps) {
+  const { t } = useTranslation();
   // Determine display key
   const effectiveKey = (stage || status).toUpperCase();
+
+  const getLabel = (key: string, fallback: string) => {
+    switch (key) {
+      case "UPLOADING":
+        return t("documents.stepUploading", "Uploading");
+      case "UPLOADED":
+        return t("documents.statusUploaded", "Uploadé");
+      case "EXTRACTING":
+        return t("documents.stepExtracting", "Extracting");
+      case "OCR":
+        return t("documents.stepOcr", "OCR");
+      case "STRUCTURING":
+        return t("documents.stepStructuring", "Structuring");
+      case "CHUNKING":
+        return t("documents.stepChunking", "Chunking");
+      case "PROCESSING":
+        return t("documents.statusProcessing", "En traitement");
+      case "COMPLETED":
+      case "READY":
+        return t("documents.stepCompleted", "Completed");
+      case "FAILED":
+        return t("documents.statusFailed", "Failed");
+      case "PARTIAL":
+        return t("documents.statusProcessing", "Partiel");
+      case "ARCHIVED":
+        return t("documents.statusArchived", "Archivé");
+      default:
+        return fallback;
+    }
+  };
 
   const config: Record<
     string,
@@ -44,85 +76,85 @@ export function DocumentStatus({
     }
   > = {
     UPLOADING: {
-      label: "Uploading",
+      label: getLabel("UPLOADING", "Uploading"),
       icon: UploadCloud,
       bg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
       dot: "bg-indigo-400",
       animateIcon: "animate-pulse",
     },
     UPLOADED: {
-      label: "Uploadé",
+      label: getLabel("UPLOADED", "Uploadé"),
       icon: UploadCloud,
       bg: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
       dot: "bg-indigo-400",
     },
     EXTRACTING: {
-      label: "Extracting",
+      label: getLabel("EXTRACTING", "Extracting"),
       icon: FileText,
       bg: "bg-sky-500/10 text-sky-300 border-sky-500/20",
       dot: "bg-sky-400",
       animateIcon: "animate-spin",
     },
     OCR: {
-      label: "OCR",
+      label: getLabel("OCR", "OCR"),
       icon: Scan,
       bg: "bg-violet-500/10 text-violet-300 border-violet-500/20",
       dot: "bg-violet-400",
       animateIcon: "animate-pulse",
     },
     STRUCTURING: {
-      label: "Structuring",
+      label: getLabel("STRUCTURING", "Structuring"),
       icon: Layers,
       bg: "bg-blue-500/10 text-blue-300 border-blue-500/20",
       dot: "bg-blue-400",
       animateIcon: "animate-pulse",
     },
     CHUNKING: {
-      label: "Chunking",
+      label: getLabel("CHUNKING", "Chunking"),
       icon: Scissors,
       bg: "bg-amber-500/10 text-amber-300 border-amber-500/20",
       dot: "bg-amber-400",
       animateIcon: "animate-spin",
     },
     PROCESSING: {
-      label: "En traitement",
+      label: getLabel("PROCESSING", "En traitement"),
       icon: Loader2,
       bg: "bg-amber-500/10 text-amber-300 border-amber-500/20",
       dot: "bg-amber-400",
       animateIcon: "animate-spin",
     },
     COMPLETED: {
-      label: "Completed",
+      label: getLabel("COMPLETED", "Completed"),
       icon: CheckCircle2,
       bg: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
       dot: "bg-emerald-400",
     },
     READY: {
-      label: "Completed",
+      label: getLabel("READY", "Completed"),
       icon: CheckCircle2,
       bg: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
       dot: "bg-emerald-400",
     },
     FAILED: {
-      label: "Failed",
+      label: getLabel("FAILED", "Failed"),
       icon: AlertTriangle,
       bg: "bg-rose-500/10 text-rose-400 border-rose-500/20",
       dot: "bg-rose-400",
     },
     PARTIAL: {
-      label: "Partiel (Avertissements)",
+      label: getLabel("PARTIAL", "Partiel"),
       icon: AlertTriangle,
       bg: "bg-amber-500/10 text-amber-300 border-amber-500/20",
       dot: "bg-amber-400",
     },
     UNUSABLE: {
-      label: "Inexploitable",
+      label: getLabel("FAILED", "Inexploitable"),
       icon: AlertTriangle,
       bg: "bg-rose-500/10 text-rose-400 border-rose-500/20",
       dot: "bg-rose-400",
     },
     ARCHIVED: {
-      label: "Archivé",
+      label: getLabel("ARCHIVED", "Archivé"),
       icon: Archive,
       bg: "bg-slate-700/20 text-slate-400 border-slate-700/40",
       dot: "bg-slate-400",

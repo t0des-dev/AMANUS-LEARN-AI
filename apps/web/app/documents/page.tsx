@@ -43,11 +43,11 @@ function DocumentsPageContent() {
       });
       setDocuments(docs);
     } catch (err: any) {
-      setError(err.message || "Impossible de charger les documents.");
+      setError(err.message || t("documents.loadingError", "Impossible de charger les documents."));
     } finally {
       setIsLoading(false);
     }
-  }, [token, currentOrg]);
+  }, [token, currentOrg, t]);
 
   useEffect(() => {
     fetchDocuments();
@@ -60,19 +60,19 @@ function DocumentsPageContent() {
       setDocuments((prev) =>
         prev.map((d) => (d.id === doc.id ? { ...d, status: res.status } : d))
       );
-      toast.success(`Ingestion démarrée pour "${doc.title}".`);
+      toast.success(`${t("documents.ingestionInProgress", "Ingestion démarrée")} : "${doc.title}"`);
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors du traitement.", "Erreur d'ingestion");
+      toast.error(err.message || t("documents.ingestionError", "Erreur lors du traitement."));
     }
   };
 
   const handleDelete = async (doc: DocumentItem) => {
     if (!token) return;
     const ok = await confirm({
-      title: "Supprimer le document",
-      message: `Voulez-vous vraiment supprimer définitivement "${doc.title}" ?\nCette action supprimera également les fragments et indexations associés.`,
-      confirmText: "Supprimer",
-      cancelText: "Annuler",
+      title: t("documents.confirmDeleteTitle", "Supprimer le document"),
+      message: `${t("documents.confirmDeleteMsg", "Voulez-vous vraiment supprimer définitivement ce document ?\nCette action supprimera également les fragments et indexations associés.")} (${doc.title})`,
+      confirmText: t("documents.delete", "Supprimer"),
+      cancelText: t("documents.cancel", "Annuler"),
       variant: "danger",
     });
     if (!ok) return;
@@ -80,9 +80,9 @@ function DocumentsPageContent() {
     try {
       await documentService.delete(token, doc.id);
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
-      toast.success(`Document "${doc.title}" supprimé avec succès.`);
+      toast.success(`${t("documents.deletedSuccess", "Document supprimé avec succès.")} (${doc.title})`);
     } catch (err: any) {
-      toast.error(err.message || "Erreur lors de la suppression.", "Erreur");
+      toast.error(err.message || t("documents.deleteFailed", "Erreur lors de la suppression."));
     }
   };
 
