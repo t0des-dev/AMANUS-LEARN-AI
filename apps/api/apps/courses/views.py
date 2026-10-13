@@ -2,6 +2,7 @@ import logging
 import uuid
 
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +13,7 @@ from apps.documents.models import Document
 from apps.organizations.models import Organization, RoleChoices
 
 from .models import Course, CourseSection
-from .permissions import CanManageCourse
+from .permissions import CanManageCourse, IsCourseOrganizationMember
 from .serializers import (
     CourseCreateSerializer,
     CourseDetailSerializer,
@@ -298,3 +299,77 @@ class CourseGenerateView(APIView):
             )
         finally:
             GenerationLock.release("course", str(course.id))
+
+
+class CourseExportDocxView(APIView):
+    """GET /api/v1/courses/{id}/export/docx/ — Export course as formatted Microsoft Word (.docx) document."""
+
+    permission_classes = [IsAuthenticated, IsCourseOrganizationMember]
+
+    def get(self, request, id: uuid.UUID):
+        from apps.courses.services.docx_exporter import CourseDocxExporter
+
+        course = get_object_or_404(
+            Course.objects.filter(organization__members__user=request.user)
+            .select_related("organization")
+            .prefetch_related("sections__children"),
+            id=id,
+        )
+        exporter = CourseDocxExporter(course)
+        buffer = exporter.generate()
+
+        safe_title = "".join(c for c in course.title if c.isalnum() or c in (" ", "-", "_")).strip().replace(" ", "_")
+        filename = f"{safe_title or 'cours'}.docx"
+
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+
+class CourseExportMarkdownView(APIView):
+    """GET /api/v1/courses/{id}/export/markdown/ — Export course as clean Markdown (.md) document."""
+
+    permission_classes = [IsAuthenticated, IsCourseOrganizationMember]
+
+    def get(self, request, id: uuid.UUID):
+        course = get_object_or_404(
+            Course.objects.filter(organization__members__user=request.user)
+            .select_related("organization")
+            .prefetch_related("sections__children"),
+            id=id,
+        )
+        lines = [f"# {course.title}\n"]
+        if course.description:
+            lines.append(f"> {course.description}\n")
+        lines.append(f"**Niveau :** {course.get_level_display()} | **Langue :** {course.language.upper()}\n\n---\n")
+
+        chapters = (
+            course.sections.filter(parent__isnull=True)
+            .order_by("order", "created_at")
+            .prefetch_related("children")
+        )
+        for ch in chapters:
+            lines.append(f"## {ch.title}\n")
+            if ch.summary:
+                lines.append(f"*{ch.summary}*\n")
+            for sec in ch.children.all().order_by("order", "created_at"):
+                lines.append(f"### {sec.title}\n")
+                if sec.objectives and isinstance(sec.objectives, list):
+                    lines.append("**Objectifs :**")
+                    for obj in sec.objectives:
+                        lines.append(f"- {obj}")
+                    lines.append("")
+                if sec.content:
+                    lines.append(f"{sec.content}\n")
+
+        content = "\n".join(lines)
+        safe_title = "".join(c for c in course.title if c.isalnum() or c in (" ", "-", "_")).strip().replace(" ", "_")
+        filename = f"{safe_title or 'cours'}.md"
+
+        response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+

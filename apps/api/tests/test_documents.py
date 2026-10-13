@@ -391,3 +391,68 @@ class DocumentManagerAPITests(APITestCase):
 
         res_s = self.client.get(status_url)
         self.assertEqual(res_s.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_url_ingest_ssrf_protection(self):
+        self.authenticate_as(self.user_a)
+        url = reverse("v1:documents:document-ingest-url")
+        payload = {
+            "url": "http://127.0.0.1:8000/internal-secrets",
+            "organization_id": str(self.org_a.id),
+        }
+        res = self.client.post(url, payload, format="json")
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("url", res.data)
+
+    def test_url_ingest_success(self):
+        from unittest.mock import patch
+        self.authenticate_as(self.user_a)
+        url = reverse("v1:documents:document-ingest-url")
+        payload = {
+            "url": "https://example.com/article-pedagogique",
+            "organization_id": str(self.org_a.id),
+            "title": "Article Électronique",
+        }
+        with patch("apps.documents.services.url_extractor.URLExtractorService.fetch_and_extract") as mock_extract, \
+             patch("apps.documents.views.process_document_pipeline") as mock_pipeline:
+            mock_extract.return_value = ("Titre Web", "Contenu très instructif sur l'apprentissage " * 10)
+            res = self.client.post(url, payload, format="json")
+            self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(res.data["title"], "Article Électronique")
+            self.assertEqual(res.data["file_type"], "txt")
+
+    def test_document_chunks_list_view(self):
+        """GET /documents/{id}/chunks/ returns extracted chunks with page provenance."""
+        from apps.ingestion.models import DocumentChunk, DocumentPage
+
+        doc = Document.objects.create(
+            organization=self.org_a,
+            owner=self.user_a,
+            title="Document avec Chunks",
+            file_name="chunks.pdf",
+            file_type="pdf",
+            file_size=2048,
+            storage_key=f"organizations/{self.org_a.id}/documents/chunks.pdf",
+        )
+        page = DocumentPage.objects.create(
+            document=doc,
+            page_number=1,
+            text="Texte de la page 1",
+        )
+        DocumentChunk.objects.create(
+            document=doc,
+            page=page,
+            chunk_index=0,
+            content="Extrait didactique sur l'apprentissage par renforcement [1].",
+            token_count=15,
+        )
+
+        self.authenticate_as(self.user_a)
+        url = reverse("v1:documents:document-chunks", kwargs={"id": doc.id})
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data["count"], 1)
+        self.assertEqual(len(res.data["results"]), 1)
+        chunk_data = res.data["results"][0]
+        self.assertEqual(chunk_data["page_number"], 1)
+        self.assertIn("apprentissage par renforcement", chunk_data["content"])
+

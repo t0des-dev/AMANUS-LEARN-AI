@@ -139,4 +139,25 @@ export const courseService = {
       body: JSON.stringify(payload),
     });
   },
+
+  async exportDocx(token: string, courseId: string): Promise<Blob> {
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl.replace(/\/$/, "")}/courses/${courseId}/export/docx/`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Échec du téléchargement Word (.docx)");
+    return res.blob();
+  },
+
+  async exportMarkdown(token: string, courseId: string): Promise<string> {
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl.replace(/\/$/, "")}/courses/${courseId}/export/markdown/`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Échec du téléchargement Markdown");
+    return res.text();
+  },
 };
+

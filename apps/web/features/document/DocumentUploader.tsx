@@ -12,6 +12,8 @@ import {
   Presentation,
   FileCode,
   ShieldCheck,
+  Globe,
+  Link2,
 } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { useOrganization } from "../../components/organization/OrganizationContext";
@@ -37,6 +39,8 @@ export function DocumentUploader({
   const { t, language: currentAppLang } = useTranslation();
   const router = useRouter();
 
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [webUrl, setWebUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedOrgId, setSelectedOrgId] = useState<string>(
     currentOrg?.id || (organizations[0]?.id ?? "")
@@ -112,8 +116,12 @@ export function DocumentUploader({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
+    if (uploadMode === "file" && !selectedFile) {
       setErrorMessage("Veuillez sélectionner un document.");
+      return;
+    }
+    if (uploadMode === "url" && (!webUrl.trim() || !webUrl.startsWith("http"))) {
+      setErrorMessage("Veuillez renseigner une URL valide (commençant par http:// ou https://).");
       return;
     }
     if (!selectedOrgId) {
@@ -126,23 +134,35 @@ export function DocumentUploader({
     }
 
     setIsUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(20);
     setErrorMessage(null);
 
     try {
-      const createdDoc = await documentService.upload(
-        token,
-        {
-          file: selectedFile,
+      let createdDoc: DocumentItem;
+      if (uploadMode === "url") {
+        setUploadProgress(40);
+        createdDoc = await documentService.ingestUrl(token, {
+          url: webUrl.trim(),
           organization_id: selectedOrgId,
           title: title.trim() || undefined,
           description: description.trim() || undefined,
           language,
-        },
-        (percent) => {
-          setUploadProgress(percent);
-        }
-      );
+        });
+      } else {
+        createdDoc = await documentService.upload(
+          token,
+          {
+            file: selectedFile!,
+            organization_id: selectedOrgId,
+            title: title.trim() || undefined,
+            description: description.trim() || undefined,
+            language,
+          },
+          (percent) => {
+            setUploadProgress(percent);
+          }
+        );
+      }
 
       setUploadProgress(100);
       setIsComplete(true);
@@ -188,6 +208,40 @@ export function DocumentUploader({
         </div>
       </div>
 
+      {/* Mode Selector Tabs */}
+      <div className="mb-6 grid grid-cols-2 gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
+        <button
+          type="button"
+          onClick={() => {
+            setUploadMode("file");
+            setErrorMessage(null);
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition ${
+            uploadMode === "file"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-950"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <UploadCloud className="h-4 w-4" />
+          <span>Fichier (PDF, Word, PPTX)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setUploadMode("url");
+            setErrorMessage(null);
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition ${
+            uploadMode === "url"
+              ? "bg-indigo-600 text-white shadow-md shadow-indigo-950"
+              : "text-slate-400 hover:text-white"
+          }`}
+        >
+          <Globe className="h-4 w-4" />
+          <span>Lien Web (Article, URL)</span>
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Organization Select */}
         <div>
@@ -212,8 +266,30 @@ export function DocumentUploader({
           </select>
         </div>
 
-        {/* Drag and Drop Box */}
-        {!selectedFile ? (
+        {/* URL Input Mode */}
+        {uploadMode === "url" ? (
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-slate-300">
+              URL de l'article ou page web
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <Link2 className="h-4 w-4" />
+              </div>
+              <input
+                type="url"
+                value={webUrl}
+                onChange={(e) => setWebUrl(e.target.value)}
+                placeholder="https://fr.wikipedia.org/wiki/Intelligence_artificielle"
+                disabled={isUploading}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-800 bg-slate-900 text-sm text-white placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500">
+              L'article sera automatiquement aspiré, nettoyé de toute publicité et découpé en notions clés.
+            </p>
+          </div>
+        ) : !selectedFile ? (
           <div
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -363,7 +439,12 @@ export function DocumentUploader({
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={!selectedFile || isUploading || !selectedOrgId}
+          disabled={
+            (uploadMode === "file" && !selectedFile) ||
+            (uploadMode === "url" && !webUrl.trim()) ||
+            isUploading ||
+            !selectedOrgId
+          }
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isUploading ? (
@@ -374,7 +455,8 @@ export function DocumentUploader({
             </span>
           ) : (
             <span className="flex items-center gap-1.5">
-              <UploadCloud className="h-4 w-4" /> {t("docs.submitUpload")}
+              {uploadMode === "url" ? <Globe className="h-4 w-4" /> : <UploadCloud className="h-4 w-4" />}
+              {uploadMode === "url" ? "Importer et analyser l'URL" : t("docs.submitUpload")}
             </span>
           )}
         </button>

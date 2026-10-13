@@ -166,6 +166,23 @@ export const documentService = {
     });
   },
 
+  async ingestUrl(
+    token: string,
+    payload: {
+      url: string;
+      organization_id: string;
+      title?: string;
+      description?: string;
+      language?: string;
+    }
+  ): Promise<DocumentItem> {
+    return documentFetch<DocumentItem>("documents/ingest-url/", token, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+
   async update(
     token: string,
     id: string,
@@ -209,6 +226,16 @@ export const documentService = {
   ): Promise<import("../types/document").DocumentPagesResponse> {
     return documentFetch<import("../types/document").DocumentPagesResponse>(
       `documents/${id}/pages/`,
+      token
+    );
+  },
+
+  async getChunks(
+    token: string,
+    id: string
+  ): Promise<import("../types/document").DocumentChunksResponse> {
+    return documentFetch<import("../types/document").DocumentChunksResponse>(
+      `documents/${id}/chunks/`,
       token
     );
   },

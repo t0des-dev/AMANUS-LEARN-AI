@@ -112,3 +112,26 @@ export interface DocumentPagesResponse {
   document_id: string;
   results: DocumentPageItem[];
 }
+
+export interface DocumentChunkItem {
+  id: string;
+  document: string;
+  page?: string | null;
+  page_number?: number | null;
+  chunk_index: number;
+  content: string;
+  token_count: number;
+  metadata: {
+    chapter?: string | null;
+    section?: string | null;
+    [key: string]: any;
+  };
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface DocumentChunksResponse {
+  count: number;
+  document_id: string;
+  results: DocumentChunkItem[];
+}

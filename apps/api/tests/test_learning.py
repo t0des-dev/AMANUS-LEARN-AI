@@ -274,3 +274,58 @@ class LearningAPITests(APITestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["course"]["id"], str(self.course.id))
         self.assertEqual(results[0]["status"], LearningPathStatus.IN_PROGRESS)
+
+    def test_flashcard_deck_and_sm2_review(self):
+        # 1. Create deck with cards
+        url_create = "/api/v1/learning/flashcard-decks/"
+        payload = {
+            "organization_id": str(self.org.id),
+            "course_id": str(self.course.id),
+            "title": "Vocabulaire Algorithmes",
+            "description": "Fiches mémo pour révision rapide.",
+            "cards": [
+                {
+                    "front": "Qu'est-ce qu'une table de hachage ?",
+                    "back": "Une structure de données associant clés et valeurs en temps O(1) moyen.",
+                    "hint": "Fonction de hachage",
+                    "source_citation": "Chapitre 2",
+                },
+                {
+                    "front": "Quelle est la complexité du tri fusion ?",
+                    "back": "O(n log n) dans le pire des cas.",
+                    "hint": "Diviser pour régner",
+                },
+            ],
+        }
+        res_create = self.client.post(url_create, payload, format="json", **self.auth_headers)
+        self.assertEqual(res_create.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res_create.data["title"], "Vocabulaire Algorithmes")
+        self.assertEqual(len(res_create.data["cards"]), 2)
+
+        deck_id = res_create.data["id"]
+        card_1_id = res_create.data["cards"][0]["id"]
+
+        # 2. Get deck detail
+        res_detail = self.client.get(f"/api/v1/learning/flashcard-decks/{deck_id}/", **self.auth_headers)
+        self.assertEqual(res_detail.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_detail.data["cards_count"], 2)
+
+        # 3. Submit first successful review (quality=4: correct after hesitation)
+        review_url = f"/api/v1/learning/flashcards/{card_1_id}/review/"
+        res_rev1 = self.client.post(review_url, {"quality": 4}, format="json", **self.auth_headers)
+        self.assertEqual(res_rev1.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_rev1.data["repetitions"], 1)
+        self.assertEqual(res_rev1.data["interval_days"], 1)
+
+        # 4. Submit second successful review (quality=5: perfect)
+        res_rev2 = self.client.post(review_url, {"quality": 5}, format="json", **self.auth_headers)
+        self.assertEqual(res_rev2.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_rev2.data["repetitions"], 2)
+        self.assertEqual(res_rev2.data["interval_days"], 6)
+
+        # 5. Submit failed review (quality=1: forgot)
+        res_rev3 = self.client.post(review_url, {"quality": 1}, format="json", **self.auth_headers)
+        self.assertEqual(res_rev3.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_rev3.data["repetitions"], 0)
+        self.assertEqual(res_rev3.data["interval_days"], 1)
+

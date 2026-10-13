@@ -10,6 +10,7 @@ class GenerationType(models.TextChoices):
     OBJECTIVES = "OBJECTIVES", "Objectifs pédagogiques"
     LESSON = "LESSON", "Cours / Leçon"
     REVISION_SHEET = "REVISION_SHEET", "Fiche de révision"
+    PODCAST_SCRIPT = "PODCAST_SCRIPT", "Script Podcast"
 
 
 class GenerationStatus(models.TextChoices):

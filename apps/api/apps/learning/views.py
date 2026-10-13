@@ -141,3 +141,121 @@ class StudySessionFinishView(APIView):
         engine = LearningEngine()
         finished_session = engine.finish_study_session(user=request.user, session_id=session.id)
         return Response(StudySessionSerializer(finished_session).data, status=status.HTTP_200_OK)
+
+
+class FlashcardDeckListCreateView(APIView):
+    """GET  /api/v1/learning/flashcard-decks/ - List decks isolated by organization.
+    POST /api/v1/learning/flashcard-decks/ - Create or save a new deck of flashcards.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.learning.models import FlashcardDeck
+        from apps.learning.serializers import FlashcardDeckSerializer
+
+        queryset = FlashcardDeck.objects.filter(
+            organization__members__user=request.user
+        ).select_related("organization", "course", "document").prefetch_related("cards")
+
+        course_id = request.query_params.get("course_id")
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+
+        document_id = request.query_params.get("document_id")
+        if document_id:
+            queryset = queryset.filter(document_id=document_id)
+
+        serializer = FlashcardDeckSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        from apps.learning.models import Flashcard, FlashcardDeck
+        from apps.learning.serializers import FlashcardDeckCreateSerializer, FlashcardDeckSerializer
+        from apps.organizations.models import Organization
+
+        create_serializer = FlashcardDeckCreateSerializer(data=request.data)
+        create_serializer.is_valid(raise_exception=True)
+        data = create_serializer.validated_data
+
+        org = get_object_or_404(Organization, id=data["organization_id"])
+        if not org.is_member(request.user):
+            raise PermissionDenied("Vous n'êtes pas membre de cette organisation.")
+
+        deck = FlashcardDeck.objects.create(
+            organization=org,
+            course_id=data.get("course_id"),
+            document_id=data.get("document_id"),
+            created_by=request.user,
+            title=data["title"],
+            description=data.get("description", ""),
+        )
+
+        cards_data = data.get("cards", [])
+        for idx, c in enumerate(cards_data):
+            Flashcard.objects.create(
+                deck=deck,
+                front=c.get("front", ""),
+                back=c.get("back", ""),
+                hint=c.get("hint", ""),
+                source_citation=c.get("source_citation", ""),
+                order=idx + 1,
+            )
+
+        deck.refresh_from_db()
+        return Response(
+            FlashcardDeckSerializer(deck, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class FlashcardDeckDetailView(APIView):
+    """GET /api/v1/learning/flashcard-decks/{id}/ - Retrieve a deck with all its flashcards."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id: UUID):
+        from apps.learning.models import FlashcardDeck
+        from apps.learning.serializers import FlashcardDeckSerializer
+
+        deck = get_object_or_404(
+            FlashcardDeck.objects.filter(organization__members__user=request.user)
+            .select_related("organization", "course", "document")
+            .prefetch_related("cards"),
+            id=id,
+        )
+        return Response(FlashcardDeckSerializer(deck, context={"request": request}).data, status=status.HTTP_200_OK)
+
+
+class FlashcardReviewSubmitView(APIView):
+    """POST /api/v1/learning/flashcards/{card_id}/review/ - Submit study evaluation (0-5) and compute next SM-2 interval."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, card_id: UUID):
+        from apps.learning.models import Flashcard, FlashcardReview
+        from apps.learning.serializers import FlashcardReviewSubmitSerializer
+
+        card = get_object_or_404(
+            Flashcard.objects.filter(deck__organization__members__user=request.user),
+            id=card_id,
+        )
+        serializer = FlashcardReviewSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        quality = serializer.validated_data["quality"]
+        review, _ = FlashcardReview.objects.get_or_create(user=request.user, card=card)
+        review.record_review(quality)
+
+        return Response(
+            {
+                "card_id": str(card.id),
+                "quality": quality,
+                "repetitions": review.repetitions,
+                "interval_days": review.interval_days,
+                "ease_factor": review.ease_factor,
+                "next_review_at": review.next_review_at,
+            },
+            status=status.HTTP_200_OK,
+        )
+

@@ -144,5 +144,28 @@ class AIService:
             level=level,
         )
 
+    def generate_podcast_script(
+        self,
+        document: Document,
+        user: Any | None = None,
+        provider_name: str | None = None,
+        model: str | None = None,
+        focus: str | None = None,
+        top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+    ) -> AIGeneration:
+        """Generates a structured 2-host pedagogical podcast dialogue (NotebookLM style)."""
+        return self.generation_service.generate_podcast_script(
+            document=document,
+            user=user,
+            provider_name=provider_name,
+            model=model,
+            focus=focus,
+            top_k=top_k,
+            language=language,
+            level=level,
+        )
+
 
 __all__ = ["AIService", "InsufficientContextError"]

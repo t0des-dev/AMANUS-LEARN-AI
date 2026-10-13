@@ -8,6 +8,7 @@ from apps.ai.views import (
     DocumentGenerateSummaryView,
 )
 from apps.ingestion.views import (
+    DocumentChunksListView,
     DocumentPagesListView,
     DocumentProcessingStatusView,
 )
@@ -17,12 +18,14 @@ from .views import (
     DocumentListCreateView,
     DocumentProcessView,
     DocumentStatusView,
+    DocumentURLIngestView,
 )
 
 app_name = "documents"
 
 urlpatterns = [
     path("", DocumentListCreateView.as_view(), name="document-list-create"),
+    path("ingest-url/", DocumentURLIngestView.as_view(), name="document-ingest-url"),
     path("<uuid:id>/", DocumentDetailView.as_view(), name="document-detail"),
     path("<uuid:id>/process/", DocumentProcessView.as_view(), name="document-process"),
     path("<uuid:id>/status/", DocumentStatusView.as_view(), name="document-status"),
@@ -32,6 +35,7 @@ urlpatterns = [
         name="document-processing-status",
     ),
     path("<uuid:id>/pages/", DocumentPagesListView.as_view(), name="document-pages"),
+    path("<uuid:id>/chunks/", DocumentChunksListView.as_view(), name="document-chunks"),
     # SPRINT 06 — AI Generation Endpoints
     path(
         "<uuid:id>/generate/summary/",

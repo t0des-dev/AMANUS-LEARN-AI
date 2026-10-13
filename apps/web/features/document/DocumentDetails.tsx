@@ -28,9 +28,13 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
+  Radio,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { documentService } from "../../services/documentService";
+import { podcastService } from "../../services/podcastService";
+import { CitationViewerDrawer } from "../../components/citation/CitationViewerDrawer";
 import {
   DocumentItem,
   DocumentPageItem,
@@ -70,6 +74,29 @@ export function DocumentDetails({
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCitationDrawerOpen, setIsCitationDrawerOpen] = useState(false);
+  const [isGeneratingPodcast, setIsGeneratingPodcast] = useState(false);
+
+  const handleGeneratePodcast = async () => {
+    if (!token || !doc.id) return;
+    setIsGeneratingPodcast(true);
+    try {
+      const existing = await podcastService.listPodcasts(token, { document_id: doc.id });
+      if (existing.length > 0) {
+        router.push(`/podcasts/${existing[0].id}`);
+        return;
+      }
+      const episode = await podcastService.generatePodcast(token, {
+        document_id: doc.id,
+        language: doc.language || "fr",
+      });
+      router.push(`/podcasts/${episode.id}`);
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de la génération du podcast.");
+    } finally {
+      setIsGeneratingPodcast(false);
+    }
+  };
 
   // Pages state
   const [pages, setPages] = useState<DocumentPageItem[]>([]);
@@ -397,6 +424,29 @@ export function DocumentDetails({
               </button>
             )}
 
+            {/* Podcast Generation CTA */}
+            <button
+              type="button"
+              onClick={handleGeneratePodcast}
+              disabled={isGeneratingPodcast || doc.status !== "READY"}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/30 bg-purple-950/40 px-3.5 py-2 text-xs font-semibold text-purple-300 transition hover:bg-purple-950/70 hover:text-white disabled:opacity-50"
+              title="Générer un épisode de podcast pédagogique à deux voix (Camille & Alex)"
+            >
+              <Radio className={`h-3.5 w-3.5 text-purple-400 ${isGeneratingPodcast ? "animate-pulse" : ""}`} />
+              <span>{isGeneratingPodcast ? "Génération..." : "Podcast (2 Voix)"}</span>
+            </button>
+
+            {/* Citation & Chunks Drawer */}
+            <button
+              type="button"
+              onClick={() => setIsCitationDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-xs font-semibold text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 hover:text-white"
+              title="Inspecter les extraits RAG et citations vérifiées"
+            >
+              <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Citations & Chunks</span>
+            </button>
+
             <button
               type="button"
               onClick={handleCheckStatus}
@@ -674,6 +724,14 @@ export function DocumentDetails({
           </div>
         </div>
       </div>
+
+      {/* Interactive Citation & Chunks Drawer */}
+      <CitationViewerDrawer
+        isOpen={isCitationDrawerOpen}
+        onClose={() => setIsCitationDrawerOpen(false)}
+        documentId={doc.id}
+        documentTitle={doc.title}
+      />
     </div>
   );
 }

@@ -356,3 +356,108 @@ class AudioPipelineAndAPITests(APITestCase):
             self.assertIn("language", v)
             self.assertIn("gender", v)
             self.assertIn("provider", v)
+
+
+class TestPodcastEpisodes(APITestCase):
+    """Integration tests for dual-voice pedagogical podcast generation and retrieval."""
+
+    def setUp(self):
+        self.user_a = User.objects.create_user(
+            email="teacher_a@test.com", password="password123", first_name="Prof A"
+        )
+        self.user_b = User.objects.create_user(
+            email="outsider_b@test.com", password="password123", first_name="Outsider B"
+        )
+        self.org = Organization.objects.create(name="Org Podcast", slug="org-podcast")
+        OrganizationMember.objects.create(
+            organization=self.org, user=self.user_a, role=RoleChoices.TEACHER
+        )
+
+        from apps.documents.models import Document
+        from apps.ingestion.models import DocumentChunk
+
+        self.doc = Document.objects.create(
+            organization=self.org,
+            title="Introduction aux Réseaux de Neurones",
+            file_name="intro_nn.pdf",
+            file_type="pdf",
+            file_size=1024,
+            storage_key="test/intro_nn.pdf",
+            owner=self.user_a,
+        )
+        DocumentChunk.objects.create(
+            document=self.doc,
+            chunk_index=0,
+            content="Les réseaux de neurones s'inspirent du fonctionnement biologique [1]. Le perceptron multicouche utilise la rétropropagation [2].",
+            token_count=20,
+        )
+
+    def _auth(self, user):
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+
+    def test_generate_podcast_episode_from_document(self):
+        self._auth(self.user_a)
+        url = reverse("v1:audio:podcast-list-create")
+        res = self.client.post(
+            url,
+            {
+                "document_id": str(self.doc.id),
+                "language": "fr",
+                "level": "BEGINNER",
+                "voice_provider": "mock",
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        data = res.data
+        self.assertIn("id", data)
+        self.assertEqual(str(data["document_id"]), str(self.doc.id))
+        self.assertIn("hosts", data)
+        self.assertGreaterEqual(len(data["hosts"]), 2)
+        self.assertIn("turns", data)
+        self.assertGreaterEqual(len(data["turns"]), 2)
+        self.assertIn("speaker", data["turns"][0])
+        self.assertIn("text", data["turns"][0])
+        self.assertIn("key_takeaways", data)
+
+    def test_list_and_get_podcast_episodes(self):
+        from apps.audio.models import PodcastEpisode
+
+        episode = PodcastEpisode.objects.create(
+            organization=self.org,
+            document=self.doc,
+            title="Podcast Épisode 1",
+            hosts=[{"name": "Camille", "role": "host"}, {"name": "Alex", "role": "expert"}],
+            turns=[{"speaker": "Camille", "text": "Bienvenue !"}, {"speaker": "Alex", "text": "Bonjour !"}],
+            key_takeaways=["Comprendre les bases"],
+            duration=180.0,
+            created_by=self.user_a,
+        )
+
+        self._auth(self.user_a)
+        # List
+        res_list = self.client.get(reverse("v1:audio:podcast-list-create"))
+        self.assertEqual(res_list.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res_list.data), 1)
+
+        # Detail
+        res_det = self.client.get(reverse("v1:audio:podcast-detail", kwargs={"id": episode.id}))
+        self.assertEqual(res_det.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_det.data["title"], "Podcast Épisode 1")
+
+    def test_outsider_cannot_access_podcast(self):
+        from apps.audio.models import PodcastEpisode
+
+        episode = PodcastEpisode.objects.create(
+            organization=self.org,
+            document=self.doc,
+            title="Podcast Privé",
+            hosts=[],
+            turns=[],
+            created_by=self.user_a,
+        )
+
+        self._auth(self.user_b)
+        res_det = self.client.get(reverse("v1:audio:podcast-detail", kwargs={"id": episode.id}))
+        self.assertEqual(res_det.status_code, status.HTTP_404_NOT_FOUND)

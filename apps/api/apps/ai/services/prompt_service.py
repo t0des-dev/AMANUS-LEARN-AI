@@ -538,3 +538,107 @@ class PromptService:
                 "}"
             )
         return system_instruction, user_prompt, f"lesson-{self.VERSION}"
+
+    def get_podcast_dialogue_prompt(
+        self,
+        document_title: str,
+        context: str,
+        language: str = "fr",
+        level: str = "BEGINNER",
+        focus: str | None = None,
+    ) -> tuple[str, str, str]:
+        """Generates a dynamic 2-host pedagogical podcast dialogue (Host & Expert / NotebookLM style)."""
+        system_instruction = self._get_system_instruction(language)
+        level_directive = self._get_level_directive(level, language)
+        focus_directive = f"\nFocus spécifique demandé : {focus}" if focus else ""
+
+        lang_code = language.lower() if language in ("fr", "en", "ar") else "fr"
+
+        if lang_code == "en":
+            user_prompt = (
+                f"DOCUMENT: « {document_title} »\n\n"
+                f"AVAILABLE SOURCE CONTEXT:\n{context}\n\n"
+                f"LEVEL DIRECTIVE: {level_directive}{focus_directive}\n\n"
+                "OBJECTIVE: Create an engaging, high-energy 2-host pedagogical podcast episode (NotebookLM style).\n"
+                "Characters:\n"
+                "1. Emma (Host) - Curious, relatable, asks intuitive questions, uses everyday analogies, drives pace.\n"
+                "2. David (Expert) - Knowledgeable specialist, explains concepts clearly, grounds claims with exact source citations [1], [2], warns against common misconceptions.\n\n"
+                "MANDATORY RULES:\n"
+                "1. Produce 10 to 16 conversational dialogue turns alternating naturally between Emma and David.\n"
+                "2. Ground every technical claim strictly in the provided sources with [1], [2] citations.\n"
+                "3. Keep the tone vibrant, educational, accessible, and free of dry reading.\n\n"
+                "Required JSON Format:\n"
+                "{\n"
+                '  "title": "Engaging Podcast Episode Title",\n'
+                '  "description": "Short pitch of what listeners will learn in this episode",\n'
+                '  "hosts": [\n'
+                '    {"name": "Emma", "role": "host", "voice_id": "shimmer"},\n'
+                '    {"name": "David", "role": "expert", "voice_id": "onyx"}\n'
+                "  ],\n"
+                '  "turns": [\n'
+                '    {"speaker": "Emma", "role": "host", "text": "Welcome to today\'s deep dive! Today we\'re unpacking..."},\n'
+                '    {"speaker": "David", "role": "expert", "text": "Hey Emma! Yes, and looking at our source materials [1], the key mechanism is..."}\n'
+                "  ],\n"
+                '  "key_takeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"],\n'
+                '  "estimated_duration_minutes": 5\n'
+                "}"
+            )
+        elif lang_code == "ar":
+            user_prompt = (
+                f"المستند : « {document_title} »\n\n"
+                f"سياق المصادر المتوفرة :\n{context}\n\n"
+                f"توجيه المستوى : {level_directive}{focus_directive}\n\n"
+                "الهدف : إنشاء حلقة بودكاست تعليمية شيقة وتفاعلية بنظام مذيعين اثنين (أسلوب الحوار التفاعلي الحديث).\n"
+                "الشخصيات :\n"
+                "1. ليلى (المقدمة) - فضولية، تطرح أسئلة ذكية، تقرب المفاهيم بأمثلة من الواقع المعاش.\n"
+                "2. كريم (الخبير) - أخصائي متمكن، يحلل المفاهيم بدقة ويستند دائماً إلى المصادر الموثقة [1] و [2].\n\n"
+                "الشروط الصارمة :\n"
+                "1. توليد حوار غني يتألف من 10 إلى 16 تدخلاً تفاعلياً متبادلاً بسلاسة بين ليلى وكريم.\n"
+                "2. توثيق الحقائق بدقة عبر الإحالات [1] و [2].\n\n"
+                "صيغة JSON الإلزامية :\n"
+                "{\n"
+                '  "title": "عنوان جذاب لحلقة البودكاست",\n'
+                '  "description": "مقدمة موجزة عما سيتعلمه المستمع في هذه الحلقة",\n'
+                '  "hosts": [\n'
+                '    {"name": "ليلى", "role": "host", "voice_id": "shimmer"},\n'
+                '    {"name": "كريم", "role": "expert", "voice_id": "onyx"}\n'
+                "  ],\n"
+                '  "turns": [\n'
+                '    {"speaker": "ليلى", "role": "host", "text": "أهلاً بكم في عدد جديد من بودكاست المعرفة! موضوعنا اليوم يثير الكثير من التساؤلات..."},\n'
+                '    {"speaker": "كريم", "role": "expert", "text": "أهلاً ليلى، وبالفعل، كما توضح وثائقنا المعتمدة [1]، فإن السر يكمن في..."}\n'
+                "  ],\n"
+                '  "key_takeaways": ["الخلاصة 1", "الخلاصة 2", "الخلاصة 3"],\n'
+                '  "estimated_duration_minutes": 5\n'
+                "}"
+            )
+        else:
+            user_prompt = (
+                f"DOCUMENT : « {document_title} »\n\n"
+                f"SOURCES DOCUMENTAIRES DISPONIBLES :\n{context}\n\n"
+                f"DIRECTIVE DE NIVEAU : {level_directive}{focus_directive}\n\n"
+                "MISSION : Concevoir un épisode de podcast pédagogique captivant à deux voix (format NotebookLM / Grand Débat).\n"
+                "Personnages :\n"
+                "1. Camille (L'Hôte) - Dynamique, curieuse, pose les bonnes questions du point de vue de l'apprenant, utilise des métaphores intuitives.\n"
+                "2. Alex (L'Expert) - Pédagogue précis, décortique les mécanismes complexes, étaye rigoureusement avec les citations de sources [1], [2], prévient des erreurs courantes.\n\n"
+                "RÈGLES IMPÉRATIVES :\n"
+                "1. Produire entre 10 et 16 répliques fluides et vivantes alternant naturellement entre Camille et Alex.\n"
+                "2. Chaque notion clé doit s'appuyer sur les sources documentaires avec citations [1], [2].\n"
+                "3. Rendre la conversation rythmée, stimulante et pédagogiquement accessible sans lecture monotone.\n\n"
+                "Format JSON obligatoire :\n"
+                "{\n"
+                '  "title": "Titre percutant de l\'épisode de podcast",\n'
+                '  "description": "Courte présentation accrocheuse des enjeux abordés",\n'
+                '  "hosts": [\n'
+                '    {"name": "Camille", "role": "host", "voice_id": "shimmer"},\n'
+                '    {"name": "Alex", "role": "expert", "voice_id": "onyx"}\n'
+                "  ],\n"
+                '  "turns": [\n'
+                '    {"speaker": "Camille", "role": "host", "text": "Bonjour et bienvenue à tous ! Aujourd\'hui, on décortique un sujet passionnant..."},\n'
+                '    {"speaker": "Alex", "role": "expert", "text": "Salut Camille ! Exactement, et ce qui est fascinant dès qu\'on ouvre notre document de référence [1], c\'est que..."}\n'
+                "  ],\n"
+                '  "key_takeaways": ["Point clé 1", "Point clé 2", "Point clé 3"],\n'
+                '  "estimated_duration_minutes": 5\n'
+                "}"
+            )
+
+        return system_instruction, user_prompt, f"podcast-{self.VERSION}"

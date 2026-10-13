@@ -12,6 +12,7 @@ from .generators import (
     KeyPointGenerator,
     LessonGenerator,
     ObjectiveGenerator,
+    PodcastScriptGenerator,
     RevisionSheetGenerator,
     SummaryGenerator,
 )
@@ -30,6 +31,7 @@ class GenerationService:
         GenerationType.OBJECTIVES: ObjectiveGenerator,
         GenerationType.LESSON: LessonGenerator,
         GenerationType.REVISION_SHEET: RevisionSheetGenerator,
+        GenerationType.PODCAST_SCRIPT: PodcastScriptGenerator,
     }
 
     def __init__(self, provider: AIProvider | None = None):
@@ -304,6 +306,31 @@ class GenerationService:
         return self.generate(
             document=document,
             generation_type=GenerationType.REVISION_SHEET,
+            user=user,
+            provider_name=provider_name,
+            model=model,
+            focus=focus,
+            top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
+        )
+
+    def generate_podcast_script(
+        self,
+        document: Document,
+        user: Any | None = None,
+        provider_name: str | None = None,
+        model: str | None = None,
+        focus: str | None = None,
+        top_k: int = 5,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
+    ) -> AIGeneration:
+        return self.generate(
+            document=document,
+            generation_type=GenerationType.PODCAST_SCRIPT,
             user=user,
             provider_name=provider_name,
             model=model,

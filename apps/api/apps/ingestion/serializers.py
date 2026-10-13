@@ -25,12 +25,15 @@ class DocumentPageSerializer(serializers.ModelSerializer):
 class DocumentChunkSerializer(serializers.ModelSerializer):
     """Serializer for processed DocumentChunk records."""
 
+    page_number = serializers.IntegerField(source="page.page_number", read_only=True)
+
     class Meta:
         model = DocumentChunk
         fields = (
             "id",
             "document",
             "page",
+            "page_number",
             "chunk_index",
             "content",
             "token_count",

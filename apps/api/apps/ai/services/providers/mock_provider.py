@@ -665,6 +665,63 @@ class MockAIProvider(AIProvider):
                         }
                     ],
                 }
+            elif (
+                "podcast" in lower_p
+                or "dialogue" in lower_p
+                or "notebooklm" in lower_p
+                or "بودكاست" in prompt
+            ):
+                data = {
+                    "title": "Épisode : Au Cœur des Notions Clés",
+                    "description": "Une discussion dynamique et approfondie décryptant les concepts majeurs du document source.",
+                    "hosts": [
+                        {"name": "Camille", "role": "host", "voice_id": "shimmer"},
+                        {"name": "Alex", "role": "expert", "voice_id": "onyx"},
+                    ],
+                    "turns": [
+                        {
+                            "speaker": "Camille",
+                            "role": "host",
+                            "text": "Bonjour à tous et bienvenue dans ce nouvel épisode ! Alex, aujourd'hui on explore un sujet passionnant qui suscite beaucoup de questions.",
+                        },
+                        {
+                            "speaker": "Alex",
+                            "role": "expert",
+                            "text": "Salut Camille ! Absolument. Dès la lecture des premières sources [1], ce qui frappe, c'est la rigueur avec laquelle le problème est abordé.",
+                        },
+                        {
+                            "speaker": "Camille",
+                            "role": "host",
+                            "text": "Pour quelqu'un qui découvre le domaine, quelle est l'intuition centrale à retenir en priorité ?",
+                        },
+                        {
+                            "speaker": "Alex",
+                            "role": "expert",
+                            "text": "C'est avant tout l'articulation entre les principes théoriques et la mise en œuvre pratique [2]. Les sources insistent sur le fait qu'il ne faut pas sauter les étapes fondamentales.",
+                        },
+                        {
+                            "speaker": "Camille",
+                            "role": "host",
+                            "text": "Exactement comme une recette où chaque ingrédient joue un rôle critique. Et quels sont les pièges à éviter absolument ?",
+                        },
+                        {
+                            "speaker": "Alex",
+                            "role": "expert",
+                            "text": "Le piège classique, souligné dans le document [1], est de négliger l'alignement méthodologique. Sans vérification empirique, les risques de dérive augmentent.",
+                        },
+                        {
+                            "speaker": "Camille",
+                            "role": "host",
+                            "text": "C'est limpide ! Merci infiniment Alex pour ces explications éclairantes. Et à très bientôt pour un prochain épisode !",
+                        },
+                    ],
+                    "key_takeaways": [
+                        "Maîtrise des concepts fondamentaux appuyée sur les sources [1].",
+                        "Application rigoureuse de la méthodologie éprouvée [2].",
+                        "Vigilance continue contre les pièges d'implémentation.",
+                    ],
+                    "estimated_duration_minutes": 4,
+                }
             else:
                 data = {
                     "status": "success",

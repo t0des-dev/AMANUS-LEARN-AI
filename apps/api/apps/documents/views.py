@@ -200,3 +200,35 @@ class DocumentStatusView(APIView):
         self.check_object_permissions(request, document)
         serializer = DocumentStatusSerializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DocumentURLIngestView(APIView):
+    """POST /api/v1/documents/ingest-url/ - Ingest web article/URL into Document pipeline."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from .serializers import DocumentURLIngestSerializer
+
+        serializer = DocumentURLIngestSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        document = serializer.save()
+
+        async_mode = request.data.get("async_mode", True)
+        task_id = None
+        if async_mode:
+            try:
+                task = process_document_pipeline.delay(str(document.id))
+                task_id = str(task.id)
+            except Exception as e:
+                logger.warning(f"Could not dispatch Celery task asynchronously: {e}")
+                process_document_pipeline(str(document.id))
+        else:
+            process_document_pipeline(str(document.id))
+
+        read_serializer = DocumentDetailSerializer(document, context={"request": request})
+        res_data = read_serializer.data
+        if task_id:
+            res_data["task_id"] = task_id
+        return Response(res_data, status=status.HTTP_201_CREATED)
+

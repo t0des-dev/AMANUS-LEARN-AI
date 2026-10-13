@@ -231,3 +231,165 @@ class StudySession(models.Model):
         self.duration = max(0, int(diff))
         self.save(update_fields=["ended_at", "duration", "updated_at"])
         return self.duration
+
+
+class FlashcardDeck(models.Model):
+    """Deck of flashcards generated from a Document or Course."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.CASCADE,
+        related_name="flashcard_decks",
+        verbose_name="Organisation",
+        db_index=True,
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="flashcard_decks",
+        verbose_name="Cours associé",
+        db_index=True,
+    )
+    document = models.ForeignKey(
+        "documents.Document",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="flashcard_decks",
+        verbose_name="Document source",
+        db_index=True,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_flashcard_decks",
+        verbose_name="Créateur",
+    )
+    title = models.CharField(max_length=255, verbose_name="Titre du paquet de fiches")
+    description = models.TextField(blank=True, default="", verbose_name="Description")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Date de mise à jour")
+
+    class Meta:
+        db_table = "learning_flashcarddeck"
+        verbose_name = "Paquet de fiches (Flashcards)"
+        verbose_name_plural = "Paquets de fiches (Flashcards)"
+        ordering = ("-created_at",)
+
+    def __str__(self) -> str:
+        return f"{self.title} ({self.cards.count()} cartes)"
+
+
+class Flashcard(models.Model):
+    """Individual flashcard with question on front, answer on back, and optional hint."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    deck = models.ForeignKey(
+        FlashcardDeck,
+        on_delete=models.CASCADE,
+        related_name="cards",
+        verbose_name="Paquet parent",
+        db_index=True,
+    )
+    front = models.TextField(verbose_name="Question / Recto")
+    back = models.TextField(verbose_name="Réponse / Verso")
+    hint = models.CharField(max_length=255, blank=True, default="", verbose_name="Indice / Astuce mémo")
+    source_citation = models.CharField(max_length=255, blank=True, default="", verbose_name="Citation source")
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordre d'affichage")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_flashcard"
+        verbose_name = "Fiche mémo"
+        verbose_name_plural = "Fiches mémo"
+        ordering = ("order", "created_at")
+
+    def __str__(self) -> str:
+        return f"{self.deck.title} - Carte #{self.order}"
+
+
+class FlashcardReview(models.Model):
+    """Tracks spaced repetition state (SM-2 Algorithm) per user per card."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="flashcard_reviews",
+        verbose_name="Apprenant",
+        db_index=True,
+    )
+    card = models.ForeignKey(
+        Flashcard,
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        verbose_name="Carte révisée",
+        db_index=True,
+    )
+    repetitions = models.PositiveIntegerField(default=0, verbose_name="Répétitions consécutives réussies")
+    ease_factor = models.FloatField(default=2.5, verbose_name="Facteur de facilité (EF)")
+    interval_days = models.PositiveIntegerField(default=0, verbose_name="Intervalle en jours")
+    last_quality = models.PositiveSmallIntegerField(default=0, verbose_name="Dernière note (0-5)")
+    next_review_at = models.DateTimeField(default=timezone.now, verbose_name="Prochaine révision prévue", db_index=True)
+    last_reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="Dernière révision")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "learning_flashcardreview"
+        verbose_name = "État de révision espacée"
+        verbose_name_plural = "États de révision espacée"
+        unique_together = ("user", "card")
+        indexes = [
+            models.Index(fields=["user", "next_review_at"]),
+        ]
+
+    def record_review(self, quality: int):
+        """Applies the SuperMemo-2 (SM-2) algorithm.
+
+        quality: int from 0 to 5
+        0-2: Recommencer la carte (échec)
+        3-5: Réussite, espacement des intervalles
+        """
+        import datetime
+        from django.utils import timezone
+
+        q = max(0, min(5, quality))
+        self.last_quality = q
+        now = timezone.now()
+        self.last_reviewed_at = now
+
+        if q < 3:
+            self.repetitions = 0
+            self.interval_days = 1
+        else:
+            if self.repetitions == 0:
+                self.interval_days = 1
+            elif self.repetitions == 1:
+                self.interval_days = 6
+            else:
+                self.interval_days = max(1, round(self.interval_days * self.ease_factor))
+            self.repetitions += 1
+
+        new_ef = self.ease_factor + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+        self.ease_factor = max(1.3, round(new_ef, 2))
+        self.next_review_at = now + datetime.timedelta(days=self.interval_days)
+        self.save(
+            update_fields=[
+                "repetitions",
+                "ease_factor",
+                "interval_days",
+                "last_quality",
+                "next_review_at",
+                "last_reviewed_at",
+                "updated_at",
+            ]
+        )
+        return self
+

@@ -58,3 +58,53 @@ class VoiceSerializer(serializers.Serializer):
     gender = serializers.CharField()
     provider = serializers.CharField()
     description = serializers.CharField()
+
+
+class PodcastEpisodeSerializer(serializers.ModelSerializer):
+    audio_url = serializers.SerializerMethodField()
+    document_title = serializers.CharField(source="document.title", read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
+
+    class Meta:
+        from .models import PodcastEpisode
+
+        model = PodcastEpisode
+        fields = (
+            "id",
+            "organization_id",
+            "document_id",
+            "document_title",
+            "course_id",
+            "course_title",
+            "title",
+            "description",
+            "language",
+            "hosts",
+            "turns",
+            "key_takeaways",
+            "duration",
+            "status",
+            "audio_url",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = (
+            "id",
+            "organization_id",
+            "status",
+            "audio_url",
+            "created_at",
+            "updated_at",
+        )
+
+    def get_audio_url(self, obj) -> str | None:
+        return obj.get_audio_url()
+
+
+class PodcastGenerateRequestSerializer(serializers.Serializer):
+    document_id = serializers.UUIDField(required=False, allow_null=True)
+    course_id = serializers.UUIDField(required=False, allow_null=True)
+    language = serializers.CharField(required=False, default="fr")
+    level = serializers.CharField(required=False, default="BEGINNER")
+    focus = serializers.CharField(required=False, allow_blank=True, default="")
+    voice_provider = serializers.CharField(required=False, default="mock")

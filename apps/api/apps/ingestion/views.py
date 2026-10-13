@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from apps.documents.models import Document
 from apps.documents.permissions import IsDocumentOrganizationMember
 from apps.ingestion.serializers import (
+    DocumentChunkSerializer,
     DocumentPageSerializer,
     DocumentProcessingStatusSerializer,
 )
@@ -67,6 +68,38 @@ class DocumentPagesListView(APIView):
         return Response(
             {
                 "count": pages.count(),
+                "document_id": str(document.id),
+                "results": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class DocumentChunksListView(APIView):
+    """GET /api/v1/documents/{id}/chunks/
+    Returns extracted chunks with provenance metadata, page numbers, and textual excerpts.
+    """
+
+    permission_classes = [IsAuthenticated, IsDocumentOrganizationMember]
+
+    def get(self, request, id):
+        try:
+            document = Document.objects.get(
+                id=id,
+                organization__members__user=request.user,
+            )
+        except Document.DoesNotExist:
+            return Response(
+                {"detail": "Document introuvable ou non autorisé."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        self.check_object_permissions(request, document)
+        chunks = document.chunks.all().select_related("page").order_by("chunk_index")
+        serializer = DocumentChunkSerializer(chunks, many=True)
+        return Response(
+            {
+                "count": chunks.count(),
                 "document_id": str(document.id),
                 "results": serializer.data,
             },

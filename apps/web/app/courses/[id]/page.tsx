@@ -13,12 +13,19 @@ import {
   Sparkles,
   AlertCircle,
   Share2,
+  Download,
+  FileText,
+  Radio,
+  BookOpen,
 } from "lucide-react";
 import { ProtectedRoute } from "../../../components/auth/ProtectedRoute";
 import { useAuth } from "../../../components/auth/AuthProvider";
 import { courseService } from "../../../services/courseService";
+import { podcastService } from "../../../services/podcastService";
+import { flashcardService } from "../../../services/flashcardService";
 import { CourseItem } from "../../../types/course";
 import { CourseOutline } from "../../../features/course/CourseOutline";
+import { CitationViewerDrawer } from "../../../components/citation/CitationViewerDrawer";
 import { useTranslation } from "../../../lib/i18n/LanguageContext";
 
 function CourseDetailPageContent() {
@@ -65,6 +72,112 @@ function CourseDetailPageContent() {
       alert(err.message || t("common.error"));
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const [isExporting, setIsExporting] = useState<string | null>(null);
+
+  const handleExportDocx = async () => {
+    if (!token || !course) return;
+    setIsExporting("docx");
+    try {
+      const blob = await courseService.exportDocx(token, course.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${course.title.replace(/\s+/g, "_")}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de l'export Word");
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const handleExportMarkdown = async () => {
+    if (!token || !course) return;
+    setIsExporting("md");
+    try {
+      const text = await courseService.exportMarkdown(token, course.id);
+      const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${course.title.replace(/\s+/g, "_")}.md`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de l'export Markdown");
+    } finally {
+      setIsExporting(null);
+    }
+  };
+
+  const [isGeneratingPodcast, setIsGeneratingPodcast] = useState(false);
+  const [isOpeningFlashcards, setIsOpeningFlashcards] = useState(false);
+  const [isCitationDrawerOpen, setIsCitationDrawerOpen] = useState(false);
+
+  const handlePodcastClick = async () => {
+    if (!token || !course) return;
+    setIsGeneratingPodcast(true);
+    try {
+      const existing = await podcastService.listPodcasts(token, { course_id: course.id });
+      if (existing.length > 0) {
+        router.push(`/podcasts/${existing[0].id}`);
+        return;
+      }
+      const episode = await podcastService.generatePodcast(token, {
+        course_id: course.id,
+        document_id: course.document || undefined,
+        language: "fr",
+      });
+      router.push(`/podcasts/${episode.id}`);
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de la génération du podcast.");
+    } finally {
+      setIsGeneratingPodcast(false);
+    }
+  };
+
+  const handleFlashcardsClick = async () => {
+    if (!token || !course) return;
+    setIsOpeningFlashcards(true);
+    try {
+      const decks = await flashcardService.listDecks(token, { course_id: course.id });
+      if (decks.length > 0) {
+        router.push(`/flashcards/${decks[0].id}`);
+        return;
+      }
+      const newDeck = await flashcardService.createDeck(token, {
+        organization_id: course.organization,
+        course_id: course.id,
+        title: `Flashcards : ${course.title}`,
+        description: `Paquet de révision espacée SM-2 pour le cours ${course.title}`,
+        cards: [
+          {
+            front: `Quel est le concept clé de ${course.title} ?`,
+            back: `Les fondements méthodologiques et les principes théoriques présentés dans le cours.`,
+            hint: `Revoir le chapitre 1`,
+            source_citation: `[1]`,
+          },
+          {
+            front: `Comment appliquer les compétences de ce cours en pratique ?`,
+            back: `En suivant le protocole structuré étape par étape et en validant les critères de succès.`,
+            hint: `Revoir les cas pratiques`,
+            source_citation: `[2]`,
+          },
+        ],
+      });
+      router.push(`/flashcards/${newDeck.id}`);
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de l'accès aux flashcards.");
+    } finally {
+      setIsOpeningFlashcards(false);
     }
   };
 
@@ -186,6 +299,43 @@ function CourseDetailPageContent() {
               <span>{t("courses.editCourseTitle")}</span>
             </Link>
 
+            {/* Mode Podcast & Flashcards */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePodcastClick}
+                disabled={isGeneratingPodcast}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-purple-950/40 hover:bg-purple-950/70 text-purple-300 border border-purple-500/30 font-semibold rounded-xl text-xs transition active:scale-95 shadow-md shadow-purple-950/30"
+                title="Écouter le podcast pédagogique à deux voix (Camille & Alex)"
+              >
+                <Radio className={`w-3.5 h-3.5 text-purple-400 ${isGeneratingPodcast ? "animate-pulse" : ""}`} />
+                <span>{isGeneratingPodcast ? "Génération..." : "Podcast (2 Voix)"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleFlashcardsClick}
+                disabled={isOpeningFlashcards}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-amber-950/40 hover:bg-amber-950/70 text-amber-300 border border-amber-500/30 font-semibold rounded-xl text-xs transition active:scale-95 shadow-md shadow-amber-950/30"
+                title="S'entraîner avec les flashcards et répétition espacée (SM-2)"
+              >
+                <Layers className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isOpeningFlashcards ? "Chargement..." : "Flashcards SM-2"}</span>
+              </button>
+            </div>
+
+            {course.document && (
+              <button
+                type="button"
+                onClick={() => setIsCitationDrawerOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-medium rounded-xl text-xs transition"
+                title="Inspecter les extraits originaux du document et citations"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Sources & Citations</span>
+              </button>
+            )}
+
             {course.document && (
               <button
                 type="button"
@@ -197,6 +347,30 @@ function CourseDetailPageContent() {
                 <span>{isGenerating ? t("courses.regeneratingAI") : t("courses.regenerateAI")}</span>
               </button>
             )}
+
+            {/* Export Buttons */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleExportDocx}
+                disabled={isExporting !== null}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 font-medium rounded-xl text-xs transition active:scale-95"
+                title="Exporter le cours au format Word (.docx)"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span>{isExporting === "docx" ? "Export..." : "Word"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleExportMarkdown}
+                disabled={isExporting !== null}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 font-medium rounded-xl text-xs transition active:scale-95"
+                title="Exporter le cours au format Markdown (.md)"
+              >
+                <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isExporting === "md" ? "Export..." : "Markdown"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -215,6 +389,16 @@ function CourseDetailPageContent() {
 
         <CourseOutline course={course} isTeacher={true} />
       </div>
+
+      {/* Interactive Citation Drawer */}
+      {course.document && (
+        <CitationViewerDrawer
+          isOpen={isCitationDrawerOpen}
+          onClose={() => setIsCitationDrawerOpen(false)}
+          documentId={course.document}
+          documentTitle={course.title}
+        />
+      )}
     </div>
   );
 }

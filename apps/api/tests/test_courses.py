@@ -396,9 +396,51 @@ class TestAICourseGeneration:
             title="Cours Verrouillé",
             document=analyzed_document,
         )
-
         api_client.force_authenticate(user=student)
         url = f"/api/v1/courses/{course.id}/generate/"
         response = api_client.post(url, {}, format="json")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+class TestCourseExport:
+    def test_export_docx_and_markdown_success(self, api_client, tenant_setup):
+        teacher = tenant_setup["teacher"]
+        org = tenant_setup["org_a"]
+        course = Course.objects.create(
+            organization=org,
+            created_by=teacher,
+            title="Introduction aux Algorithmes",
+            description="Cours complet d'algorithmique fondamentale.",
+        )
+        ch = CourseSection.objects.create(
+            course=course,
+            title="Chapitre 1 : Les Arbres Binaires",
+            summary="Théorie et manipulation des arbres.",
+        )
+        CourseSection.objects.create(
+            course=course,
+            parent=ch,
+            title="Section 1.1 : Parcours en profondeur",
+            content="### Présentation\nLe parcours en profondeur utilise une pile ou la récursion.\n- Préordre\n- Postordre",
+            objectives=["Comprendre DFS", "Implémenter la récursion"],
+            estimated_minutes=20,
+        )
+
+        api_client.force_authenticate(user=teacher)
+
+        # 1. Test DOCX Export
+        res_docx = api_client.get(f"/api/v1/courses/{course.id}/export/docx/")
+        assert res_docx.status_code == status.HTTP_200_OK
+        assert res_docx["Content-Type"] == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        assert len(res_docx.content) > 1000
+
+        # 2. Test Markdown Export
+        res_md = api_client.get(f"/api/v1/courses/{course.id}/export/markdown/")
+        assert res_md.status_code == status.HTTP_200_OK
+        assert "text/markdown" in res_md["Content-Type"]
+        assert "Introduction aux Algorithmes" in res_md.content.decode("utf-8")
+        assert "Chapitre 1 : Les Arbres Binaires" in res_md.content.decode("utf-8")
+        assert "Comprendre DFS" in res_md.content.decode("utf-8")
+

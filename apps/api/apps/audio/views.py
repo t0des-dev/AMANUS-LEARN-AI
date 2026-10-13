@@ -198,3 +198,175 @@ class VoicesListView(APIView):
         language = request.query_params.get("language")
         voices = list_available_voices(language=language)
         return Response({"voices": voices}, status=status.HTTP_200_OK)
+
+
+class PodcastEpisodeListCreateView(APIView):
+    """GET  /api/v1/audio/podcasts/ - List user's organization podcast episodes.
+
+    POST /api/v1/audio/podcasts/ - Generate a dynamic 2-voice educational podcast episode.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import PodcastEpisode
+        from .serializers import PodcastEpisodeSerializer
+
+        qs = (
+            PodcastEpisode.objects.filter(organization__members__user=request.user)
+            .select_related("organization", "document", "course")
+            .order_by("-created_at")
+        )
+        doc_id = request.query_params.get("document_id")
+        course_id = request.query_params.get("course_id")
+        if doc_id:
+            qs = qs.filter(document_id=doc_id)
+        if course_id:
+            qs = qs.filter(course_id=course_id)
+
+        serializer = PodcastEpisodeSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        from apps.ai.services import AIService, InsufficientContextError
+        from apps.courses.models import Course
+        from apps.documents.models import Document
+
+        from .models import AudioStatus, PodcastEpisode
+        from .serializers import (
+            PodcastEpisodeSerializer,
+            PodcastGenerateRequestSerializer,
+        )
+
+        serializer = PodcastGenerateRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        doc_id = data.get("document_id")
+        course_id = data.get("course_id")
+
+        if not doc_id and not course_id:
+            return Response(
+                {"detail": "Vous devez spécifier soit document_id soit course_id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        document = None
+        course = None
+        organization = None
+
+        if doc_id:
+            document = get_object_or_404(Document, id=doc_id)
+            if not document.organization.is_member(request.user):
+                raise PermissionDenied("Vous n'êtes pas membre de cette organisation.")
+            organization = document.organization
+
+        if course_id:
+            course = get_object_or_404(Course, id=course_id)
+            if not course.organization.is_member(request.user):
+                raise PermissionDenied("Vous n'êtes pas membre de cette organisation.")
+            organization = course.organization
+            if not document and course.document:
+                document = course.document
+
+        language = data.get("language") or (document.detected_language if document else "fr") or "fr"
+        level = data.get("level", "BEGINNER")
+        focus = data.get("focus", "")
+        provider_name = data.get("voice_provider", "mock")
+
+        ai_service = AIService()
+        try:
+            if document:
+                generation_record = ai_service.generate_podcast_script(
+                    document=document,
+                    user=request.user,
+                    provider_name=provider_name,
+                    language=language,
+                    level=level,
+                    focus=focus,
+                )
+                dialogue_data = generation_record.result or {}
+            else:
+                dialogue_data = {
+                    "title": f"Podcast : {course.title}",
+                    "description": course.description or "Exploration audio du cours.",
+                    "hosts": [
+                        {"name": "Camille", "role": "host", "voice_id": "shimmer"},
+                        {"name": "Alex", "role": "expert", "voice_id": "onyx"},
+                    ],
+                    "turns": [
+                        {
+                            "speaker": "Camille",
+                            "role": "host",
+                            "text": f"Bonjour et bienvenue ! Aujourd'hui nous décryptons le cours : {course.title}.",
+                        },
+                        {
+                            "speaker": "Alex",
+                            "role": "expert",
+                            "text": "Salut Camille ! Un sujet particulièrement stimulant qui structure des concepts essentiels.",
+                        },
+                    ],
+                    "key_takeaways": ["Principes fondamentaux du module", "Pratique méthodique"],
+                    "estimated_duration_minutes": 3,
+                }
+        except InsufficientContextError as exc:
+            return Response(
+                {"detail": str(exc), "code": "insufficient_context"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            logger.exception("Podcast generation failed: %s", exc)
+            return Response(
+                {"detail": f"Erreur lors de la génération du podcast : {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        episode = PodcastEpisode.objects.create(
+            organization=organization,
+            document=document,
+            course=course,
+            title=dialogue_data.get("title") or f"Podcast - {document.title if document else course.title}",
+            description=dialogue_data.get("description", ""),
+            language=language,
+            hosts=dialogue_data.get("hosts", []),
+            turns=dialogue_data.get("turns", []),
+            key_takeaways=dialogue_data.get("key_takeaways", []),
+            duration=float(dialogue_data.get("estimated_duration_minutes", 4)) * 60.0,
+            status=AudioStatus.COMPLETED,
+            created_by=request.user,
+        )
+
+        return Response(
+            PodcastEpisodeSerializer(episode).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class PodcastEpisodeDetailView(APIView):
+    """GET    /api/v1/audio/podcasts/<id>/ - Retrieve episode with full dialogue turns.
+
+    DELETE /api/v1/audio/podcasts/<id>/ - Delete episode.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        from .models import PodcastEpisode
+        from .serializers import PodcastEpisodeSerializer
+
+        episode = get_object_or_404(
+            PodcastEpisode.objects.filter(organization__members__user=request.user)
+            .select_related("organization", "document", "course"),
+            id=id,
+        )
+        return Response(PodcastEpisodeSerializer(episode).data, status=status.HTTP_200_OK)
+
+    def delete(self, request, id):
+        from .models import PodcastEpisode
+
+        episode = get_object_or_404(
+            PodcastEpisode.objects.filter(organization__members__user=request.user),
+            id=id,
+        )
+        episode.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
