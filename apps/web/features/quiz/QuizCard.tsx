@@ -2,13 +2,14 @@
 
 import React from "react";
 import Link from "next/link";
-import { BookOpen, Clock, Award, Play, ChevronRight, HelpCircle, Sparkles } from "lucide-react";
+import { BookOpen, Clock, Award, Play, ChevronRight, HelpCircle, Sparkles, Trash2, FileText } from "lucide-react";
 import { Quiz } from "../../types/quiz";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 
 interface QuizCardProps {
   quiz: Quiz;
   className?: string;
+  onDelete?: (quiz: Quiz) => void;
 }
 
 const TYPE_CONFIG: Record<string, { key: string; label: string; badge: string }> = {
@@ -47,7 +48,7 @@ const DIFFICULTY_CONFIG: Record<string, { key: string; label: string; badge: str
   },
 };
 
-export function QuizCard({ quiz, className = "" }: QuizCardProps) {
+export function QuizCard({ quiz, className = "", onDelete }: QuizCardProps) {
   const { t } = useTranslation();
   const typeInfo = TYPE_CONFIG[quiz.quiz_type] || TYPE_CONFIG.TRAINING;
   const diffInfo = DIFFICULTY_CONFIG[quiz.difficulty] || DIFFICULTY_CONFIG.MEDIUM;
@@ -67,9 +68,15 @@ export function QuizCard({ quiz, className = "" }: QuizCardProps) {
             {t(diffInfo.key, diffInfo.label)}
           </span>
           {quiz.course_title && (
-            <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 max-w-[150px] truncate">
+            <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 max-w-[150px] truncate" title={quiz.course_title}>
               <BookOpen className="h-3 w-3 shrink-0" />
               <span className="truncate">{quiz.course_title}</span>
+            </span>
+          )}
+          {quiz.document_title && (
+            <span className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 max-w-[160px] truncate bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/50" title={quiz.document_title}>
+              <FileText className="h-3 w-3 shrink-0 text-indigo-500" />
+              <span className="truncate">{quiz.document_title}</span>
             </span>
           )}
         </div>
@@ -131,6 +138,21 @@ export function QuizCard({ quiz, className = "" }: QuizCardProps) {
               <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
               {t("quizzes.generate", "Générer")}
             </Link>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(quiz);
+              }}
+              className="inline-flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900 transition"
+              title={t("quizzes.delete", "Supprimer")}
+              aria-label={t("quizzes.delete", "Supprimer")}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           )}
         </div>
       </div>

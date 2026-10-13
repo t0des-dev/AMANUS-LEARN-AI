@@ -77,6 +77,8 @@ class QuizListSerializer(serializers.ModelSerializer):
     questions_count = serializers.SerializerMethodField()
     organization_name = serializers.CharField(source="organization.name", read_only=True)
     course_title = serializers.CharField(source="course.title", read_only=True, default=None)
+    document_title = serializers.SerializerMethodField()
+    document_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
@@ -87,6 +89,8 @@ class QuizListSerializer(serializers.ModelSerializer):
             "course",
             "course_title",
             "document",
+            "document_id",
+            "document_title",
             "title",
             "description",
             "type",
@@ -100,10 +104,26 @@ class QuizListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "document_id",
+            "document_title",
             "questions_count",
             "created_at",
             "updated_at",
         ]
+
+    def get_document_title(self, obj: Quiz):
+        if obj.document:
+            return obj.document.title
+        if obj.course and getattr(obj.course, "document", None):
+            return obj.course.document.title
+        return None
+
+    def get_document_id(self, obj: Quiz):
+        if obj.document_id:
+            return str(obj.document_id)
+        if obj.course and getattr(obj.course, "document_id", None):
+            return str(obj.course.document_id)
+        return None
 
     def get_questions_count(self, obj: Quiz) -> int:
         return obj.questions.count()

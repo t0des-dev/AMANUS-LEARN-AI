@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
@@ -10,7 +11,7 @@ from rest_framework.views import APIView
 
 from apps.courses.models import Course
 from apps.documents.models import Document
-from apps.organizations.models import Organization, RoleChoices
+from apps.organizations.models import Organization, OrganizationMember, RoleChoices
 
 from .models import Quiz, QuizAttempt
 from .permissions import CanManageQuiz, IsQuizOrganizationMember
@@ -63,6 +64,12 @@ class QuizListCreateView(generics.ListCreateAPIView):
         if course_id:
             queryset = queryset.filter(course_id=course_id)
 
+        document_id = self.request.query_params.get("document_id")
+        if document_id:
+            queryset = queryset.filter(
+                Q(document_id=document_id) | Q(course__document_id=document_id)
+            )
+
         quiz_type = self.request.query_params.get("type")
         if quiz_type:
             queryset = queryset.filter(type=quiz_type)
@@ -72,6 +79,58 @@ class QuizListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(difficulty=difficulty)
 
         return queryset
+
+
+class QuizBulkDeleteView(APIView):
+    """POST/DELETE /api/v1/quizzes/bulk-delete/
+
+    Supprime en masse des quiz/évaluations liés à un document ou selon une liste d'IDs.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        return self._do_delete(request)
+
+    def delete(self, request):
+        return self._do_delete(request)
+
+    def _do_delete(self, request):
+        user = request.user
+        quiz_ids = request.data.get("quiz_ids", [])
+        document_id = request.data.get("document_id")
+
+        if not quiz_ids and not document_id:
+            return Response(
+                {"error": "Veuillez fournir quiz_ids ou document_id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        authorized_org_ids = OrganizationMember.objects.filter(
+            user=user,
+            role__in=[RoleChoices.OWNER, RoleChoices.ADMIN, RoleChoices.TEACHER],
+        ).values_list("organization_id", flat=True)
+
+        queryset = Quiz.objects.filter(
+            organization__members__user=user
+        ).filter(
+            Q(created_by=user) | Q(organization_id__in=authorized_org_ids)
+        )
+
+        if document_id:
+            queryset = queryset.filter(
+                Q(document_id=document_id) | Q(course__document_id=document_id)
+            )
+        if quiz_ids:
+            queryset = queryset.filter(id__in=quiz_ids)
+
+        deleted_count = queryset.count()
+        queryset.delete()
+
+        return Response(
+            {"deleted": deleted_count, "message": f"{deleted_count} quiz supprimé(s)."},
+            status=status.HTTP_200_OK,
+        )
 
     def perform_create(self, serializer):
         user = self.request.user

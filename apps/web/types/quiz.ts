@@ -32,6 +32,8 @@ export interface Quiz {
   course: string | null;
   course_title?: string;
   document?: string | null;
+  document_id?: string | null;
+  document_title?: string | null;
   title: string;
   description: string;
   quiz_type: QuizType;

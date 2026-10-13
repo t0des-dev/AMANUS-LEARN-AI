@@ -55,6 +55,7 @@ export const quizService = {
     params?: {
       organization_id?: string;
       course_id?: string;
+      document_id?: string;
       quiz_type?: string;
       type?: string;
       difficulty?: string;
@@ -63,6 +64,7 @@ export const quizService = {
     const query = new URLSearchParams();
     if (params?.organization_id) query.append("organization_id", params.organization_id);
     if (params?.course_id) query.append("course_id", params.course_id);
+    if (params?.document_id) query.append("document_id", params.document_id);
     if (params?.quiz_type) query.append("quiz_type", params.quiz_type);
     if (params?.type) query.append("quiz_type", params.type);
     if (params?.difficulty) query.append("difficulty", params.difficulty);
@@ -77,12 +79,33 @@ export const quizService = {
     params?: {
       organization_id?: string;
       course_id?: string;
+      document_id?: string;
       quiz_type?: string;
       type?: string;
       difficulty?: string;
     }
   ): Promise<Quiz[]> {
     return this.list(token, params);
+  },
+
+  async delete(token: string, quizId: string): Promise<void> {
+    return quizFetch<void>(`quizzes/${quizId}/`, token, {
+      method: "DELETE",
+    });
+  },
+
+  deleteQuiz(token: string, quizId: string): Promise<void> {
+    return this.delete(token, quizId);
+  },
+
+  async bulkDelete(
+    token: string,
+    payload: { quiz_ids?: string[]; document_id?: string }
+  ): Promise<{ deleted: number }> {
+    return quizFetch<{ deleted: number }>("quizzes/bulk-delete/", token, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   async get(token: string, quizId: string): Promise<Quiz> {

@@ -30,6 +30,7 @@ import {
   AlertCircle,
   Radio,
   BookOpen,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { documentService } from "../../services/documentService";
@@ -459,6 +460,16 @@ export function DocumentDetails({
               <BookOpen className="h-3.5 w-3.5 text-indigo-400" />
               <span>{t("documents.citationsChunks", "Citations & Chunks")}</span>
             </button>
+
+            {/* Document Quizzes Link */}
+            <Link
+              href={`/quizzes?document_id=${doc.id}`}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-950/40 px-3.5 py-2 text-xs font-semibold text-indigo-300 transition hover:bg-indigo-900/60 hover:text-white"
+              title={t("documents.viewQuizzes", "Voir les quiz et évaluations de ce document")}
+            >
+              <HelpCircle className="h-3.5 w-3.5 text-indigo-400" />
+              <span>{t("documents.quizzes", "Quiz & Évaluations")}</span>
+            </Link>
 
             <button
               type="button"

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   HelpCircle,
   PlusCircle,
@@ -13,11 +14,16 @@ import {
   AlertCircle,
   Loader2,
   FileText,
+  Trash2,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useOrganization } from "@/components/organization/OrganizationContext";
 import { useTranslation } from "@/lib/i18n/LanguageContext";
+import { useToast } from "@/components/toast/ToastProvider";
+import { useConfirm } from "@/components/dialog/ConfirmDialogProvider";
 import { quizService } from "@/services/quizService";
 import { courseService } from "@/services/courseService";
 import { documentService } from "@/services/documentService";
@@ -30,6 +36,11 @@ function QuizzesPageContent() {
   const { token, user } = useAuth();
   const { currentOrg } = useOrganization();
   const { t } = useTranslation();
+  const toast = useToast();
+  const { confirm } = useConfirm();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [courses, setCourses] = useState<CourseItem[]>([]);
@@ -40,6 +51,14 @@ function QuizzesPageContent() {
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("ALL");
+  const [documentFilter, setDocumentFilter] = useState<string>(
+    searchParams.get("document_id") || "ALL"
+  );
+
+  useEffect(() => {
+    const docParam = searchParams.get("document_id") || "ALL";
+    setDocumentFilter(docParam);
+  }, [searchParams]);
 
   // Create Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -64,6 +83,7 @@ function QuizzesPageContent() {
     try {
       const data = await quizService.listQuizzes(token, {
         organization_id: currentOrg?.id || undefined,
+        document_id: documentFilter !== "ALL" ? documentFilter : undefined,
         quiz_type: typeFilter !== "ALL" ? (typeFilter as QuizType) : undefined,
         difficulty: difficultyFilter !== "ALL" ? (difficultyFilter as QuizDifficulty) : undefined,
       });
@@ -73,7 +93,7 @@ function QuizzesPageContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, currentOrg, typeFilter, difficultyFilter]);
+  }, [token, currentOrg, typeFilter, difficultyFilter, documentFilter]);
 
   const fetchCoursesAndDocs = useCallback(async () => {
     if (!token) return;
@@ -94,6 +114,83 @@ function QuizzesPageContent() {
     fetchCoursesAndDocs();
   }, [fetchQuizzes, fetchCoursesAndDocs]);
 
+  const handleDocumentFilterChange = (docId: string) => {
+    setDocumentFilter(docId);
+    const params = new URLSearchParams(searchParams.toString());
+    if (docId !== "ALL") {
+      params.set("document_id", docId);
+    } else {
+      params.delete("document_id");
+    }
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`${pathname}${qs}`, { scroll: false });
+  };
+
+  const handleClearFilters = () => {
+    setTypeFilter("ALL");
+    setDifficultyFilter("ALL");
+    setDocumentFilter("ALL");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("document_id");
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`${pathname}${qs}`, { scroll: false });
+  };
+
+  const handleDeleteQuiz = async (quiz: Quiz) => {
+    if (!token) return;
+    const ok = await confirm({
+      title: t("quizzes.deleteQuiz", "Supprimer le quiz"),
+      message: t(
+        "quizzes.confirmDelete",
+        "Êtes-vous sûr de vouloir supprimer définitivement ce quiz et toutes ses questions ?"
+      ),
+      confirmText: t("quizzes.delete", "Supprimer"),
+      cancelText: t("common.cancel", "Annuler"),
+      variant: "danger",
+    });
+    if (!ok) return;
+
+    try {
+      await quizService.deleteQuiz(token, quiz.id);
+      setQuizzes((prev) => prev.filter((q) => q.id !== quiz.id));
+      toast.success(t("quizzes.deleteSuccess", "Quiz supprimé avec succès."));
+    } catch (err: any) {
+      toast.error(
+        err.message || t("quizzes.deleteError", "Erreur lors de la suppression du quiz.")
+      );
+    }
+  };
+
+  const handleBulkDeleteDocumentQuizzes = async () => {
+    if (!token || documentFilter === "ALL") return;
+    const activeDoc = documents.find((d) => d.id === documentFilter);
+    const docTitle = activeDoc?.title || documentFilter;
+    const ok = await confirm({
+      title: t("quizzes.deleteDocQuizzes", "Supprimer les quiz de ce document"),
+      message: `${t(
+        "quizzes.confirmDeleteDocQuizzes",
+        "Êtes-vous sûr de vouloir supprimer tous les quiz associés à ce document ?"
+      )} (${docTitle})`,
+      confirmText: t("quizzes.deleteDocQuizzes", "Supprimer tous les quiz"),
+      cancelText: t("common.cancel", "Annuler"),
+      variant: "danger",
+    });
+    if (!ok) return;
+
+    try {
+      const res = await quizService.bulkDelete(token, { document_id: documentFilter });
+      toast.success(`${res.deleted} ${t("quizzes.bulkDeleteSuccess", "quiz supprimé(s) avec succès.")}`);
+      await fetchQuizzes();
+    } catch (err: any) {
+      toast.error(
+        err.message || t("quizzes.bulkDeleteError", "Erreur lors de la suppression groupée des quiz.")
+      );
+    }
+  };
+
+  const isFiltered = typeFilter !== "ALL" || difficultyFilter !== "ALL" || documentFilter !== "ALL";
+  const activeDocument = documents.find((d) => d.id === documentFilter);
+
   const handleCreateQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !currentOrg) return;
@@ -106,6 +203,7 @@ function QuizzesPageContent() {
       const newQuiz = await quizService.createQuiz(token, {
         organization: currentOrg.id,
         course: selectedCourseId || undefined,
+        document: selectedDocId || undefined,
         title: newTitle,
         description: newDesc,
         quiz_type: newType,
@@ -194,10 +292,31 @@ function QuizzesPageContent() {
 
         {/* Filter Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          {/* Document filter */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase shrink-0">
+              <FileText className="h-3.5 w-3.5 text-indigo-500" />
+              <span>{t("quizzes.filterByDoc", "Document :")}</span>
+            </div>
+            <select
+              value={documentFilter}
+              onChange={(e) => handleDocumentFilterChange(e.target.value)}
+              className="max-w-[180px] sm:max-w-[240px] truncate text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="ALL">{t("quizzes.allDocs", "Tous les documents")}</option>
+              {documents.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Modes filter */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase">
               <Filter className="h-3.5 w-3.5" />
-              <span>Modes :</span>
+              <span>{t("quizzes.filterModes", "Modes :")}</span>
             </div>
             {["ALL", "TRAINING", "EXAM", "REVISION"].map((tMode) => (
               <button
@@ -212,17 +331,18 @@ function QuizzesPageContent() {
                 {tMode === "ALL"
                   ? t("common.filter")
                   : tMode === "TRAINING"
-                  ? "Entraînement"
+                  ? t("quizzes.training", "Entraînement")
                   : tMode === "EXAM"
-                  ? "Examen"
-                  : "Révision"}
+                  ? t("quizzes.exam", "Examen")
+                  : t("quizzes.revision", "Révision")}
               </button>
             ))}
           </div>
 
+          {/* Difficulty filter */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase">
-              <span>{t("courses.level")} :</span>
+              <span>{t("quizzes.filterDifficulty", "Difficulté :")}</span>
             </div>
             {["ALL", "EASY", "MEDIUM", "HARD"].map((d) => (
               <button
@@ -234,11 +354,77 @@ function QuizzesPageContent() {
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
                 }`}
               >
-                {d === "ALL" ? t("common.filter") : d === "EASY" ? t("courses.levelBeginner") : d === "MEDIUM" ? t("courses.levelIntermediate") : t("courses.levelAdvanced")}
+                {d === "ALL"
+                  ? t("common.filter")
+                  : d === "EASY"
+                  ? t("quizzes.easy", "Facile")
+                  : d === "MEDIUM"
+                  ? t("quizzes.medium", "Moyen")
+                  : t("quizzes.hard", "Difficile")}
               </button>
             ))}
+
+            {/* Clear filters button */}
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition"
+                title={t("quizzes.clearFilters", "Effacer les filtres")}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>{t("quizzes.clearFilters", "Effacer les filtres")}</span>
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Active Document Filter Banner */}
+        {documentFilter !== "ALL" && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-indigo-600 text-white shrink-0">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                    {t("quizzes.activeFilter", "Filtre actif :")}
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-indigo-200/60 dark:bg-indigo-900/60 text-indigo-900 dark:text-indigo-200">
+                    {activeDocument?.title || documentFilter}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  {quizzes.length} {t("quizzes.documentQuizzesCount", "quiz trouvé(s) pour ce document")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {quizzes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBulkDeleteDocumentQuizzes}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900 transition"
+                  title={t("quizzes.deleteDocQuizzes", "Supprimer les quiz de ce document")}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>{t("quizzes.deleteDocQuizzes", "Supprimer les quiz")}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleDocumentFilterChange("ALL")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-850 transition"
+                title={t("quizzes.clearFilters", "Effacer le filtre")}
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>{t("quizzes.clearFilters", "Effacer")}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Quiz Catalog */}
         {isLoading ? (
@@ -263,13 +449,13 @@ function QuizzesPageContent() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition"
             >
               <Sparkles className="h-4 w-4" />
-              Générer un quiz IA maintenant
+              {t("quizzes.generateQuiz", "Générer un quiz IA maintenant")}
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {quizzes.map((quiz) => (
-              <QuizCard key={quiz.id} quiz={quiz} />
+              <QuizCard key={quiz.id} quiz={quiz} onDelete={handleDeleteQuiz} />
             ))}
           </div>
         )}
@@ -487,7 +673,16 @@ function QuizzesPageContent() {
 export default function QuizzesPage() {
   return (
     <ProtectedRoute>
-      <QuizzesPageContent />
+      <Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-500">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
+            <span className="text-sm">Chargement des quiz...</span>
+          </div>
+        }
+      >
+        <QuizzesPageContent />
+      </Suspense>
     </ProtectedRoute>
   );
 }
