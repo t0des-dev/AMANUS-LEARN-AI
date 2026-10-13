@@ -374,7 +374,7 @@ function CoursesPageContent() {
                     <option value="">-- {t("courses.noDoc")} --</option>
                     {documents.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.title}
+                        {d.title} {d.status !== "READY" && d.status !== "COMPLETED" ? `(${d.status})` : ""}
                       </option>
                     ))}
                   </select>
@@ -385,7 +385,7 @@ function CoursesPageContent() {
                 <div className="p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-xl text-xs text-indigo-300 flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
                   <span>
-                    La structure hiérarchique (Chapitres, Sections, Leçons) sera automatiquement générée à partir des extraits RAG de ce document.
+                    {t("courses.autoStructureHint", "La structure hiérarchique (Chapitres, Sections, Leçons) sera automatiquement générée à partir des extraits de ce document.")}
                   </span>
                 </div>
               )}

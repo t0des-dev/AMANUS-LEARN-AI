@@ -865,9 +865,12 @@ class MockAIProvider(AIProvider):
         if context_text:
             raw_chunks = re.split(r'\[\d+\]', context_text)
             for ch in raw_chunks:
+                # Remove header lines like '--- Source [1] : ... ---'
+                cleaned = re.sub(r'^[^\n]*---\n?', '', ch).strip()
                 cleaned = re.sub(
-                    r'^(?:Extrait|Source|Page|Document)[^\n:]*:', '', ch, flags=re.IGNORECASE
+                    r'^(?:Extrait|Source|Page|Document)[^\n:]*:', '', cleaned, flags=re.IGNORECASE
                 ).strip()
+                cleaned = re.sub(r'^[:\-—\s]+', '', cleaned).strip()
                 if (
                     len(cleaned) > 25
                     and not cleaned.startswith("{")
@@ -880,11 +883,34 @@ class MockAIProvider(AIProvider):
         if not doc_title and not extracted_chunks:
             return None
 
+        # If chunks are empty but doc_title exists, create thematic chunks adapted to doc_title
+        if not extracted_chunks and doc_title:
+            extracted_chunks = [
+                f"{doc_title} - الإطار العام والمفاهيم التأسيسية",
+                f"{doc_title} - القواعد والأحكام الجوهرية المنظمة",
+                f"{doc_title} - الإجراءات والآليات الميدانية والضمانات",
+                f"{doc_title} - المعايير التطبيقية والأحكام الختامية",
+            ] if is_arabic else [
+                f"{doc_title} - Foundational Framework & Key Concepts",
+                f"{doc_title} - Core Principles & Structural Guidelines",
+                f"{doc_title} - Implementation Procedures & Safeguards",
+                f"{doc_title} - Synthesis & Operational Standards",
+            ] if is_english else [
+                f"{doc_title} - Cadre Général & Notions Fondamentales",
+                f"{doc_title} - Principes Directeurs & Règles Essentielles",
+                f"{doc_title} - Modalités Pratiques & Garanties d'Application",
+                f"{doc_title} - Synthèse Globale & Dispositions Clés",
+            ]
+
         # Helper to extract a concise topic from chunk
         def _get_chunk_topic(text: str, default: str) -> str:
             lines = [l.strip() for l in text.split("\n") if l.strip()]
-            for line in lines[:3]:
-                clean_line = re.sub(r'^[#*_\-\s\d.:]+', '', line).strip()
+            for line in lines[:4]:
+                clean_line = re.sub(r'^[#*_\-\s\d.:|]+', '', line).strip()
+                clean_line = re.sub(r'--+.*--+', '', clean_line).strip()
+                clean_line = re.sub(
+                    r'^(?:Source|Extrait|Chapitre|Section)[^:]*:', '', clean_line, flags=re.IGNORECASE
+                ).strip()
                 words = clean_line.split()
                 if 2 <= len(words) <= 12 and not clean_line.startswith("http"):
                     return clean_line

@@ -189,6 +189,20 @@ class CourseGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Ensure document is ingested and has text chunks for RAG
+        from apps.documents.models import DocumentStatus
+        if document.chunks.count() == 0:
+            try:
+                from apps.ingestion.tasks import extract_document, create_chunks
+                logger.info("Auto-triggering ingestion for document %s before course generation", document.id)
+                extract_document(str(document.id))
+                create_chunks(str(document.id))
+                document.refresh_from_db()
+                document.status = DocumentStatus.READY
+                document.save(update_fields=["status", "updated_at"])
+            except Exception as ing_err:
+                logger.warning("Auto-ingestion attempt for doc %s failed: %s", document.id, ing_err)
+
         from apps.ai.services.orchestration import (
             ConcurrentGenerationConflictError,
             GenerationLock,
