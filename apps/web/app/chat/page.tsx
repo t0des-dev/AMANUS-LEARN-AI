@@ -24,12 +24,14 @@ import { documentService } from "../../services/documentService";
 import { ChatSession, PedagogicalCommandCode } from "../../types/chat";
 import { DocumentItem } from "../../types/document";
 import { SuggestedPrompt } from "../../components/chat/SuggestedPrompt";
+import { useToast } from "../../components/toast/ToastProvider";
 
 function ChatHubContent() {
   const router = useRouter();
   const { token } = useAuth();
   const { currentOrg } = useOrganization();
   const { t } = useTranslation();
+  const toast = useToast();
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -86,7 +88,7 @@ function ChatHubContent() {
 
       router.push(`/chat/${newSession.id}`);
     } catch (err: any) {
-      alert(err.message || "Impossible de démarrer la session.");
+      toast.error(err.message || "Impossible de démarrer la session.");
       setIsCreating(false);
     }
   };
@@ -100,8 +102,9 @@ function ChatHubContent() {
     try {
       await chatService.deleteSession(token, sessionId);
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      toast.success("Conversation supprimée.");
     } catch (err: any) {
-      alert(err.message || "Erreur de suppression.");
+      toast.error(err.message || "Erreur de suppression.");
     }
   };
 

@@ -35,6 +35,7 @@ import { useAuth } from "../../components/auth/AuthProvider";
 import { documentService } from "../../services/documentService";
 import { podcastService } from "../../services/podcastService";
 import { CitationViewerDrawer } from "../../components/citation/CitationViewerDrawer";
+import { useToast } from "../../components/toast/ToastProvider";
 import {
   DocumentItem,
   DocumentPageItem,
@@ -64,6 +65,7 @@ export function DocumentDetails({
 }: DocumentDetailsProps) {
   const { token } = useAuth();
   const router = useRouter();
+  const toast = useToast();
 
   const [doc, setDoc] = useState<DocumentItem>(initialDoc);
   const [currentStage, setCurrentStage] = useState<DocumentProcessingStage | "Failed">(
@@ -92,7 +94,7 @@ export function DocumentDetails({
       });
       router.push(`/podcasts/${episode.id}`);
     } catch (err: any) {
-      alert(err.message || "Erreur lors de la génération du podcast.");
+      toast.error(err.message || "Erreur lors de la génération du podcast.", "Erreur Podcast");
     } finally {
       setIsGeneratingPodcast(false);
     }

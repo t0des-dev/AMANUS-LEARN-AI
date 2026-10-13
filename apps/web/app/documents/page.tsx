@@ -17,10 +17,12 @@ import { documentService } from "../../services/documentService";
 import { DocumentItem } from "../../types/document";
 import { DocumentList } from "../../features/document/DocumentList";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
+import { useToast } from "../../components/toast/ToastProvider";
 
 function DocumentsPageContent() {
   const { t } = useTranslation();
   const { token } = useAuth();
+  const toast = useToast();
   const { currentOrg, organizations, isLoading: isOrgLoading } = useOrganization();
 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -56,8 +58,9 @@ function DocumentsPageContent() {
       setDocuments((prev) =>
         prev.map((d) => (d.id === doc.id ? { ...d, status: res.status } : d))
       );
+      toast.success(`Ingestion démarrée pour "${doc.title}".`);
     } catch (err: any) {
-      alert(err.message || "Erreur lors du traitement.");
+      toast.error(err.message || "Erreur lors du traitement.", "Erreur d'ingestion");
     }
   };
 
@@ -68,8 +71,9 @@ function DocumentsPageContent() {
     try {
       await documentService.delete(token, doc.id);
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+      toast.success(`Document "${doc.title}" supprimé.`);
     } catch (err: any) {
-      alert(err.message || "Erreur lors de la suppression.");
+      toast.error(err.message || "Erreur lors de la suppression.", "Erreur");
     }
   };
 

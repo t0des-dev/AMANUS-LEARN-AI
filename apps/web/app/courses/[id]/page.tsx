@@ -27,11 +27,13 @@ import { CourseItem } from "../../../types/course";
 import { CourseOutline } from "../../../features/course/CourseOutline";
 import { CitationViewerDrawer } from "../../../components/citation/CitationViewerDrawer";
 import { useTranslation } from "../../../lib/i18n/LanguageContext";
+import { useToast } from "../../../components/toast/ToastProvider";
 
 function CourseDetailPageContent() {
   const params = useParams();
   const courseId = params?.id as string;
   const router = useRouter();
+  const toast = useToast();
   const { token, user } = useAuth();
   const { t, isRTL } = useTranslation();
 
@@ -68,8 +70,9 @@ function CourseDetailPageContent() {
     try {
       const updated = await courseService.generate(token, course.id);
       setCourse(updated);
+      toast.success("Cours régénéré avec succès par l'IA.");
     } catch (err: any) {
-      alert(err.message || t("common.error"));
+      toast.error(err.message || t("common.error"), "Génération IA");
     } finally {
       setIsGenerating(false);
     }
@@ -90,8 +93,9 @@ function CourseDetailPageContent() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success("Document Word téléchargé avec succès.");
     } catch (err: any) {
-      alert(err.message || "Erreur lors de l'export Word");
+      toast.error(err.message || "Erreur lors de l'export Word", "Export Word");
     } finally {
       setIsExporting(null);
     }
@@ -111,8 +115,9 @@ function CourseDetailPageContent() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success("Document Markdown téléchargé avec succès.");
     } catch (err: any) {
-      alert(err.message || "Erreur lors de l'export Markdown");
+      toast.error(err.message || "Erreur lors de l'export Markdown", "Export Markdown");
     } finally {
       setIsExporting(null);
     }
@@ -138,7 +143,7 @@ function CourseDetailPageContent() {
       });
       router.push(`/podcasts/${episode.id}`);
     } catch (err: any) {
-      alert(err.message || "Erreur lors de la génération du podcast.");
+      toast.error(err.message || "Erreur lors de la génération du podcast.", "Podcast");
     } finally {
       setIsGeneratingPodcast(false);
     }
@@ -175,7 +180,7 @@ function CourseDetailPageContent() {
       });
       router.push(`/flashcards/${newDeck.id}`);
     } catch (err: any) {
-      alert(err.message || "Erreur lors de l'accès aux flashcards.");
+      toast.error(err.message || "Erreur lors de l'accès aux flashcards.", "Flashcards");
     } finally {
       setIsOpeningFlashcards(false);
     }

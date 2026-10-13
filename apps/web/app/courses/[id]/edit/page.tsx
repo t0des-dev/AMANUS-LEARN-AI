@@ -28,6 +28,7 @@ import {
   UpdateSectionPayload,
 } from "../../../../types/course";
 import { LessonEditor } from "../../../../features/course/LessonEditor";
+import { useToast } from "../../../../components/toast/ToastProvider";
 
 function findSectionById(
   sections: CourseSectionItem[],
@@ -63,6 +64,7 @@ function CourseEditPageContent() {
   const initialSectionId = searchParams?.get("section");
   const router = useRouter();
   const { token } = useAuth();
+  const toast = useToast();
 
   const [course, setCourse] = useState<CourseItem | null>(null);
   const [selectedSection, setSelectedSection] =
@@ -133,9 +135,10 @@ function CourseEditPageContent() {
       });
       setCourse(updated);
       setCourseSaveSuccess(true);
+      toast.success("Paramètres du cours mis à jour avec succès.");
       setTimeout(() => setCourseSaveSuccess(false), 3000);
     } catch (err: any) {
-      alert(err.message || "Erreur de mise à jour.");
+      toast.error(err.message || "Erreur de mise à jour des paramètres.");
     } finally {
       setIsSavingCourse(false);
     }
@@ -143,15 +146,20 @@ function CourseEditPageContent() {
 
   const handleSaveSection = async (payload: UpdateSectionPayload) => {
     if (!token || !selectedSection) return;
-    const updated = await courseService.updateSection(
-      token,
-      selectedSection.id,
-      payload
-    );
-    setSelectedSection(updated);
-    // Refresh course hierarchy in background
-    const refreshed = await courseService.get(token, courseId);
-    setCourse(refreshed);
+    try {
+      const updated = await courseService.updateSection(
+        token,
+        selectedSection.id,
+        payload
+      );
+      setSelectedSection(updated);
+      // Refresh course hierarchy in background
+      const refreshed = await courseService.get(token, courseId);
+      setCourse(refreshed);
+      toast.success("Contenu de la section sauvegardé.");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la sauvegarde de la section.");
+    }
   };
 
   const handleDeleteSection = async (sectionId: string) => {
@@ -165,8 +173,9 @@ function CourseEditPageContent() {
         setSelectedSection(null);
       }
       await fetchCourse();
+      toast.success("Section supprimée.");
     } catch (err: any) {
-      alert(err.message || "Erreur lors de la suppression.");
+      toast.error(err.message || "Erreur lors de la suppression.");
     }
   };
 
@@ -183,8 +192,9 @@ function CourseEditPageContent() {
       setShowAddChapter(false);
       setNewChapterTitle("");
       await fetchCourse();
+      toast.success("Chapitre ajouté avec succès.");
     } catch (err: any) {
-      alert(err.message || "Erreur lors de l'ajout du chapitre.");
+      toast.error(err.message || "Erreur lors de l'ajout du chapitre.");
     }
   };
 
@@ -203,8 +213,9 @@ function CourseEditPageContent() {
       setCourse(updated);
       const firstLeaf = findFirstLeafSection(updated.sections || []);
       if (firstLeaf) setSelectedSection(firstLeaf);
+      toast.success("Structure du cours générée avec succès par l'IA !");
     } catch (err: any) {
-      alert(err.message || "Échec de la génération IA.");
+      toast.error(err.message || "Échec de la génération IA.");
     } finally {
       setIsGeneratingAI(false);
     }

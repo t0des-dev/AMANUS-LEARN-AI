@@ -16,6 +16,7 @@ import {
 import { FlashcardItem, FlashcardDeckItem } from "../../types/flashcard";
 import { flashcardService } from "../../services/flashcardService";
 import { useAuth } from "../../components/auth/AuthProvider";
+import { useToast } from "../../components/toast/ToastProvider";
 
 interface FlashcardReviewerProps {
   deck: FlashcardDeckItem;
@@ -32,6 +33,7 @@ const QUALITY_OPTIONS = [
 
 export const FlashcardReviewer: React.FC<FlashcardReviewerProps> = ({ deck, onFinish }) => {
   const { token } = useAuth();
+  const toast = useToast();
   const cards = deck.cards || [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,7 +67,7 @@ export const FlashcardReviewer: React.FC<FlashcardReviewerProps> = ({ deck, onFi
           if (onFinish) onFinish();
         }
       } catch (err: any) {
-        alert(err.message || "Erreur lors de l'enregistrement de la révision");
+        toast.error(err.message || "Erreur lors de l'enregistrement de la révision", "Erreur Flashcards");
       } finally {
         setIsSubmitting(false);
       }

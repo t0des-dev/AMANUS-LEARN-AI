@@ -17,6 +17,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useTranslation } from "../../lib/i18n/LanguageContext";
 import { VoiceSelector } from "./VoiceSelector";
 import { AudioPlayer } from "./AudioPlayer";
+import { useToast } from "../toast/ToastProvider";
 
 interface AudioGenerationButtonProps {
   sectionId: string;
@@ -33,6 +34,7 @@ export function AudioGenerationButton({
 }: AudioGenerationButtonProps) {
   const { token } = useAuth();
   const { t, language: currentAppLang } = useTranslation();
+  const toast = useToast();
 
   const [audio, setAudio] = useState<AudioContent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,11 +106,12 @@ export function AudioGenerationButton({
 
       setAudio(created);
       setShowVoiceModal(false);
+      toast.info("Génération du résumé audio lancée en arrière-plan...");
       if (onAudioGenerated) {
         onAudioGenerated(created);
       }
     } catch (err: any) {
-      alert(err.message || "Erreur lors de la demande de génération audio.");
+      toast.error(err.message || "Erreur lors de la demande de génération audio.");
     } finally {
       setIsSubmitting(false);
     }

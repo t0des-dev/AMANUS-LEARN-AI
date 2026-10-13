@@ -24,9 +24,11 @@ import { courseService } from "../../services/courseService";
 import { documentService } from "../../services/documentService";
 import { CourseItem, CourseLevel } from "../../types/course";
 import { DocumentItem } from "../../types/document";
+import { useToast } from "../../components/toast/ToastProvider";
 
 function CoursesPageContent() {
   const { token } = useAuth();
+  const toast = useToast();
   const { currentOrg } = useOrganization();
   const { t, isRTL } = useTranslation();
 
@@ -123,8 +125,9 @@ function CoursesPageContent() {
     try {
       await courseService.delete(token, courseId);
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
+      toast.success("Cours supprimé avec succès.");
     } catch (err: any) {
-      alert(err.message || t("common.error"));
+      toast.error(err.message || t("common.error"), "Erreur de suppression");
     }
   };
 

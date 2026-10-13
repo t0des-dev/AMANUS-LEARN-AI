@@ -17,12 +17,14 @@ import {
   OrganizationRole,
 } from "../../types/organization";
 import { InviteMemberDialog } from "./InviteMemberDialog";
+import { useToast } from "../../components/toast/ToastProvider";
 
 interface MemberListProps {
   organization: Organization;
 }
 
 export function MemberList({ organization }: MemberListProps) {
+  const toast = useToast();
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,9 +74,10 @@ export function MemberList({ organization }: MemberListProps) {
         newRole
       );
       await fetchMembers();
+      toast.success("Rôle du membre mis à jour.");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        alert(err.message);
+        toast.error(err.message, "Erreur");
       }
     } finally {
       setUpdatingMemberId(null);
@@ -100,9 +103,10 @@ export function MemberList({ organization }: MemberListProps) {
         member.id
       );
       await fetchMembers();
+      toast.success(`Membre ${member.user.email} retiré.`);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        alert(err.message);
+        toast.error(err.message, "Erreur");
       }
     }
   };

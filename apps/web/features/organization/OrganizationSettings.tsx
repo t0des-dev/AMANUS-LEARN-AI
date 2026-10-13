@@ -15,6 +15,7 @@ import { authStorage } from "../../lib/authTokens";
 import { organizationService } from "../../services/organizationService";
 import { Organization, OrganizationPlan } from "../../types/organization";
 import { useOrganization } from "../../components/organization/OrganizationContext";
+import { useToast } from "../../components/toast/ToastProvider";
 
 interface OrganizationSettingsProps {
   organization: Organization;
@@ -26,6 +27,7 @@ export function OrganizationSettings({
   onUpdated,
 }: OrganizationSettingsProps) {
   const router = useRouter();
+  const toast = useToast();
   const { refreshOrganizations, setCurrentOrg } = useOrganization();
 
   const [name, setName] = useState(organization.name);
@@ -72,7 +74,7 @@ export function OrganizationSettings({
     );
 
     if (confirmation !== organization.name) {
-      alert("Le nom saisi ne correspond pas. Suppression annulée.");
+      toast.warning("Le nom saisi ne correspond pas. Suppression annulée.", "Annulation");
       return;
     }
 
@@ -84,12 +86,13 @@ export function OrganizationSettings({
       await organizationService.delete(token, organization.id);
       setCurrentOrg(null);
       await refreshOrganizations();
+      toast.success("Organisation supprimée avec succès.");
       router.push("/organizations");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        alert(err.message);
+        toast.error(err.message, "Erreur de suppression");
       } else {
-        alert("Erreur lors de la suppression de l'organisation.");
+        toast.error("Erreur lors de la suppression de l'organisation.");
       }
     } finally {
       setIsDeleting(false);
