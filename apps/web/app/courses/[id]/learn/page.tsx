@@ -142,6 +142,46 @@ function CourseLearnPageContent() {
     router.push(`/courses/${courseId}/learn?lesson=${lesson.id}`);
   };
 
+  const rootChapters = useMemo(() => course?.sections || [], [course]);
+
+  const currentChapter = useMemo(() => {
+    if (!activeLesson || rootChapters.length === 0) return null;
+    if (!activeLesson.parent) {
+      return rootChapters.find((ch) => ch.id === activeLesson.id) || null;
+    }
+    return (
+      rootChapters.find(
+        (ch) =>
+          ch.id === activeLesson.parent ||
+          ch.children?.some((c) => c.id === activeLesson.id)
+      ) || null
+    );
+  }, [activeLesson, rootChapters]);
+
+  const chapterIdx = currentChapter
+    ? rootChapters.findIndex((c) => c.id === currentChapter.id)
+    : -1;
+
+  const handleNextAxis = () => {
+    if (chapterIdx >= 0 && chapterIdx < rootChapters.length - 1) {
+      const nextChap = rootChapters[chapterIdx + 1];
+      const lessons = flattenLessons([nextChap]);
+      if (lessons.length > 0) {
+        handleSelectLesson(lessons[0]);
+      }
+    }
+  };
+
+  const handlePrevAxis = () => {
+    if (chapterIdx > 0) {
+      const prevChap = rootChapters[chapterIdx - 1];
+      const lessons = flattenLessons([prevChap]);
+      if (lessons.length > 0) {
+        handleSelectLesson(lessons[0]);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen bg-slate-950">
@@ -219,6 +259,11 @@ function CourseLearnPageContent() {
             <LessonViewer
               courseId={course.id}
               lesson={activeLesson}
+              axisTitle={currentChapter?.title}
+              hasPrevAxis={chapterIdx > 0}
+              hasNextAxis={chapterIdx >= 0 && chapterIdx < rootChapters.length - 1}
+              onNextAxis={handleNextAxis}
+              onPrevAxis={handlePrevAxis}
               isCompleted={completedIds.has(activeLesson.id)}
               onToggleComplete={() => toggleLessonComplete(activeLesson.id)}
               onNext={handleNextLesson}

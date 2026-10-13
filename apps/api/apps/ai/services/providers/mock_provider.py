@@ -863,7 +863,7 @@ class MockAIProvider(AIProvider):
         # 3. Extract chunk blocks
         extracted_chunks = []
         if context_text:
-            raw_chunks = re.split(r'\[\d+\]', context_text)
+            raw_chunks = re.split(r'(?:^|\n)---\s*Source\s*\[\d+\][^\n]*---\n?|\[\d+\]', context_text)
             for ch in raw_chunks:
                 # Remove header lines like '--- Source [1] : ... ---'
                 cleaned = re.sub(r'^[^\n]*---\n?', '', ch).strip()

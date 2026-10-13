@@ -194,28 +194,106 @@ class CourseBuilderService:
             else:
                 chapter_order = course.sections.filter(parent__isnull=True).count()
 
-            # 5. Materialize hierarchical Chapters -> Sections / Lessons
+            # 5. Materialize hierarchical Chapters (Axes) -> Lessons with full document content
             chapters_data = validated_blueprint.get("chapters", [])
+            total_doc_chunks = len(doc_chunks)
+            total_blueprint_lessons = max(1, sum(len(ch.get("sections", [])) for ch in chapters_data))
+            chunks_per_lesson = max(1, (total_doc_chunks + total_blueprint_lessons - 1) // total_blueprint_lessons)
+
+            global_lesson_counter = 0
+
             for ch_idx, ch_data in enumerate(chapters_data):
+                ch_title = ch_data["title"]
+                ch_summary = ch_data.get("summary", "")
+
+                # Provide rich introductory content for the Axis / Chapter
+                if target_lang == "ar":
+                    chap_content = (
+                        f"# {ch_title}\n\n"
+                        f"## نظرة عامة على المحور وأهدافه\n\n"
+                        f"{ch_summary or 'استعراض شامل ومفصل لكافة المفاهيم والموضوعات المندرجة ضمن هذا المحور.'}\n\n"
+                        f"> **توجيه منهجي :** استيعاب تسلسل الدروس التفاعلية التابعة لهذا المحور وفق الترتيب البيداغوجي المعتمد."
+                    )
+                elif target_lang == "en":
+                    chap_content = (
+                        f"# {ch_title}\n\n"
+                        f"## Axis Overview and Objectives\n\n"
+                        f"{ch_summary or 'Comprehensive overview of foundational concepts covered under this learning axis.'}\n\n"
+                        f"> **Pedagogical Note:** Review the interactive lessons sequentially to consolidate understanding."
+                    )
+                else:
+                    chap_content = (
+                        f"# {ch_title}\n\n"
+                        f"## Présentation de l'Axe et Objectifs\n\n"
+                        f"{ch_summary or 'Vue d\\'ensemble détaillée des concepts et principes abordés dans cet axe.'}\n\n"
+                        f"> **Note méthodologique :** Suivre les leçons interactives de ce module selon la progression pédagogique."
+                    )
+
                 chap_obj = CourseSection.objects.create(
                     course=course,
                     parent=None,
-                    title=ch_data["title"],
+                    title=ch_title,
                     order=chapter_order,
-                    summary=ch_data.get("summary", ""),
+                    summary=ch_summary,
+                    content=chap_content,
                     estimated_minutes=ch_data.get("estimated_minutes", 30),
                 )
                 chapter_order += 1
 
                 lessons_data = ch_data.get("sections", [])
                 for l_idx, l_data in enumerate(lessons_data):
+                    l_title = l_data["title"]
+                    existing_content = (l_data.get("content") or "").strip()
+                    existing_summary = (l_data.get("summary") or "").strip()
+
+                    # Assign corresponding document chunks to this lesson
+                    c_start = global_lesson_counter * chunks_per_lesson
+                    c_end = min(total_doc_chunks, c_start + chunks_per_lesson)
+                    lesson_chunks = doc_chunks[c_start:c_end] if total_doc_chunks > 0 else []
+                    global_lesson_counter += 1
+
+                    # If existing content is short (< 350 chars) or generic, enrich with full chunk text
+                    if (len(existing_content) < 350 or "Contenu du module" in existing_content) and lesson_chunks:
+                        chunk_bodies = [c.get("content", "").strip() for c in lesson_chunks if c.get("content", "").strip()]
+                        extracted_text = "\n\n".join(chunk_bodies)
+
+                        if target_lang == "ar":
+                            final_content = (
+                                f"## {l_title}\n\n"
+                                f"{extracted_text}\n\n"
+                                f"### النقاط الرئيسية المستخلصة\n"
+                                f"- استخلاص وتحليل المفاهيم الجوهرية الموثقة في المستند [1].\n"
+                                f"- التطبيق العملي والمعايير المنهجية المتبعة [2].\n\n"
+                                f"> **ملاحظة تأطيرية :** يرتكز هذا الدرس بصورة كاملة ومباشرة على نصوص الوثيقة المستخرجة."
+                            )
+                        elif target_lang == "en":
+                            final_content = (
+                                f"## {l_title}\n\n"
+                                f"{extracted_text}\n\n"
+                                f"### Key Learning Takeaways\n"
+                                f"- Core conceptual insights directly extracted from source material [1].\n"
+                                f"- Methodological principles and real-world guidelines [2].\n\n"
+                                f"> **Important Note:** This lesson strictly reflects the complete extracted document content."
+                            )
+                        else:
+                            final_content = (
+                                f"## {l_title}\n\n"
+                                f"{extracted_text}\n\n"
+                                f"### Points Clés & Synthèse Didactique\n"
+                                f"- Analyse approfondie des notions directement issues du document source [1].\n"
+                                f"- Mise en pratique méthodologique et directives opérationnelles [2].\n\n"
+                                f"> **Règle fondamentale :** Le contenu de cette leçon est intégralement extrait et structuré à partir du document."
+                            )
+                    else:
+                        final_content = existing_content
+
                     sec_obj = CourseSection.objects.create(
                         course=course,
                         parent=chap_obj,
-                        title=l_data["title"],
+                        title=l_title,
                         order=l_idx,
-                        content=l_data.get("content", ""),
-                        summary=l_data.get("summary", ""),
+                        content=final_content,
+                        summary=existing_summary or (final_content[:200] + "..."),
                         objectives=l_data.get("objectives", []),
                         estimated_minutes=l_data.get("estimated_minutes", 15),
                     )
