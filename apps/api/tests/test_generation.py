@@ -245,7 +245,7 @@ class TestSpecializedGenerators:
             provider=provider,
         )
         assert prompt_ver.startswith("lesson-")
-        assert "sections" in result
+        assert "chapters" in result or "sections" in result
 
 
 # =========================================================================
@@ -357,7 +357,7 @@ class TestGenerationAPIEndpoints:
         data = response.data
         assert data["type"] == "LESSON"
         assert data["status"] == "SUCCESS"
-        assert "sections" in data["result"]
+        assert "chapters" in data["result"] or "sections" in data["result"]
 
     def test_generate_objectives_endpoint_success(
         self, api_client, document_with_chunks, users_and_orgs

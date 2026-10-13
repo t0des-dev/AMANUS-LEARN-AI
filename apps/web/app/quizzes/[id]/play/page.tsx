@@ -171,7 +171,7 @@ function QuizPlayContent({ quizId }: { quizId: string }) {
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
-                    <span>Générer avec l'IA</span>
+                    <span>{"Générer avec l'IA"}</span>
                   </>
                 )}
               </button>
