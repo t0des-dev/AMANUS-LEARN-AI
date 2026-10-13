@@ -208,24 +208,27 @@ class CourseBuilderService:
 
                 # Provide rich introductory content for the Axis / Chapter
                 if target_lang == "ar":
+                    default_desc = "استعراض شامل ومفصل لكافة المفاهيم والموضوعات المندرجة ضمن هذا المحور."
                     chap_content = (
                         f"# {ch_title}\n\n"
                         f"## نظرة عامة على المحور وأهدافه\n\n"
-                        f"{ch_summary or 'استعراض شامل ومفصل لكافة المفاهيم والموضوعات المندرجة ضمن هذا المحور.'}\n\n"
+                        f"{ch_summary or default_desc}\n\n"
                         f"> **توجيه منهجي :** استيعاب تسلسل الدروس التفاعلية التابعة لهذا المحور وفق الترتيب البيداغوجي المعتمد."
                     )
                 elif target_lang == "en":
+                    default_desc = "Comprehensive overview of foundational concepts covered under this learning axis."
                     chap_content = (
                         f"# {ch_title}\n\n"
                         f"## Axis Overview and Objectives\n\n"
-                        f"{ch_summary or 'Comprehensive overview of foundational concepts covered under this learning axis.'}\n\n"
+                        f"{ch_summary or default_desc}\n\n"
                         f"> **Pedagogical Note:** Review the interactive lessons sequentially to consolidate understanding."
                     )
                 else:
+                    default_desc = "Vue d'ensemble détaillée des concepts et principes abordés dans cet axe."
                     chap_content = (
                         f"# {ch_title}\n\n"
                         f"## Présentation de l'Axe et Objectifs\n\n"
-                        f"{ch_summary or 'Vue d\\'ensemble détaillée des concepts et principes abordés dans cet axe.'}\n\n"
+                        f"{ch_summary or default_desc}\n\n"
                         f"> **Note méthodologique :** Suivre les leçons interactives de ce module selon la progression pédagogique."
                     )
 
