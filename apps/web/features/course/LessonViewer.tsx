@@ -445,27 +445,69 @@ function buildSlides(
   const rawContent = lesson.content ? lesson.content.trim() : "";
 
   if (rawContent) {
-    // 1. Check if headings exist (##, ###, #)
-    const headingBlocks = rawContent.split(/\n(?=#{1,3}\s+)/);
+    // 1. Check if major headings (##) exist to structure slides by topic
+    const rawBlocks = rawContent.split(/\n(?=##\s+)/).map((b) => b.trim()).filter(Boolean);
 
-    if (headingBlocks.length > 1) {
-      headingBlocks.forEach((block, idx) => {
-        const trimmed = block.trim();
-        if (!trimmed) return;
+    // Merge any bare heading (block without substantive body) with the following block
+    const mergedBlocks: string[] = [];
+    for (let i = 0; i < rawBlocks.length; i++) {
+      const b = rawBlocks[i];
+      const lines = b.split("\n").map((l) => l.trim()).filter(Boolean);
+      // If it only has 1 line (just a heading) and there is a subsequent block, merge them
+      if (lines.length <= 1 && i < rawBlocks.length - 1) {
+        rawBlocks[i + 1] = `${b}\n\n${rawBlocks[i + 1]}`;
+      } else {
+        mergedBlocks.push(b);
+      }
+    }
 
-        const firstLine = trimmed.split("\n")[0] || "";
+    if (mergedBlocks.length > 1) {
+      mergedBlocks.forEach((block, idx) => {
+        const firstLine = block.split("\n")[0] || "";
         const cleanTitle = firstLine.replace(/^#{1,3}\s+/, "").replace(/[*_`]/g, "").trim();
-        const bodyContent = trimmed.substring(firstLine.length).trim();
+        const bodyContent = block.substring(firstLine.length).trim();
 
         slides.push({
           id: `slide-content-${idx + 1}`,
           type: "content",
           title: cleanTitle || `${lesson.title} - ${idx + 1}`,
-          content: bodyContent || trimmed,
+          content: bodyContent || block,
         });
       });
+    } else if (mergedBlocks.length === 1) {
+      const singleBlock = mergedBlocks[0];
+      const firstLine = singleBlock.split("\n")[0] || "";
+      const isHeading = /^#{1,3}\s+/.test(firstLine);
+      const cleanTitle = isHeading
+        ? firstLine.replace(/^#{1,3}\s+/, "").replace(/[*_`]/g, "").trim()
+        : lesson.title;
+      const bodyContent = isHeading
+        ? singleBlock.substring(firstLine.length).trim()
+        : singleBlock;
+
+      // Partition into readable slides of 2-3 paragraphs
+      const paragraphs = (bodyContent || singleBlock).split(/\n\n+/).filter((p) => p.trim());
+      if (paragraphs.length <= 2) {
+        slides.push({
+          id: "slide-content-main",
+          type: "content",
+          title: cleanTitle || lesson.title,
+          content: bodyContent || singleBlock,
+        });
+      } else {
+        const chunkSize = 2;
+        for (let i = 0; i < paragraphs.length; i += chunkSize) {
+          const slice = paragraphs.slice(i, i + chunkSize);
+          slides.push({
+            id: `slide-content-${Math.floor(i / chunkSize) + 1}`,
+            type: "content",
+            title: i === 0 ? cleanTitle : `${cleanTitle} (${Math.floor(i / chunkSize) + 1})`,
+            content: slice.join("\n\n"),
+          });
+        }
+      }
     } else {
-      // 2. If no distinct markdown headings, partition by double-newlines into 2-3 paragraphs per slide
+      // 2. If no headings, partition by double-newlines into 2-3 paragraphs per slide
       const paragraphs = rawContent.split(/\n\n+/).filter((p) => p.trim());
       if (paragraphs.length <= 2) {
         slides.push({

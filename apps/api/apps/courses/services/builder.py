@@ -249,44 +249,86 @@ class CourseBuilderService:
                     existing_content = (l_data.get("content") or "").strip()
                     existing_summary = (l_data.get("summary") or "").strip()
 
-                    # Assign corresponding document chunks to this lesson
-                    c_start = global_lesson_counter * chunks_per_lesson
-                    c_end = min(total_doc_chunks, c_start + chunks_per_lesson)
-                    lesson_chunks = doc_chunks[c_start:c_end] if total_doc_chunks > 0 else []
+                    # Assign corresponding document chunks to this lesson (with cyclic fallback)
+                    if total_doc_chunks > 0:
+                        c_start = (global_lesson_counter * chunks_per_lesson) % total_doc_chunks
+                        c_end = min(total_doc_chunks, c_start + max(1, chunks_per_lesson))
+                        lesson_chunks = doc_chunks[c_start:c_end]
+                        if not lesson_chunks:
+                            lesson_chunks = [doc_chunks[global_lesson_counter % total_doc_chunks]]
+                    else:
+                        lesson_chunks = []
                     global_lesson_counter += 1
 
-                    # If existing content is short (< 350 chars) or generic, enrich with full chunk text
-                    if (len(existing_content) < 350 or "Contenu du module" in existing_content) and lesson_chunks:
+                    # Check if existing content is insufficient (too brief, template placeholder, or lacks narrative depth)
+                    is_too_brief = len(existing_content) < 650 or existing_content.count("\n") < 3
+                    is_generic = (
+                        "Contenu du module" in existing_content
+                        or "شرح تفصيلي وغني" in existing_content
+                        or "Développement pédagogique" in existing_content
+                    )
+
+                    if (is_too_brief or is_generic) and lesson_chunks:
                         chunk_bodies = [c.get("content", "").strip() for c in lesson_chunks if c.get("content", "").strip()]
                         extracted_text = "\n\n".join(chunk_bodies)
 
-                        if target_lang == "ar":
-                            final_content = (
-                                f"## {l_title}\n\n"
-                                f"{extracted_text}\n\n"
-                                f"### النقاط الرئيسية المستخلصة\n"
-                                f"- استخلاص وتحليل المفاهيم الجوهرية الموثقة في المستند [1].\n"
-                                f"- التطبيق العملي والمعايير المنهجية المتبعة [2].\n\n"
-                                f"> **ملاحظة تأطيرية :** يرتكز هذا الدرس بصورة كاملة ومباشرة على نصوص الوثيقة المستخرجة."
-                            )
-                        elif target_lang == "en":
-                            final_content = (
-                                f"## {l_title}\n\n"
-                                f"{extracted_text}\n\n"
-                                f"### Key Learning Takeaways\n"
-                                f"- Core conceptual insights directly extracted from source material [1].\n"
-                                f"- Methodological principles and real-world guidelines [2].\n\n"
-                                f"> **Important Note:** This lesson strictly reflects the complete extracted document content."
-                            )
+                        if extracted_text:
+                            if target_lang == "ar":
+                                if existing_content and not is_generic:
+                                    final_content = (
+                                        f"{existing_content}\n\n"
+                                        f"### الشرح المعمق والتحليل الموثق من نصوص الوثيقة\n\n"
+                                        f"{extracted_text}\n\n"
+                                        f"> **ملاحظة تأطيرية :** تم تأصيل وبناء محتوى هذا الدرس مباشرة من نصوص الوثيقة المعتمدة [1]."
+                                    )
+                                else:
+                                    final_content = (
+                                        f"## {l_title}\n\n"
+                                        f"### المضمون التعليمي والشرح المعمق\n\n"
+                                        f"{extracted_text}\n\n"
+                                        f"### النقاط الرئيسية المستخلصة\n"
+                                        f"- استخلاص وتحليل المفاهيم الجوهرية الموثقة في المستند [1].\n"
+                                        f"- التطبيق العملي والمعايير المنهجية المتبعة [2].\n\n"
+                                        f"> **ملاحظة تأطيرية :** يرتكز هذا الدرس بصورة كاملة ومباشرة على نصوص الوثيقة المستخرجة."
+                                    )
+                            elif target_lang == "en":
+                                if existing_content and not is_generic:
+                                    final_content = (
+                                        f"{existing_content}\n\n"
+                                        f"### Detailed Explanations & Source Grounding\n\n"
+                                        f"{extracted_text}\n\n"
+                                        f"> **Important Note:** This lesson strictly reflects the complete extracted document content [1]."
+                                    )
+                                else:
+                                    final_content = (
+                                        f"## {l_title}\n\n"
+                                        f"### Core Educational Content & Analysis\n\n"
+                                        f"{extracted_text}\n\n"
+                                        f"### Key Learning Takeaways\n"
+                                        f"- Core conceptual insights directly extracted from source material [1].\n"
+                                        f"- Methodological principles and real-world guidelines [2].\n\n"
+                                        f"> **Important Note:** This lesson strictly reflects the complete extracted document content."
+                                    )
+                            else:
+                                if existing_content and not is_generic:
+                                    final_content = (
+                                        f"{existing_content}\n\n"
+                                        f"### Développement Didactique & Contenu Approfondi\n\n"
+                                        f"{extracted_text}\n\n"
+                                        f"> **Règle fondamentale :** Le contenu de cette leçon est intégralement extrait et structuré à partir du document [1]."
+                                    )
+                                else:
+                                    final_content = (
+                                        f"## {l_title}\n\n"
+                                        f"### Contenu Pédagogique Détaillé\n\n"
+                                        f"{extracted_text}\n\n"
+                                        f"### Points Clés & Synthèse Didactique\n"
+                                        f"- Analyse approfondie des notions directement issues du document source [1].\n"
+                                        f"- Mise en pratique méthodologique et directives opérationnelles [2].\n\n"
+                                        f"> **Règle fondamentale :** Le contenu de cette leçon est intégralement extrait et structuré à partir du document."
+                                    )
                         else:
-                            final_content = (
-                                f"## {l_title}\n\n"
-                                f"{extracted_text}\n\n"
-                                f"### Points Clés & Synthèse Didactique\n"
-                                f"- Analyse approfondie des notions directement issues du document source [1].\n"
-                                f"- Mise en pratique méthodologique et directives opérationnelles [2].\n\n"
-                                f"> **Règle fondamentale :** Le contenu de cette leçon est intégralement extrait et structuré à partir du document."
-                            )
+                            final_content = existing_content
                     else:
                         final_content = existing_content
 

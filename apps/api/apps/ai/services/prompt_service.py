@@ -408,7 +408,8 @@ class PromptService:
                 "المهمة الإلزامية :\n"
                 "1. تغطية كامل محتوى الوثيقة عبر توليد جميع الفصول التعليمية اللازمة (من 4 إلى 6 فصول كاملة).\n"
                 "2. يجب أن يتضمن كل فصل من 2 إلى 3 دروس تفصيلية متدرجة وشاملة تغطي كافة المفاهيم.\n"
-                "3. في كل درس، يجب كتابة محتوى تعليمي غني ومنظم بتنسيق Markdown متقن (عناوين فرعية ## و ###، نقاط رئيسية، أمثلة توضيحية، تنبيهات، وإحالات المصادر [1] و [2]).\n\n"
+                "3. في كل درس، يجب كتابة محتوى تعليمي غني ومنظم بتنسيق Markdown متقن (عناوين فرعية ## و ###، نقاط رئيسية، أمثلة توضيحية، تنبيهات، وإحالات المصادر [1] و [2]).\n"
+                "4. تحذير حاسم وإلزامي: يُمنع منعاً باتاً الاكتفاء بالعناوين أو المخططات الهيكلية أو مجرد نقاط مقتضبة. يجب أن يتضمن حقل 'content' في كل درس شرحاً نظرياً وتحليلياً وتطبيقياً متكاملاً في 3 إلى 5 فقرات تعليمية مطولة تشرح المفاهيم باستفاضة تامة مع الاستشهادات [1] و [2] بحيث يستفيد المتعلم من درس تعليمي كامل وغني بالمعارف.\n\n"
                 "هيكل JSON الإلزامي :\n"
                 "{\n"
                 '  "title": "عنوان الدورة أو المقرر الكامل",\n'
@@ -423,14 +424,14 @@ class PromptService:
                 '      "sections": [\n'
                 "        {\n"
                 '          "title": "الدرس 1.1 : الإطار العام والمفاهيم الجوهرية",\n'
-                '          "content": "## المفاهيم الأساسية\\n\\nشرح تفصيلي وغني في عدة فقرات...\\n\\n### النقاط الرئيسية\\n- نقطة أولى مع توثيق المصدر [1]\\n- نقطة ثانية مع شرح موسع [2]\\n\\n> **ملاحظة مهمة :** قاعدة أو تعريف دقيق.",\n'
+                '          "content": "## المفاهيم الأساسية\\n\\nيقدم هذا الدرس شرحاً تأصيلياً ومعمقاً للمفاهيم الجوهرية الواردة في الوثيقة [1]. يرتكز التحليل على استيعاب القواعد والآليات التأسيسية التي تشكل المنطلق الفعلي للموضوع.\\n\\n### التطبيقات العملية والمنهجية\\nيتطلب تطبيق هذه المفاهيم اتباع خطوات منهجية دقيقة لضمان تحقيق النتائج المرجوة [2]. وتبرز أهمية الربط بين النظريات والواقع العملي في تلافي الأخطاء الشائعة.\\n\\n### النقاط الرئيسية\\n- المبدأ التأسيسي الأول المستخرج من الوثيقة [1].\\n- المعايير التشغيلية المتبعة في الميدان [2].\\n\\n> **ملاحظة تأطيرية :** يتعين ترسيخ هذه القواعد كأرضية صلبة قبل الانتقال إلى المحاور المتقدمة.",\n'
                 '          "summary": "خلاصة الدرس",\n'
                 '          "objectives": ["استيعاب المفاهيم الأولية بدقة"],\n'
                 '          "estimated_minutes": 15\n'
                 "        },\n"
                 "        {\n"
                 '          "title": "الدرس 1.2 : التعاريف والمحددات التقنية",\n'
-                '          "content": "## المعايير والمحددات\\n\\nتحليل معمق للمحددات المستخرجة من الوثيقة [1]...",\n'
+                '          "content": "## المعايير والمحددات\\n\\nتحليل معمق للمحددات المستخرجة من الوثيقة [1] مع استعراض النماذج التطبيقية والضوابط المنهجية...\\n\\n### التوجيهات التشغيلية\\nتفصيل الخطوات العملية والأمثلة الواقعية المستندة إلى المراجع [2].",\n'
                 '          "summary": "خلاصة الدرس الثاني",\n'
                 '          "objectives": ["التمييز بين المعايير والمحددات"],\n'
                 '          "estimated_minutes": 20\n'
@@ -444,7 +445,7 @@ class PromptService:
                 '      "sections": [\n'
                 "        {\n"
                 '          "title": "الدرس 2.1 : تحليل المكونات",\n'
-                '          "content": "## البنية الهيكلية\\n\\nشرح منهجي للمكونات مع استشهادات...",\n'
+                '          "content": "## البنية الهيكلية\\n\\nشرح منهجي ومفصل للمكونات والعلاقات الوظيفية بين عناصر الموضوع مدعماً بالاستشهادات [1] والأمثلة المعيارية [2]...",\n'
                 '          "summary": "خلاصة تحليل المكونات",\n'
                 '          "objectives": ["تحليل العلاقات بين المكونات"],\n'
                 '          "estimated_minutes": 20\n'
@@ -463,7 +464,8 @@ class PromptService:
                 "MANDATORY MISSION:\n"
                 "1. Cover the entire document breadth by generating all necessary chapters (generate 4 to 6 full chapters).\n"
                 "2. Each chapter must contain 2 to 3 detailed, progressive lessons.\n"
-                "3. In each lesson, provide rich, substantive educational text in Markdown (subheadings ## and ###, bullet points, concrete examples, notes, and citations [1], [2]).\n\n"
+                "3. In each lesson, provide rich, substantive educational text in Markdown (subheadings ## and ###, bullet points, concrete examples, notes, and citations [1], [2]).\n"
+                "4. CRITICAL MANDATORY DIRECTIVE: STRICTLY FORBIDDEN to output only headings, skeletal outlines, or bare bullet points. The 'content' field of EACH lesson MUST contain a thorough, substantive instructional development of at least 3 to 5 full analytical paragraphs explaining the concepts in detail, providing practical illustrations, and citing sources [1], [2].\n\n"
                 "Mandatory JSON format:\n"
                 "{\n"
                 '  "title": "Comprehensive Course Title",\n'
@@ -478,14 +480,14 @@ class PromptService:
                 '      "sections": [\n'
                 "        {\n"
                 '          "title": "Lesson 1.1: Theoretical Overview",\n'
-                '          "content": "## Foundational Overview\\n\\nDetailed educational explanation across several paragraphs...\\n\\n### Key Principles\\n- Core takeaway with source citation [1]\\n- Second key element [2]\\n\\n> **Important Note:** Crucial definition or rule.",\n'
+                '          "content": "## Foundational Overview\\n\\nThis lesson provides a comprehensive, deep instructional exploration of core concepts grounded in source document [1]. Theoretical frameworks and methodological pillars are clearly defined and contextualized.\\n\\n### Practical Applications & Methodologies\\nApplying these principles effectively requires adhering to tested operational guidelines and structured analytical workflows [2].\\n\\n### Key Principles\\n- Primary foundational insight extracted from source material [1]\\n- Practical guidelines and industry standards [2]\\n\\n> **Important Note:** Master these core foundations before progressing to advanced modules.",\n'
                 '          "summary": "Lesson summary",\n'
                 '          "objectives": ["Understand foundational concepts"],\n'
                 '          "estimated_minutes": 15\n'
                 "        },\n"
                 "        {\n"
                 '          "title": "Lesson 1.2: Technical Terminology & Rules",\n'
-                '          "content": "## Definitions & Methodological Rules\\n\\nDetailed breakdown of terms with citations [1]...",\n'
+                '          "content": "## Definitions & Methodological Rules\\n\\nDetailed breakdown of technical concepts with full source citations [1] and operational illustrations [2]...",\n'
                 '          "summary": "Summary of lesson 1.2",\n'
                 '          "objectives": ["Master technical terminology"],\n'
                 '          "estimated_minutes": 20\n'
@@ -504,7 +506,8 @@ class PromptService:
                 "MISSION OBLIGATOIRE :\n"
                 "1. Couvrir l'INTÉGRALITÉ du document source en générant TOUS les chapitres nécessaires (générer 4 à 6 chapitres complets structurés).\n"
                 "2. Chaque chapitre doit comporter 2 à 3 leçons détaillées et progressives pour approfondir le sujet.\n"
-                "3. Chaque leçon doit fournir un contenu didactique riche et complet rédigé en Markdown structuré (titres ## et ###, puces didactiques, exemples concrets, encadrés de synthèse et citations de sources [1], [2]).\n\n"
+                "3. Chaque leçon doit fournir un contenu didactique riche et complet rédigé en Markdown structuré (titres ## et ###, puces didactiques, exemples concrets, encadrés de synthèse et citations de sources [1], [2]).\n"
+                "4. DIRECTIVE CRITIQUE OBLIGATOIRE : INTERDICTION STRICTE de renvoyer de simples titres, un sommaire ou des listes à puces squelettiques. Le champ 'content' de chaque leçon DOIT contenir un développement pédagogique complet et approfondi d'au moins 3 à 5 paragraphes substantiels expliquant les notions en détail, illustrant par des exemples concrets et référençant les sources [1], [2].\n\n"
                 "Format JSON obligatoire :\n"
                 "{\n"
                 '  "title": "Titre complet du cours",\n'

@@ -413,7 +413,7 @@ class DocumentManagerAPITests(APITestCase):
             "title": "Article Électronique",
         }
         with patch("apps.documents.services.url_extractor.URLExtractorService.fetch_and_extract") as mock_extract, \
-             patch("apps.documents.views.process_document_pipeline") as mock_pipeline:
+             patch("apps.documents.views.process_document_pipeline") as _mock_pipeline:
             mock_extract.return_value = ("Titre Web", "Contenu très instructif sur l'apprentissage " * 10)
             res = self.client.post(url, payload, format="json")
             self.assertEqual(res.status_code, status.HTTP_201_CREATED)

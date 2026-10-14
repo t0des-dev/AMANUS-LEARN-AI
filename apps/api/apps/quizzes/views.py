@@ -80,6 +80,19 @@ class QuizListCreateView(generics.ListCreateAPIView):
 
         return queryset
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        organization = serializer.validated_data["organization"]
+
+        # Only TEACHER, ADMIN, OWNER can create quizzes
+        role = organization.get_user_role(user)
+        if role not in (RoleChoices.OWNER, RoleChoices.ADMIN, RoleChoices.TEACHER):
+            raise PermissionDenied(
+                "Seuls les enseignants et administrateurs peuvent créer des QCM."
+            )
+
+        serializer.save(created_by=user)
+
 
 class QuizBulkDeleteView(APIView):
     """POST/DELETE /api/v1/quizzes/bulk-delete/
@@ -131,19 +144,6 @@ class QuizBulkDeleteView(APIView):
             {"deleted": deleted_count, "message": f"{deleted_count} quiz supprimé(s)."},
             status=status.HTTP_200_OK,
         )
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        organization = serializer.validated_data["organization"]
-
-        # Only TEACHER, ADMIN, OWNER can create quizzes
-        role = organization.get_user_role(user)
-        if role not in (RoleChoices.OWNER, RoleChoices.ADMIN, RoleChoices.TEACHER):
-            raise PermissionDenied(
-                "Seuls les enseignants et administrateurs peuvent créer des QCM."
-            )
-
-        serializer.save(created_by=user)
 
 
 class CourseQuizzesView(APIView):

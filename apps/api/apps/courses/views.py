@@ -1,8 +1,8 @@
 import logging
 import uuid
 
-from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -193,7 +193,7 @@ class CourseGenerateView(APIView):
         from apps.documents.models import DocumentStatus
         if document.chunks.count() == 0:
             try:
-                from apps.ingestion.tasks import extract_document, create_chunks
+                from apps.ingestion.tasks import create_chunks, extract_document
                 logger.info("Auto-triggering ingestion for document %s before course generation", document.id)
                 extract_document(str(document.id))
                 create_chunks(str(document.id))

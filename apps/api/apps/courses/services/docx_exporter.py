@@ -1,10 +1,9 @@
 """Service exporting Course and its hierarchical sections to a polished Microsoft Word (.docx) document."""
 
 import io
+
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT
 
 from apps.courses.models import Course
 

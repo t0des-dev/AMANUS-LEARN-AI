@@ -358,6 +358,7 @@ class FlashcardReview(models.Model):
         3-5: Réussite, espacement des intervalles
         """
         import datetime
+
         from django.utils import timezone
 
         q = max(0, min(5, quality))

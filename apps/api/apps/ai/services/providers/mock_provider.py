@@ -904,7 +904,7 @@ class MockAIProvider(AIProvider):
 
         # Helper to extract a concise topic from chunk
         def _get_chunk_topic(text: str, default: str) -> str:
-            lines = [l.strip() for l in text.split("\n") if l.strip()]
+            lines = [line_item.strip() for line_item in text.split("\n") if line_item.strip()]
             for line in lines[:4]:
                 clean_line = re.sub(r'^[#*_\-\s\d.:|]+', '', line).strip()
                 clean_line = re.sub(r'--+.*--+', '', clean_line).strip()
@@ -1182,7 +1182,7 @@ class MockAIProvider(AIProvider):
         )
 
         def _get_chunk_topic(text: str, default: str) -> str:
-            lines = [l.strip() for l in text.split("\n") if l.strip()]
+            lines = [line_item.strip() for line_item in text.split("\n") if line_item.strip()]
             for line in lines[:3]:
                 clean_line = re.sub(r'^[#*_\-\s\d.:]+', '', line).strip()
                 words = clean_line.split()

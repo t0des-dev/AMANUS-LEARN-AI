@@ -227,8 +227,9 @@ class DocumentURLIngestSerializer(serializers.Serializer):
     def create(self, validated_data) -> Document:
         import io
         import uuid
-        from apps.documents.services.url_extractor import URLExtractorService
+
         from apps.documents.services.storage import get_storage_service
+        from apps.documents.services.url_extractor import URLExtractorService
 
         request = self.context["request"]
         url = validated_data["url"]

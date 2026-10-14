@@ -228,7 +228,7 @@ class S3StorageService(BaseStorageService):
             response = self.s3_client.get_object(Bucket=self.bucket_name, Key=storage_key)
             body = response["Body"].read()
             return io.BytesIO(body)
-        except Exception as e:
+        except Exception:
             local = LocalStorageService()
             if local.file_exists(storage_key):
                 return local.get_file(storage_key)
