@@ -90,7 +90,7 @@ jobs:
             type=sha,format=short
 
       - name: Build API Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: infrastructure/docker/Dockerfile.api
@@ -98,7 +98,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/api:${{ github.sha }}
 
       - name: Build Worker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: infrastructure/docker/Dockerfile.worker
@@ -106,7 +106,7 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
 
       - name: Build Web Frontend Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: infrastructure/docker/Dockerfile.web
