@@ -32,6 +32,24 @@ class MockAIProvider(AIProvider):
             # Detect type from prompt
             lower_p = prompt.lower()
             if (
+                '"slides":' in prompt
+                or "diapositives" in lower_p
+                or "diaporama" in lower_p
+                or "شريحة" in prompt
+                or "شرائح" in prompt
+            ):
+                if any(ar_term in prompt for ar_term in ["شرائح", "شريحة"]):
+                    data = _fixture("slides_ar")
+                elif (
+                    "available sources" in lower_p
+                    or "slide deck" in lower_p
+                    or "presentation slides" in lower_p
+                    or "language: en" in lower_p
+                ):
+                    data = _fixture("slides_en")
+                else:
+                    data = _fixture("slides_fr")
+            elif (
                 "qcm" in lower_p
                 or "quiz" in lower_p
                 or '"questions":' in prompt

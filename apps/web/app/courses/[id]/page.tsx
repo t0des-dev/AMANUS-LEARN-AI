@@ -17,12 +17,14 @@ import {
   FileText,
   Radio,
   BookOpen,
+  Presentation,
 } from "lucide-react";
 import { ProtectedRoute } from "../../../components/auth/ProtectedRoute";
 import { useAuth } from "../../../components/auth/AuthProvider";
 import { courseService } from "../../../services/courseService";
 import { podcastService } from "../../../services/podcastService";
 import { flashcardService } from "../../../services/flashcardService";
+import { presentationService } from "../../../services/presentationService";
 import { CourseItem } from "../../../types/course";
 import { CourseOutline } from "../../../features/course/CourseOutline";
 import { CitationViewerDrawer } from "../../../components/citation/CitationViewerDrawer";
@@ -186,6 +188,37 @@ function CourseDetailPageContent() {
     }
   };
 
+  const [isGeneratingSlides, setIsGeneratingSlides] = useState(false);
+
+  const handleSlidesClick = async () => {
+    if (!token || !course) return;
+    setIsGeneratingSlides(true);
+    try {
+      const existing = await presentationService.listCoursePresentations(
+        token,
+        course.id
+      );
+      if (existing.length > 0) {
+        router.push(`/presentations/${existing[0].id}`);
+        return;
+      }
+      const deck = await presentationService.createPresentation(token, course.id, {
+        title: `Diaporama : ${course.title}`,
+        language: course.language,
+        level: course.level,
+      });
+      toast.success("Diaporama généré à partir du document.");
+      router.push(`/presentations/${deck.id}`);
+    } catch (err: any) {
+      toast.error(
+        err.message || "Erreur lors de la génération du diaporama.",
+        "Diaporama"
+      );
+    } finally {
+      setIsGeneratingSlides(false);
+    }
+  };
+
   const getLevelLabel = (level: string) => {
     switch (level) {
       case "BEGINNER":
@@ -326,6 +359,21 @@ function CourseDetailPageContent() {
               >
                 <Layers className="w-3.5 h-3.5 text-amber-400" />
                 <span>{isOpeningFlashcards ? "Chargement..." : "Flashcards SM-2"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSlidesClick}
+                disabled={isGeneratingSlides}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-rose-950/40 hover:bg-rose-950/70 text-rose-300 border border-rose-500/30 font-semibold rounded-xl text-xs transition active:scale-95 shadow-md shadow-rose-950/30"
+                title="Générer un diaporama pédagogique à partir du document"
+              >
+                <Presentation
+                  className={`w-3.5 h-3.5 text-rose-400 ${isGeneratingSlides ? "animate-pulse" : ""}`}
+                />
+                <span>
+                  {isGeneratingSlides ? "Génération..." : "Diaporama IA"}
+                </span>
               </button>
             </div>
 

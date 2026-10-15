@@ -2,6 +2,8 @@ import logging
 
 from django.db import transaction
 
+from apps.ai.services.generation_service import GenerationService
+from apps.ai.services.generators.slide_generator import SlideDeckGenerator
 from apps.courses.models import Course
 from apps.slides.models import (
     Presentation,
@@ -10,6 +12,7 @@ from apps.slides.models import (
     PresentationTheme,
 )
 from apps.slides.services.slide_planner import SlidePlanner
+from apps.slides.services.validator import PresentationValidator
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +20,19 @@ logger = logging.getLogger(__name__)
 class SlideGenerator:
     """Generates a complete pedagogical Presentation from a Course.
 
-    Coordinates SlidePlanner to compute slide blueprints and persists
-    Presentation and PresentationSlide instances in the database.
+    When the course is backed by an indexed document, slides are produced by the
+    RAG-grounded ``SlideDeckGenerator`` (with a full AIGeneration audit trail and
+    token billing). Otherwise, or if the AI path fails, it degrades gracefully to
+    the deterministic ``SlidePlanner`` templates.
     """
 
-    def __init__(self, planner: SlidePlanner | None = None) -> None:
+    def __init__(
+        self,
+        planner: SlidePlanner | None = None,
+        generation_service: GenerationService | None = None,
+    ) -> None:
         self.planner = planner or SlidePlanner()
+        self.generation_service = generation_service or GenerationService()
 
     def generate_presentation(
         self,
@@ -32,6 +42,7 @@ class SlideGenerator:
         language: str | None = None,
         level: str | None = None,
         focus: str | None = None,
+        user=None,
     ) -> Presentation:
         """Plans and generates a new Presentation with all slides."""
         presentation_title = (title or course.title).strip()
@@ -45,12 +56,13 @@ class SlideGenerator:
             )
 
             try:
-                blueprints = self.planner.plan_presentation(
-                    course,
+                blueprints = self._plan_blueprints(
+                    course=course,
                     title=presentation_title,
                     language=language,
                     level=level,
                     focus=focus,
+                    user=user,
                 )
 
                 slide_instances = [
@@ -89,3 +101,77 @@ class SlideGenerator:
                     exc_info=True,
                 )
                 raise
+
+    def _plan_blueprints(
+        self,
+        course: Course,
+        title: str,
+        language: str | None,
+        level: str | None,
+        focus: str | None,
+        user=None,
+    ) -> list[dict]:
+        """Returns AI-generated blueprints when possible, else heuristic ones."""
+        document = course.document
+        if document is not None and document.chunks.exists():
+            try:
+                generation = self.generation_service.generate_slides(
+                    document=document,
+                    user=user,
+                    language=language or course.language,
+                    level=level or course.level,
+                    focus=focus,
+                    top_k=8,
+                )
+                blueprints = self._validate_blueprints(
+                    SlideDeckGenerator.to_blueprints(
+                        generation.result, fallback_title=title
+                    )
+                )
+                if blueprints:
+                    logger.info(
+                        "Slide deck for course %s generated via AI (%s), %d slides",
+                        course.id,
+                        generation.provider,
+                        len(blueprints),
+                    )
+                    return blueprints
+                logger.warning(
+                    "AI slide payload for course %s was empty, using heuristic planner",
+                    course.id,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "AI slide generation failed for course %s, "
+                    "falling back to heuristic planner: %s",
+                    course.id,
+                    exc,
+                    exc_info=True,
+                )
+
+        return self.planner.plan_presentation(
+            course,
+            title=title,
+            language=language,
+            level=level,
+            focus=focus,
+        )
+
+    @staticmethod
+    def _validate_blueprints(blueprints: list[dict]) -> list[dict]:
+        """Applies the presentation density caps to AI-produced blueprints."""
+        validated: list[dict] = []
+        for bp in blueprints:
+            slide = PresentationValidator.validate_slide_content(
+                title=bp["title"],
+                content=bp.get("content", ""),
+                slide_number=bp["slide_number"],
+            )
+            validated.append(
+                {
+                    **bp,
+                    "title": slide["title"],
+                    "content": slide["content"],
+                }
+            )
+        return validated

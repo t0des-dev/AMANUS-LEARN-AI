@@ -102,6 +102,7 @@ class CoursePresentationsView(APIView):
                 language=language,
                 level=level,
                 focus=focus,
+                user=request.user,
             )
             QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.012)
         except Exception as exc:

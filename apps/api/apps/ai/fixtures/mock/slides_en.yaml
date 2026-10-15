@@ -1,0 +1,52 @@
+slides:
+- slide_number: 1
+  title: Introduction to Neural Networks
+  bullet_points:
+  - Teaching deck grounded in the source document [1]
+  - Audience: beginner-level learners
+  - Goal: master the fundamental mechanisms
+  speaker_notes: Welcome. We will explore key concepts taken straight from the
+    provided document.
+- slide_number: 2
+  title: Agenda
+  bullet_points:
+  - Fundamental principles and definitions [1]
+  - Attention and weighting mechanisms [2]
+  - Optimization and training [3]
+  - Key takeaways
+  speaker_notes: Here is our roadmap for the session.
+- slide_number: 3
+  title: Fundamental Principles
+  bullet_points:
+  - A neural network organizes computation units into layers [1]
+  - Each connection carries a weight learned during training [1]
+  - The activation function introduces non-linearity [1]
+  speaker_notes: Emphasize the notion of weights and propagation.
+- slide_number: 4
+  title: The Attention Mechanism
+  bullet_points:
+  - Attention weights the relevance of each token [2]
+  - This weighting focuses the model on useful context [2]
+  - Attention is computed in parallel across the sequence [2]
+  speaker_notes: Give a concrete sentence example.
+- slide_number: 5
+  title: Optimization and Training
+  bullet_points:
+  - Backpropagation updates weights via gradient descent [3]
+  - Normalization stabilizes internal distributions [3]
+  - The learning rate controls the update magnitude [3]
+  speaker_notes: Explain the role of the loss function.
+- slide_number: 6
+  title: Key Takeaways
+  bullet_points:
+  - Learned weights encode the model's knowledge [1]
+  - Attention drives contextual focus [2]
+  - Optimization converges through backpropagation [3]
+  speaker_notes: Recap before moving to questions.
+- slide_number: 7
+  title: Conclusion and Q&A
+  bullet_points:
+  - Thank you for your attention
+  - Floor open for questions and discussion
+  - Additional resources available on the platform
+  speaker_notes: Open the discussion with learners.

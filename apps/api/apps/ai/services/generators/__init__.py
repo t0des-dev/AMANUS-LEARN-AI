@@ -4,6 +4,7 @@ from .lesson_generator import LessonGenerator
 from .objective_generator import ObjectiveGenerator
 from .podcast_script_generator import PodcastScriptGenerator
 from .revision_sheet_generator import RevisionSheetGenerator
+from .slide_generator import SlideDeckGenerator
 from .summary_generator import SummaryGenerator
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "LessonGenerator",
     "RevisionSheetGenerator",
     "PodcastScriptGenerator",
+    "SlideDeckGenerator",
 ]

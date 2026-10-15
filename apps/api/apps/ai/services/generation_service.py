@@ -14,6 +14,7 @@ from .generators import (
     ObjectiveGenerator,
     PodcastScriptGenerator,
     RevisionSheetGenerator,
+    SlideDeckGenerator,
     SummaryGenerator,
 )
 from .providers import AIProvider, get_ai_provider
@@ -32,6 +33,7 @@ class GenerationService:
         GenerationType.LESSON: LessonGenerator,
         GenerationType.REVISION_SHEET: RevisionSheetGenerator,
         GenerationType.PODCAST_SCRIPT: PodcastScriptGenerator,
+        GenerationType.SLIDES: SlideDeckGenerator,
     }
 
     def __init__(self, provider: AIProvider | None = None):
@@ -339,4 +341,35 @@ class GenerationService:
             language=language,
             level=level,
             use_cache=use_cache,
+        )
+
+    def generate_slides(
+        self,
+        document: Document,
+        user: Any | None = None,
+        provider_name: str | None = None,
+        model: str | None = None,
+        focus: str | None = None,
+        top_k: int = 8,
+        language: str | None = None,
+        level: str | None = None,
+        use_cache: bool = False,
+        slide_count: int | None = None,
+    ) -> AIGeneration:
+        """Generates a RAG-grounded slide deck payload for a document.
+
+        The audit ``result`` holds ``{"slides": [...]}`` with ``bullet_points``.
+        """
+        return self.generate(
+            document=document,
+            generation_type=GenerationType.SLIDES,
+            user=user,
+            provider_name=provider_name,
+            model=model,
+            focus=focus,
+            top_k=top_k,
+            language=language,
+            level=level,
+            use_cache=use_cache,
+            slide_count=slide_count,
         )

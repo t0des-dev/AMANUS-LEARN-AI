@@ -11,6 +11,7 @@ class GenerationType(models.TextChoices):
     LESSON = "LESSON", "Cours / Leçon"
     REVISION_SHEET = "REVISION_SHEET", "Fiche de révision"
     PODCAST_SCRIPT = "PODCAST_SCRIPT", "Script Podcast"
+    SLIDES = "SLIDES", "Diaporama"
 
 
 class GenerationStatus(models.TextChoices):

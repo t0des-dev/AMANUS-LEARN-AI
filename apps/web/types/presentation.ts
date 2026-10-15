@@ -42,6 +42,9 @@ export interface Presentation {
 export interface CreatePresentationPayload {
   title?: string;
   theme?: PresentationTheme;
+  language?: string;
+  level?: string;
+  focus?: string;
 }
 
 export interface UpdatePresentationPayload {

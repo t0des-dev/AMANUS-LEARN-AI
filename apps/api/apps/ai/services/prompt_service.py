@@ -274,6 +274,91 @@ class PromptService:
             )
         return system_instruction, user_prompt, f"key-points-{self.VERSION}"
 
+    def get_slides_prompt(
+        self,
+        document_title: str,
+        context: str,
+        language: str = "fr",
+        level: str = "BEGINNER",
+        focus: str | None = None,
+        slide_count: int | None = None,
+    ) -> tuple[str, str, str]:
+        """Generates prompts for a full RAG-grounded slide deck from a document."""
+        lang = (language or "fr").lower()
+        system_instruction = self._get_system_instruction(lang)
+        focus_directive = f"\nFOCUS PARTICULIER : {focus}" if focus else ""
+        count_directive = (
+            f"\nNOMBRE DE DIAPOSITIVES CIBLÉ : {slide_count}" if slide_count else ""
+        )
+
+        if lang == "ar":
+            user_prompt = (
+                f"المستند : « {document_title} »\n\n"
+                f"المصادر المتاحة :\n{context}\n{focus_directive}{count_directive}\n"
+                "المهمة : تصميم عرض تقديمي تعليمي متكامل ومتسلسل انطلاقاً من هذا المستند.\n"
+                "قواعد صارمة :\n"
+                "- استند في كل عبارة إلى المصادر ووثّقها بالإحالات [x].\n"
+                "- ابدأ بشريحة عنوان، ثم جدول أعمال، ثم المحتوى، ثم خلاصة، ثم خاتمة.\n"
+                "- بين 4 و6 نقاط كحد أقصى لكل شريحة، صياغة موجزة في سطر واحد لكل نقطة.\n"
+                "- اضبط المفردات وعمق التحليل على المستوى التعليمي المطلوب.\n"
+                "هيكل JSON الإلزامي :\n"
+                "{\n"
+                '  "slides": [\n'
+                '    {\n'
+                '      "slide_number": 1,\n'
+                '      "title": "عنوان الشريحة",\n'
+                '      "bullet_points": ["نقطة موثقة [1]", "نقطة أخرى"],\n'
+                '      "speaker_notes": "ملاحظات المتحدث لإحياء هذه الشريحة."\n'
+                "    }\n"
+                "  ]\n"
+                "}"
+            )
+        elif lang == "en":
+            user_prompt = (
+                f'DOCUMENT: "{document_title}"\n\n'
+                f"AVAILABLE SOURCES:\n{context}\n{focus_directive}{count_directive}\n"
+                "MISSION: Design a complete, coherent pedagogical slide deck grounded in this document.\n"
+                "Strict rules:\n"
+                "- Ground every statement in the sources and cite them with [x].\n"
+                "- Start with a title slide, then an agenda, then content, then a summary, then a conclusion.\n"
+                "- Between 4 and 6 bullets per slide maximum, each phrased on a single concise line.\n"
+                "- Adapt vocabulary and depth to the requested learning level.\n"
+                "Mandatory JSON format:\n"
+                "{\n"
+                '  "slides": [\n'
+                "    {\n"
+                '      "slide_number": 1,\n'
+                '      "title": "Slide title",\n'
+                '      "bullet_points": ["Sourced point [1]", "Another point"],\n'
+                '      "speaker_notes": "Presenter notes to deliver this slide."\n'
+                "    }\n"
+                "  ]\n"
+                "}"
+            )
+        else:
+            user_prompt = (
+                f"DOCUMENT : « {document_title} »\n\n"
+                f"SOURCES DOCUMENTAIRES DISPONIBLES :\n{context}\n{focus_directive}{count_directive}\n"
+                "MISSION : Concevoir un support de présentation (diaporama) pédagogique complet et cohérent à partir de ce document.\n"
+                "Règles strictes :\n"
+                "- Appuie chaque affirmation sur les sources et cite les références entre crochets [x].\n"
+                "- Commence par une diapositive de titre, puis un sommaire, puis le contenu, puis une synthèse et une conclusion.\n"
+                "- Entre 4 et 6 points maximum par diapositive, formulés de façon concise sur une seule ligne chacun.\n"
+                "- Adapte le vocabulaire et la profondeur d'analyse au niveau pédagogique demandé.\n"
+                "Format JSON obligatoire :\n"
+                "{\n"
+                '  "slides": [\n'
+                "    {\n"
+                '      "slide_number": 1,\n'
+                '      "title": "Titre de la diapositive",\n'
+                '      "bullet_points": ["Point sourcé [1]", "Autre point"],\n'
+                '      "speaker_notes": "Notes de l\'intervenant pour animer cette diapositive."\n'
+                "    }\n"
+                "  ]\n"
+                "}"
+            )
+        return system_instruction, user_prompt, f"slides-{self.VERSION}"
+
     def get_objectives_prompt(
         self,
         document_title: str,

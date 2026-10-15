@@ -1,0 +1,52 @@
+slides:
+- slide_number: 1
+  title: Introduction aux réseaux de neurones
+  bullet_points:
+  - Support pédagogique fondé sur le document source [1]
+  - Public : apprenants de niveau débutant
+  - Objectif : maîtriser les mécanismes fondamentaux
+  speaker_notes: Bienvenue dans cette présentation. Nous allons explorer les
+    concepts clés directement issus du document fourni.
+- slide_number: 2
+  title: Sommaire
+  bullet_points:
+  - Principes fondamentaux et définitions [1]
+  - Mécanismes d'attention et pondération [2]
+  - Optimisation et entraînement [3]
+  - Synthèse et points à retenir
+  speaker_notes: Voici la feuille de route de la session.
+- slide_number: 3
+  title: Principes fondamentaux
+  bullet_points:
+  - Un réseau de neurones organise des unités de calcul en couches [1]
+  - Chaque connexion porte un poids appris pendant l'entraînement [1]
+  - La fonction d'activation introduit la non-linéarité [1]
+  speaker_notes: Insistez sur la notion de poids et de propagation.
+- slide_number: 4
+  title: Le mécanisme d'attention
+  bullet_points:
+  - Le principe d'attention pondère la pertinence de chaque token [2]
+  - Cette pondération permet de focaliser le modèle sur le contexte utile [2]
+  - L'attention est calculée en parallèle sur toute la séquence [2]
+  speaker_notes: Donnez un exemple concret de phrase analysée.
+- slide_number: 5
+  title: Optimisation et entraînement
+  bullet_points:
+  - La rétropropagation met à jour les poids par descente de gradient [3]
+  - La normalisation stabilise les distributions internes [3]
+  - Le taux d'apprentissage contrôle l'amplitude des mises à jour [3]
+  speaker_notes: Expliquez le rôle de la fonction de perte.
+- slide_number: 6
+  title: Synthèse et points clés
+  bullet_points:
+  - Les poids appris encodent les connaissances du modèle [1]
+  - L'attention pilote le focus contextuel [2]
+  - L'optimisation converge par rétropropagation [3]
+  speaker_notes: Récapitulez avant de passer aux questions.
+- slide_number: 7
+  title: Conclusion et questions
+  bullet_points:
+  - Merci pour votre attention
+  - Place aux questions et à l'échange
+  - Ressources complémentaires disponibles sur la plateforme
+  speaker_notes: Ouvrez la discussion avec les apprenants.
