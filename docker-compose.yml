@@ -101,7 +101,6 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
       - ./apps/api:/app/apps/api
-      - ./workers:/app/workers
     depends_on:
       postgres:
         condition: service_healthy
@@ -126,7 +125,6 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
       - ./apps/api:/app/apps/api
-      - ./workers:/app/workers
     depends_on:
       postgres:
         condition: service_healthy

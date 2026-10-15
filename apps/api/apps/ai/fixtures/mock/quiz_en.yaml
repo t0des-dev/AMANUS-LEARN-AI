@@ -1,0 +1,27 @@
+questions:
+- question: What is the primary role of the self-attention mechanism in Transformer models?
+  answers:
+  - text: Dynamically weight the contextual importance between all tokens
+    is_correct: true
+  - text: Uniformly downsample spatial feature maps
+    is_correct: false
+  - text: Compute an unweighted arithmetic mean across tokens
+    is_correct: false
+  - text: Bypass the tokenizer to directly feed raw characters
+    is_correct: false
+  explanation: Self-attention computes dynamic affinity scores between all tokens in a sequence to focus representations on relevant context [1].
+  difficulty: MEDIUM
+  source: 'Chapter 1: Self-Attention Architecture'
+- question: Which optimization algorithm is widely used to minimize training loss in neural networks?
+  answers:
+  - text: Adam or Stochastic Gradient Descent (SGD)
+    is_correct: true
+  - text: Dijkstra shortest path algorithm
+    is_correct: false
+  - text: Unsupervised K-Means clustering
+    is_correct: false
+  - text: Ordinary Least Squares linear regression
+    is_correct: false
+  explanation: Optimizers like Adam iteratively adjust weights via backpropagation based on computed gradients [2].
+  difficulty: EASY
+  source: 'Chapter 2: Optimization and Training'

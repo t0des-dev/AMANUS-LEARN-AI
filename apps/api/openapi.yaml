@@ -1,0 +1,6314 @@
+openapi: 3.0.3
+info:
+  title: Amanus Learn AI API
+  version: 1.0.0
+  description: Master API for SaaS EdTech / AI / RAG / LMS
+paths:
+  /api/v1/ai/query/:
+    post:
+      operationId: api_v1_ai_query_create
+      description: |-
+        POST /api/v1/rag/query/
+
+        Executes complete RAG retrieval pipeline: hybrid/semantic/lexical search, re-ranking,
+        grounded context generation, and structured citations.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/search/:
+    post:
+      operationId: api_v1_ai_search_create
+      description: |-
+        POST /api/v1/rag/search/
+
+        Semantic vector search with organization multi-tenant filtering,
+        re-ranking, and structured provenance metadata.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/tasks/{task_id}/:
+    get:
+      operationId: api_v1_ai_tasks_retrieve
+      description: |-
+        GET /api/v1/ai/tasks/{task_id}/ (and /api/v1/tasks/{task_id}/)
+
+        Returns the unified lifecycle status, progress, duration, and result of any background generation task.
+        Enforces strict multi-tenant authorization.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/courses/{id}/:
+    get:
+      operationId: api_v1_analytics_courses_retrieve
+      description: GET /api/v1/analytics/courses/{id}/ — Instructor course analytics
+        (enrollment, progress, problematic chapters).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/courses/{id}/students/:
+    get:
+      operationId: api_v1_analytics_courses_students_retrieve
+      description: GET /api/v1/analytics/courses/{id}/students/ — Per-student performance
+        and study duration in a course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/quizzes/{id}/:
+    get:
+      operationId: api_v1_analytics_quizzes_retrieve
+      description: GET /api/v1/analytics/quizzes/{id}/ — Quiz analytics with difficult
+        questions analysis.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/student/:
+    get:
+      operationId: api_v1_analytics_student_retrieve
+      description: GET /api/v1/analytics/student/ — Student personal learning analytics.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/audio/{id}:
+    get:
+      operationId: api_v1_audio_retrieve
+      description: |-
+        GET    /api/v1/audio/{id} — Retrieve status, duration, script, and audio_url.
+
+        DELETE /api/v1/audio/{id} — Delete audio record and remove audio file from storage.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_audio_destroy
+      description: |-
+        GET    /api/v1/audio/{id} — Retrieve status, duration, script, and audio_url.
+
+        DELETE /api/v1/audio/{id} — Delete audio record and remove audio file from storage.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/audio/{id}/:
+    get:
+      operationId: api_v1_audio_retrieve_2
+      description: |-
+        GET    /api/v1/audio/{id} — Retrieve status, duration, script, and audio_url.
+
+        DELETE /api/v1/audio/{id} — Delete audio record and remove audio file from storage.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_audio_destroy_2
+      description: |-
+        GET    /api/v1/audio/{id} — Retrieve status, duration, script, and audio_url.
+
+        DELETE /api/v1/audio/{id} — Delete audio record and remove audio file from storage.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/audio/podcasts/:
+    get:
+      operationId: api_v1_audio_podcasts_retrieve
+      description: |-
+        GET  /api/v1/audio/podcasts/ - List user's organization podcast episodes.
+
+        POST /api/v1/audio/podcasts/ - Generate a dynamic 2-voice educational podcast episode.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_audio_podcasts_create
+      description: |-
+        GET  /api/v1/audio/podcasts/ - List user's organization podcast episodes.
+
+        POST /api/v1/audio/podcasts/ - Generate a dynamic 2-voice educational podcast episode.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/audio/podcasts/{id}/:
+    get:
+      operationId: api_v1_audio_podcasts_retrieve_2
+      description: |-
+        GET    /api/v1/audio/podcasts/<id>/ - Retrieve episode with full dialogue turns.
+
+        DELETE /api/v1/audio/podcasts/<id>/ - Delete episode.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_audio_podcasts_destroy
+      description: |-
+        GET    /api/v1/audio/podcasts/<id>/ - Retrieve episode with full dialogue turns.
+
+        DELETE /api/v1/audio/podcasts/<id>/ - Delete episode.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/audio/voices:
+    get:
+      operationId: api_v1_audio_voices_retrieve
+      description: GET /api/v1/audio/voices — List available voices for VoiceSelector.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/audio/voices/:
+    get:
+      operationId: api_v1_audio_voices_retrieve_2
+      description: GET /api/v1/audio/voices — List available voices for VoiceSelector.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/login:
+    post:
+      operationId: api_v1_auth_login_create
+      description: Authenticates credentials and returns JWT access and refresh tokens.
+      summary: User Login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                  access:
+                    type: string
+                  refresh:
+                    type: string
+          description: Authentication successful
+        '400':
+          description: Invalid credentials or inactive account
+  /api/v1/auth/logout:
+    post:
+      operationId: api_v1_auth_logout_create
+      description: Terminates the active user session and optionally revokes the refresh
+        token.
+      summary: User Logout
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Logout'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Logout'
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Déconnexion réussie.
+          description: Successfully logged out
+  /api/v1/auth/me:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      description: Returns profile information for the currently authenticated user.
+      summary: Get Current User Profile
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '401':
+          description: Unauthorized
+    patch:
+      operationId: api_v1_auth_me_partial_update
+      description: Allows updating partial details (first_name, last_name, avatar,
+        language).
+      summary: Update Current User Profile
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+  /api/v1/auth/refresh:
+    post:
+      operationId: api_v1_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/register:
+    post:
+      operationId: api_v1_auth_register_create
+      description: Creates a new user account and returns authentication tokens along
+        with the user profile.
+      summary: User Registration
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                  access:
+                    type: string
+                  refresh:
+                    type: string
+          description: Account created successfully
+        '400':
+          description: Validation error
+  /api/v1/billing/audit-logs:
+    get:
+      operationId: api_v1_billing_audit_logs_list
+      description: GET /billing/audit-logs - List audit trail logs for tenant admins.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/v1/billing/audit-logs/:
+    get:
+      operationId: api_v1_billing_audit_logs_list_2
+      description: GET /billing/audit-logs - List audit trail logs for tenant admins.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/v1/billing/plan:
+    get:
+      operationId: api_v1_billing_plan_list
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /api/v1/billing/plan/:
+    get:
+      operationId: api_v1_billing_plan_list_2
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /api/v1/billing/plans:
+    get:
+      operationId: api_v1_billing_plans_list
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /api/v1/billing/plans/:
+    get:
+      operationId: api_v1_billing_plans_list_2
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /api/v1/billing/subscription:
+    get:
+      operationId: api_v1_billing_subscription_retrieve
+      description: Returns current contract, active plan, renewal date and status.
+      summary: Get Subscription
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    post:
+      operationId: api_v1_billing_subscription_create
+      description: Upgrade, downgrade, or update active plan for organization.
+      summary: Change Subscription Plan
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/billing/subscription/:
+    get:
+      operationId: api_v1_billing_subscription_retrieve_2
+      description: Returns current contract, active plan, renewal date and status.
+      summary: Get Subscription
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    post:
+      operationId: api_v1_billing_subscription_create_2
+      description: Upgrade, downgrade, or update active plan for organization.
+      summary: Change Subscription Plan
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /api/v1/billing/system/health:
+    get:
+      operationId: api_v1_billing_system_health_retrieve
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /api/v1/billing/system/health/:
+    get:
+      operationId: api_v1_billing_system_health_retrieve_2
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /api/v1/billing/usage:
+    get:
+      operationId: api_v1_billing_usage_retrieve
+      description: Returns consumption breakdown across all tracked metrics with thresholds.
+      summary: Get Quota Usage
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+          description: ''
+  /api/v1/billing/usage/:
+    get:
+      operationId: api_v1_billing_usage_retrieve_2
+      description: Returns consumption breakdown across all tracked metrics with thresholds.
+      summary: Get Quota Usage
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+          description: ''
+  /api/v1/chat/commands:
+    get:
+      operationId: api_v1_chat_commands_retrieve
+      description: GET /api/v1/chat/commands — List available pedagogical commands.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/chat/commands/:
+    get:
+      operationId: api_v1_chat_commands_retrieve_2
+      description: GET /api/v1/chat/commands — List available pedagogical commands.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/chat/sessions:
+    get:
+      operationId: api_v1_chat_sessions_list
+      description: |-
+        GET  /api/v1/chat/sessions — List conversations accessible to the user.
+
+        POST /api/v1/chat/sessions — Create a new conversation session.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedChatSessionListList'
+          description: ''
+    post:
+      operationId: api_v1_chat_sessions_create
+      description: |-
+        GET  /api/v1/chat/sessions — List conversations accessible to the user.
+
+        POST /api/v1/chat/sessions — Create a new conversation session.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreate'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionCreate'
+          description: ''
+  /api/v1/chat/sessions/:
+    get:
+      operationId: api_v1_chat_sessions_list_2
+      description: |-
+        GET  /api/v1/chat/sessions — List conversations accessible to the user.
+
+        POST /api/v1/chat/sessions — Create a new conversation session.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedChatSessionListList'
+          description: ''
+    post:
+      operationId: api_v1_chat_sessions_create_2
+      description: |-
+        GET  /api/v1/chat/sessions — List conversations accessible to the user.
+
+        POST /api/v1/chat/sessions — Create a new conversation session.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatSessionCreate'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionCreate'
+          description: ''
+  /api/v1/chat/sessions/{id}:
+    get:
+      operationId: api_v1_chat_sessions_retrieve
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionDetail'
+          description: ''
+    put:
+      operationId: api_v1_chat_sessions_update
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSessionDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatSessionDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatSessionDetail'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionDetail'
+          description: ''
+    patch:
+      operationId: api_v1_chat_sessions_partial_update
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChatSessionDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedChatSessionDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedChatSessionDetail'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionDetail'
+          description: ''
+    delete:
+      operationId: api_v1_chat_sessions_destroy
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/chat/sessions/{id}/:
+    get:
+      operationId: api_v1_chat_sessions_retrieve_2
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionDetail'
+          description: ''
+    put:
+      operationId: api_v1_chat_sessions_update_2
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatSessionDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatSessionDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChatSessionDetail'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionDetail'
+          description: ''
+    patch:
+      operationId: api_v1_chat_sessions_partial_update_2
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChatSessionDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedChatSessionDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedChatSessionDetail'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatSessionDetail'
+          description: ''
+    delete:
+      operationId: api_v1_chat_sessions_destroy_2
+      description: |-
+        GET    /api/v1/chat/sessions/{id} — Retrieve session details and messages.
+
+        PATCH  /api/v1/chat/sessions/{id} — Update session title or scope.
+        DELETE /api/v1/chat/sessions/{id} — Delete conversation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/chat/sessions/{id}/messages:
+    post:
+      operationId: api_v1_chat_sessions_messages_create
+      description: |-
+        POST /api/v1/chat/sessions/{id}/messages — Send a pedagogical question.
+
+        Supports both standard JSON response and real-time Server-Sent Events (SSE) streaming.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/chat/sessions/{id}/messages/:
+    post:
+      operationId: api_v1_chat_sessions_messages_create_2
+      description: |-
+        POST /api/v1/chat/sessions/{id}/messages — Send a pedagogical question.
+
+        Supports both standard JSON response and real-time Server-Sent Events (SSE) streaming.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/courses/:
+    get:
+      operationId: api_v1_courses_list
+      description: |-
+        GET  /api/v1/courses/ — List courses accessible to the authenticated user.
+
+        POST /api/v1/courses/ — Create a new course in an organization.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCourseListList'
+          description: ''
+    post:
+      operationId: api_v1_courses_create
+      description: |-
+        GET  /api/v1/courses/ — List courses accessible to the authenticated user.
+
+        POST /api/v1/courses/ — Create a new course in an organization.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseCreate'
+          description: ''
+  /api/v1/courses/{id}/:
+    get:
+      operationId: api_v1_courses_retrieve
+      description: |-
+        GET    /api/v1/courses/{id}/ — Course detail with full hierarchical outline.
+
+        PATCH  /api/v1/courses/{id}/ — Update course metadata (Teacher/Admin/Owner).
+        DELETE /api/v1/courses/{id}/ — Delete course (Teacher/Admin/Owner).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseDetail'
+          description: ''
+    put:
+      operationId: api_v1_courses_update
+      description: |-
+        GET    /api/v1/courses/{id}/ — Course detail with full hierarchical outline.
+
+        PATCH  /api/v1/courses/{id}/ — Update course metadata (Teacher/Admin/Owner).
+        DELETE /api/v1/courses/{id}/ — Delete course (Teacher/Admin/Owner).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_courses_partial_update
+      description: |-
+        GET    /api/v1/courses/{id}/ — Course detail with full hierarchical outline.
+
+        PATCH  /api/v1/courses/{id}/ — Update course metadata (Teacher/Admin/Owner).
+        DELETE /api/v1/courses/{id}/ — Delete course (Teacher/Admin/Owner).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_courses_destroy
+      description: |-
+        GET    /api/v1/courses/{id}/ — Course detail with full hierarchical outline.
+
+        PATCH  /api/v1/courses/{id}/ — Update course metadata (Teacher/Admin/Owner).
+        DELETE /api/v1/courses/{id}/ — Delete course (Teacher/Admin/Owner).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/courses/{id}/export/docx/:
+    get:
+      operationId: api_v1_courses_export_docx_retrieve
+      description: GET /api/v1/courses/{id}/export/docx/ — Export course as formatted
+        Microsoft Word (.docx) document.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/courses/{id}/export/markdown/:
+    get:
+      operationId: api_v1_courses_export_markdown_retrieve
+      description: GET /api/v1/courses/{id}/export/markdown/ — Export course as clean
+        Markdown (.md) document.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/courses/{id}/generate/:
+    post:
+      operationId: api_v1_courses_generate_create
+      description: |-
+        POST /api/v1/courses/{id}/generate/
+
+        Transforms an analyzed document into a structured pedagogical course:
+        Course -> Chapter -> Section -> Lesson.
+        All generated content remains fully editable by teachers.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/courses/{id}/presentations/:
+    get:
+      operationId: api_v1_courses_presentations_retrieve
+      description: |-
+        POST /api/v1/courses/{id}/presentations/ - Generate a presentation from a Course.
+        GET  /api/v1/courses/{id}/presentations/ - List all presentations for a Course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_courses_presentations_create
+      description: |-
+        POST /api/v1/courses/{id}/presentations/ - Generate a presentation from a Course.
+        GET  /api/v1/courses/{id}/presentations/ - List all presentations for a Course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/courses/{id}/quizzes/:
+    get:
+      operationId: api_v1_courses_quizzes_retrieve
+      description: |-
+        GET  /api/v1/courses/{id}/quizzes — List quizzes belonging to a specific course.
+
+        POST /api/v1/courses/{id}/quizzes — Create a quiz attached to this course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_courses_quizzes_create
+      description: |-
+        GET  /api/v1/courses/{id}/quizzes — List quizzes belonging to a specific course.
+
+        POST /api/v1/courses/{id}/quizzes — Create a quiz attached to this course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/courses/{id}/sections/:
+    get:
+      operationId: api_v1_courses_sections_list
+      description: |-
+        GET  /api/v1/courses/{id}/sections/ — List hierarchical sections/chapters of a course.
+
+        POST /api/v1/courses/{id}/sections/ — Add a new section, chapter or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCourseSectionTreeList'
+          description: ''
+    post:
+      operationId: api_v1_courses_sections_create
+      description: |-
+        GET  /api/v1/courses/{id}/sections/ — List hierarchical sections/chapters of a course.
+
+        POST /api/v1/courses/{id}/sections/ — Add a new section, chapter or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseSectionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseSectionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseSectionCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSectionCreate'
+          description: ''
+  /api/v1/documents/:
+    get:
+      operationId: api_v1_documents_list
+      description: |-
+        GET  /api/v1/documents - List documents isolated by organization
+
+        POST /api/v1/documents - Upload document (PDF, DOCX, PPTX, TXT)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentListList'
+          description: ''
+    post:
+      operationId: api_v1_documents_create
+      description: |-
+        GET  /api/v1/documents - List documents isolated by organization
+
+        POST /api/v1/documents - Upload document (PDF, DOCX, PPTX, TXT)
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentUpload'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentUpload'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUpload'
+          description: ''
+  /api/v1/documents/{id}/:
+    get:
+      operationId: api_v1_documents_retrieve
+      description: |-
+        GET    /api/v1/documents/{id} - Retrieve document details
+
+        PATCH  /api/v1/documents/{id} - Update document metadata
+        DELETE /api/v1/documents/{id} - Delete document and purge file from storage
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+          description: ''
+    put:
+      operationId: api_v1_documents_update
+      description: |-
+        GET    /api/v1/documents/{id} - Retrieve document details
+
+        PATCH  /api/v1/documents/{id} - Update document metadata
+        DELETE /api/v1/documents/{id} - Delete document and purge file from storage
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DocumentUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_documents_partial_update
+      description: |-
+        GET    /api/v1/documents/{id} - Retrieve document details
+
+        PATCH  /api/v1/documents/{id} - Update document metadata
+        DELETE /api/v1/documents/{id} - Delete document and purge file from storage
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDocumentUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_documents_destroy
+      description: |-
+        GET    /api/v1/documents/{id} - Retrieve document details
+
+        PATCH  /api/v1/documents/{id} - Update document metadata
+        DELETE /api/v1/documents/{id} - Delete document and purge file from storage
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/documents/{id}/chunks/:
+    get:
+      operationId: api_v1_documents_chunks_retrieve
+      description: |-
+        GET /api/v1/documents/{id}/chunks/
+        Returns extracted chunks with provenance metadata, page numbers, and textual excerpts.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/generate/course/:
+    post:
+      operationId: api_v1_documents_generate_course_create
+      description: |-
+        POST /api/v1/documents/{id}/generate/course
+
+        Generates a pedagogical course/lesson from document RAG chunks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/generate/key-points/:
+    post:
+      operationId: api_v1_documents_generate_key_points_create
+      description: |-
+        POST /api/v1/documents/{id}/generate/key-points
+
+        Extracts essential key points and core concepts from document RAG chunks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/generate/objectives/:
+    post:
+      operationId: api_v1_documents_generate_objectives_create
+      description: |-
+        POST /api/v1/documents/{id}/generate/objectives
+
+        Generates structured learning objectives from document RAG chunks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/generate/revision-sheet/:
+    post:
+      operationId: api_v1_documents_generate_revision_sheet_create
+      description: |-
+        POST /api/v1/documents/{id}/generate/revision-sheet
+
+        Generates an exam revision sheet from document RAG chunks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/generate/summary/:
+    post:
+      operationId: api_v1_documents_generate_summary_create
+      description: |-
+        POST /api/v1/documents/{id}/generate/summary
+
+        Generates a structured, grounded summary from document RAG chunks.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/pages/:
+    get:
+      operationId: api_v1_documents_pages_retrieve
+      description: |-
+        GET /api/v1/documents/{id}/pages/
+
+        Returns extracted pages and their hierarchical structure for the document.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/process/:
+    post:
+      operationId: api_v1_documents_process_create
+      description: POST /api/v1/documents/{id}/process - Trigger pipeline staging
+        for document.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/processing-status/:
+    get:
+      operationId: api_v1_documents_processing_status_retrieve
+      description: |-
+        GET /api/v1/documents/{id}/processing-status/
+
+        Returns the fine-grained lifecycle progression of the document
+        (Uploading, Extracting, OCR, Structuring, Chunking, Completed, Failed).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/{id}/status/:
+    get:
+      operationId: api_v1_documents_status_retrieve
+      description: GET /api/v1/documents/{id}/status - Check processing lifecycle
+        status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/documents/ingest-url/:
+    post:
+      operationId: api_v1_documents_ingest_url_create
+      description: POST /api/v1/documents/ingest-url/ - Ingest web article/URL into
+        Document pipeline.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/health:
+    get:
+      operationId: api_v1_health_retrieve
+      description: Returns system health status for monitoring and container orchestration.
+      summary: Service Health Check
+      tags:
+      - Monitoring
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+          description: Service is healthy
+  /api/v1/health/:
+    get:
+      operationId: api_v1_health_retrieve_2
+      description: Returns system health status for monitoring and container orchestration.
+      summary: Service Health Check
+      tags:
+      - Monitoring
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+          description: Service is healthy
+  /api/v1/learning/courses/:
+    get:
+      operationId: api_v1_learning_courses_list
+      description: GET /api/v1/learning/courses/ — List all courses tracked in the
+        user's learning paths.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLearningPathList'
+          description: ''
+  /api/v1/learning/courses/{id}/progress/:
+    get:
+      operationId: api_v1_learning_courses_progress_retrieve
+      description: GET /api/v1/learning/courses/{id}/progress/ — Granular progress
+        breakdown for a course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/dashboard/:
+    get:
+      operationId: api_v1_learning_dashboard_retrieve
+      description: GET /api/v1/learning/dashboard/ — Student dashboard with real computed
+        metrics.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/flashcard-decks/:
+    get:
+      operationId: api_v1_learning_flashcard_decks_retrieve
+      description: |-
+        GET  /api/v1/learning/flashcard-decks/ - List decks isolated by organization.
+        POST /api/v1/learning/flashcard-decks/ - Create or save a new deck of flashcards.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_learning_flashcard_decks_create
+      description: |-
+        GET  /api/v1/learning/flashcard-decks/ - List decks isolated by organization.
+        POST /api/v1/learning/flashcard-decks/ - Create or save a new deck of flashcards.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/flashcard-decks/{id}/:
+    get:
+      operationId: api_v1_learning_flashcard_decks_retrieve_2
+      description: GET /api/v1/learning/flashcard-decks/{id}/ - Retrieve a deck with
+        all its flashcards.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/flashcards/{card_id}/review/:
+    post:
+      operationId: api_v1_learning_flashcards_review_create
+      description: POST /api/v1/learning/flashcards/{card_id}/review/ - Submit study
+        evaluation (0-5) and compute next SM-2 interval.
+      parameters:
+      - in: path
+        name: card_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/sections/{id}/complete/:
+    post:
+      operationId: api_v1_learning_sections_complete_create
+      description: POST /api/v1/learning/sections/{id}/complete/ — Mark section progress
+        / completion.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/sessions/{id}/finish/:
+    post:
+      operationId: api_v1_learning_sessions_finish_create
+      description: POST /api/v1/learning/sessions/{id}/finish/ — Conclude a study
+        session and record duration.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/learning/sessions/start/:
+    post:
+      operationId: api_v1_learning_sessions_start_create
+      description: POST /api/v1/learning/sessions/start/ — Start tracking an active
+        study session.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/organizations/:
+    get:
+      operationId: api_v1_organizations_list
+      description: Returns all organizations the current authenticated user belongs
+        to.
+      summary: List User Organizations
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - Organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+    post:
+      operationId: api_v1_organizations_create
+      description: Creates a new multi-tenant organization. The creator automatically
+        receives the OWNER role.
+      summary: Create Organization
+      tags:
+      - Organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}:
+    get:
+      operationId: api_v1_organizations_retrieve
+      description: Returns details for a specific organization if the user is a member.
+      summary: Get Organization Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+        '404':
+          description: Organization not found
+    put:
+      operationId: api_v1_organizations_update
+      description: |-
+        Retrieve, update or delete an organization.
+        Multi-tenant isolation: user must belong to the organization.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_organizations_partial_update
+      description: Updates organization settings (restricted to OWNER and ADMIN).
+      summary: Update Organization
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+        '403':
+          description: Forbidden
+    delete:
+      operationId: api_v1_organizations_destroy
+      description: Deletes an organization and all associated data (restricted to
+        OWNER).
+      summary: Delete Organization
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Organization deleted
+        '403':
+          description: Forbidden
+  /api/v1/organizations/{id}/members:
+    get:
+      operationId: api_v1_organizations_members_list
+      description: Returns all members belonging to the specified organization.
+      summary: List Organization Members
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizationMember'
+          description: ''
+    post:
+      operationId: api_v1_organizations_members_create
+      description: Adds a user to the organization with a specified role (restricted
+        to OWNER and ADMIN).
+      summary: Add / Invite Member
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationMemberCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrganizationMemberCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrganizationMemberCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+          description: ''
+        '403':
+          description: Forbidden
+  /api/v1/organizations/{id}/members/{member_id}:
+    patch:
+      operationId: api_v1_organizations_members_partial_update
+      description: Modifies a member's role (restricted to OWNER and ADMIN).
+      summary: Update Member Role
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: member_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationMemberUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationMemberUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationMemberUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+          description: ''
+        '403':
+          description: Forbidden
+    delete:
+      operationId: api_v1_organizations_members_destroy
+      description: Removes a member from the organization (restricted to OWNER, ADMIN,
+        or self-removal).
+      summary: Remove Member
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: member_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Organizations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Member removed
+        '403':
+          description: Forbidden
+  /api/v1/presentations/{id}/:
+    get:
+      operationId: api_v1_presentations_retrieve
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationDetail'
+          description: ''
+    put:
+      operationId: api_v1_presentations_update
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresentationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PresentationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PresentationUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_presentations_partial_update
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPresentationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPresentationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPresentationUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_presentations_destroy
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/presentations/{id}/export/:
+    post:
+      operationId: api_v1_presentations_export_create
+      description: |-
+        POST /api/v1/presentations/{id}/export/ — Export presentation as PPTX.
+
+        Supports synchronous export (default) or async celery task (via ?async=true or {"async": true}).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/presentations/{id}/reorder/:
+    post:
+      operationId: api_v1_presentations_reorder_create
+      description: POST /api/v1/presentations/{id}/reorder/ — Bulk reorder slides.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/presentations/{id}/slides/:
+    post:
+      operationId: api_v1_presentations_slides_create
+      description: POST /api/v1/presentations/{id}/slides/ — Add a new slide to a
+        presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/presentations/{id}/slides/{slide_id}/:
+    patch:
+      operationId: api_v1_presentations_slides_partial_update
+      description: |-
+        PATCH  /api/v1/presentations/{id}/slides/{slide_id}/ — Update slide content/title.
+        DELETE /api/v1/presentations/{id}/slides/{slide_id}/ — Remove slide from presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: slide_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_presentations_slides_destroy
+      description: |-
+        PATCH  /api/v1/presentations/{id}/slides/{slide_id}/ — Update slide content/title.
+        DELETE /api/v1/presentations/{id}/slides/{slide_id}/ — Remove slide from presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: slide_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/quizzes/:
+    get:
+      operationId: api_v1_quizzes_list
+      description: |-
+        GET  /api/v1/quizzes/ — List quizzes accessible to user.
+
+        POST /api/v1/quizzes/ — Create a new quiz.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedQuizListList'
+          description: ''
+    post:
+      operationId: api_v1_quizzes_create
+      description: |-
+        GET  /api/v1/quizzes/ — List quizzes accessible to user.
+
+        POST /api/v1/quizzes/ — Create a new quiz.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizCreate'
+          description: ''
+  /api/v1/quizzes/{id}/:
+    get:
+      operationId: api_v1_quizzes_retrieve
+      description: |-
+        GET    /api/v1/quizzes/{id}/ — Detail of quiz with questions.
+
+        PATCH  /api/v1/quizzes/{id}/ — Update quiz metadata.
+        DELETE /api/v1/quizzes/{id}/ — Delete quiz.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizDetail'
+          description: ''
+    put:
+      operationId: api_v1_quizzes_update
+      description: |-
+        GET    /api/v1/quizzes/{id}/ — Detail of quiz with questions.
+
+        PATCH  /api/v1/quizzes/{id}/ — Update quiz metadata.
+        DELETE /api/v1/quizzes/{id}/ — Delete quiz.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuizCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizCreate'
+          description: ''
+    patch:
+      operationId: api_v1_quizzes_partial_update
+      description: |-
+        GET    /api/v1/quizzes/{id}/ — Detail of quiz with questions.
+
+        PATCH  /api/v1/quizzes/{id}/ — Update quiz metadata.
+        DELETE /api/v1/quizzes/{id}/ — Delete quiz.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedQuizCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedQuizCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedQuizCreate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizCreate'
+          description: ''
+    delete:
+      operationId: api_v1_quizzes_destroy
+      description: |-
+        GET    /api/v1/quizzes/{id}/ — Detail of quiz with questions.
+
+        PATCH  /api/v1/quizzes/{id}/ — Update quiz metadata.
+        DELETE /api/v1/quizzes/{id}/ — Delete quiz.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/quizzes/{id}/generate/:
+    post:
+      operationId: api_v1_quizzes_generate_create
+      description: |-
+        POST /api/v1/quizzes/{id}/generate/
+
+        Generates multiple choice questions using AI and RAG extraction from document.
+        Enforces strict validation of all questions before database insertion.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/quizzes/{id}/results/:
+    get:
+      operationId: api_v1_quizzes_results_retrieve
+      description: GET /api/v1/quizzes/{id}/results — Retrieves user attempts, best
+        and latest performance for this quiz.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/quizzes/{id}/start/:
+    post:
+      operationId: api_v1_quizzes_start_create
+      description: POST /api/v1/quizzes/{id}/start — Initializes a quiz attempt session.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/quizzes/{id}/submit/:
+    post:
+      operationId: api_v1_quizzes_submit_create
+      description: POST /api/v1/quizzes/{id}/submit — Submits answers, calculates
+        score, and evaluates results.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/quizzes/bulk-delete/:
+    post:
+      operationId: api_v1_quizzes_bulk_delete_create
+      description: |-
+        POST/DELETE /api/v1/quizzes/bulk-delete/
+
+        Supprime en masse des quiz/évaluations liés à un document ou selon une liste d'IDs.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_quizzes_bulk_delete_destroy
+      description: |-
+        POST/DELETE /api/v1/quizzes/bulk-delete/
+
+        Supprime en masse des quiz/évaluations liés à un document ou selon une liste d'IDs.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/quizzes/history/:
+    get:
+      operationId: api_v1_quizzes_history_retrieve
+      description: GET /api/v1/quizzes/history/ — Paginated history of all quiz attempts
+        for the authenticated user.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/query/:
+    post:
+      operationId: api_v1_rag_query_create
+      description: |-
+        POST /api/v1/rag/query/
+
+        Executes complete RAG retrieval pipeline: hybrid/semantic/lexical search, re-ranking,
+        grounded context generation, and structured citations.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/search/:
+    post:
+      operationId: api_v1_rag_search_create
+      description: |-
+        POST /api/v1/rag/search/
+
+        Semantic vector search with organization multi-tenant filtering,
+        re-ranking, and structured provenance metadata.
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/tasks/{task_id}/:
+    get:
+      operationId: api_v1_rag_tasks_retrieve
+      description: |-
+        GET /api/v1/ai/tasks/{task_id}/ (and /api/v1/tasks/{task_id}/)
+
+        Returns the unified lifecycle status, progress, duration, and result of any background generation task.
+        Enforces strict multi-tenant authorization.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/sections/{id}:
+    get:
+      operationId: api_v1_sections_retrieve
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSection'
+          description: ''
+    put:
+      operationId: api_v1_sections_update
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseSectionUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseSectionUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseSectionUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSectionUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_sections_partial_update
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseSectionUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseSectionUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseSectionUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSectionUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_sections_destroy
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sections/{id}/:
+    get:
+      operationId: api_v1_sections_retrieve_2
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSection'
+          description: ''
+    put:
+      operationId: api_v1_sections_update_2
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseSectionUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CourseSectionUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CourseSectionUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSectionUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_sections_partial_update_2
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseSectionUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseSectionUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCourseSectionUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseSectionUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_sections_destroy_2
+      description: |-
+        GET    /api/v1/sections/{id}/ — Section / lesson details.
+
+        PATCH  /api/v1/sections/{id}/ — Edit section or lesson content (Teacher editable AI content).
+        DELETE /api/v1/sections/{id}/ — Delete section or lesson.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sections/{id}/audio:
+    get:
+      operationId: api_v1_sections_audio_retrieve
+      description: |-
+        POST /api/v1/sections/{id}/audio — Trigger asynchronous TTS audio generation for a section.
+
+        GET  /api/v1/sections/{id}/audio — Retrieve existing audio content for a section.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_sections_audio_create
+      description: |-
+        POST /api/v1/sections/{id}/audio — Trigger asynchronous TTS audio generation for a section.
+
+        GET  /api/v1/sections/{id}/audio — Retrieve existing audio content for a section.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/sections/{id}/audio/:
+    get:
+      operationId: api_v1_sections_audio_retrieve_2
+      description: |-
+        POST /api/v1/sections/{id}/audio — Trigger asynchronous TTS audio generation for a section.
+
+        GET  /api/v1/sections/{id}/audio — Retrieve existing audio content for a section.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_sections_audio_create_2
+      description: |-
+        POST /api/v1/sections/{id}/audio — Trigger asynchronous TTS audio generation for a section.
+
+        GET  /api/v1/sections/{id}/audio — Retrieve existing audio content for a section.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/slides/presentations/{id}/:
+    get:
+      operationId: api_v1_slides_presentations_retrieve
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationDetail'
+          description: ''
+    put:
+      operationId: api_v1_slides_presentations_update
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresentationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PresentationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PresentationUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationUpdate'
+          description: ''
+    patch:
+      operationId: api_v1_slides_presentations_partial_update
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPresentationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPresentationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPresentationUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationUpdate'
+          description: ''
+    delete:
+      operationId: api_v1_slides_presentations_destroy
+      description: |-
+        GET    /api/v1/presentations/{id}/ — Get presentation details with slides.
+        PATCH  /api/v1/presentations/{id}/ — Update presentation (title, theme, slide reordering).
+        DELETE /api/v1/presentations/{id}/ — Delete presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/slides/presentations/{id}/export/:
+    post:
+      operationId: api_v1_slides_presentations_export_create
+      description: |-
+        POST /api/v1/presentations/{id}/export/ — Export presentation as PPTX.
+
+        Supports synchronous export (default) or async celery task (via ?async=true or {"async": true}).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/slides/presentations/{id}/reorder/:
+    post:
+      operationId: api_v1_slides_presentations_reorder_create
+      description: POST /api/v1/presentations/{id}/reorder/ — Bulk reorder slides.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/slides/presentations/{id}/slides/:
+    post:
+      operationId: api_v1_slides_presentations_slides_create
+      description: POST /api/v1/presentations/{id}/slides/ — Add a new slide to a
+        presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/slides/presentations/{id}/slides/{slide_id}/:
+    patch:
+      operationId: api_v1_slides_presentations_slides_partial_update
+      description: |-
+        PATCH  /api/v1/presentations/{id}/slides/{slide_id}/ — Update slide content/title.
+        DELETE /api/v1/presentations/{id}/slides/{slide_id}/ — Remove slide from presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: slide_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: api_v1_slides_presentations_slides_destroy
+      description: |-
+        PATCH  /api/v1/presentations/{id}/slides/{slide_id}/ — Update slide content/title.
+        DELETE /api/v1/presentations/{id}/slides/{slide_id}/ — Remove slide from presentation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: slide_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/system/health:
+    get:
+      operationId: api_v1_system_health_retrieve
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /api/v1/system/health/:
+    get:
+      operationId: api_v1_system_health_retrieve_2
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /api/v1/tasks/{task_id}/:
+    get:
+      operationId: api_v1_tasks_retrieve
+      description: |-
+        GET /api/v1/ai/tasks/{task_id}/ (and /api/v1/tasks/{task_id}/)
+
+        Returns the unified lifecycle status, progress, duration, and result of any background generation task.
+        Enforces strict multi-tenant authorization.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /billing/audit-logs:
+    get:
+      operationId: billing_audit_logs_list
+      description: GET /billing/audit-logs - List audit trail logs for tenant admins.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /billing/audit-logs/:
+    get:
+      operationId: billing_audit_logs_list_2
+      description: GET /billing/audit-logs - List audit trail logs for tenant admins.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /billing/plan:
+    get:
+      operationId: billing_plan_list
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /billing/plan/:
+    get:
+      operationId: billing_plan_list_2
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /billing/plans:
+    get:
+      operationId: billing_plans_list
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /billing/plans/:
+    get:
+      operationId: billing_plans_list_2
+      description: Returns tier details, limits, and quotas for FREE, PRO, BUSINESS,
+        ENTERPRISE.
+      summary: List SaaS Plans
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanDetails'
+          description: ''
+  /billing/subscription:
+    get:
+      operationId: billing_subscription_retrieve
+      description: Returns current contract, active plan, renewal date and status.
+      summary: Get Subscription
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    post:
+      operationId: billing_subscription_create
+      description: Upgrade, downgrade, or update active plan for organization.
+      summary: Change Subscription Plan
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /billing/subscription/:
+    get:
+      operationId: billing_subscription_retrieve_2
+      description: Returns current contract, active plan, renewal date and status.
+      summary: Get Subscription
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+    post:
+      operationId: billing_subscription_create_2
+      description: Upgrade, downgrade, or update active plan for organization.
+      summary: Change Subscription Plan
+      tags:
+      - Billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePlan'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+          description: ''
+  /billing/system/health:
+    get:
+      operationId: billing_system_health_retrieve
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /billing/system/health/:
+    get:
+      operationId: billing_system_health_retrieve_2
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /billing/usage:
+    get:
+      operationId: billing_usage_retrieve
+      description: Returns consumption breakdown across all tracked metrics with thresholds.
+      summary: Get Quota Usage
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+          description: ''
+  /billing/usage/:
+    get:
+      operationId: billing_usage_retrieve_2
+      description: Returns consumption breakdown across all tracked metrics with thresholds.
+      summary: Get Quota Usage
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageSummary'
+          description: ''
+  /system/health:
+    get:
+      operationId: system_health_retrieve
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+  /system/health/:
+    get:
+      operationId: system_health_retrieve_2
+      description: Deep diagnostics checking Database, Redis cache, and storage connectivity.
+      summary: Production System Health Check
+      tags:
+      - System
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: System is healthy
+        '503':
+          description: One or more components are degraded
+components:
+  schemas:
+    AuditLog:
+      type: object
+      description: Immutable audit trail log entry.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          title: Organisation
+        actor:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          title: Utilisateur initiateur
+        actor_email:
+          type: string
+          readOnly: true
+        actor_name:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          readOnly: true
+          title: Action réalisée
+        resource_type:
+          type: string
+          readOnly: true
+          title: Type de ressource
+        resource_id:
+          type: string
+          readOnly: true
+          title: Identifiant ressource
+        ip_address:
+          type: string
+          readOnly: true
+          nullable: true
+          title: Adresse IP
+        user_agent:
+          type: string
+          readOnly: true
+        metadata:
+          readOnly: true
+          title: Données contextuelles
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Horodatage
+      required:
+      - action
+      - actor
+      - actor_email
+      - actor_name
+      - created_at
+      - id
+      - ip_address
+      - metadata
+      - organization
+      - resource_id
+      - resource_type
+      - user_agent
+    ChangePlan:
+      type: object
+      description: Input payload to upgrade or change subscription plan.
+      properties:
+        plan:
+          $ref: '#/components/schemas/PlanEnum'
+      required:
+      - plan
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        session_id:
+          type: string
+          format: uuid
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/ChatMessageRoleEnum'
+          title: Rôle
+        sender:
+          type: string
+          readOnly: true
+        content:
+          type: string
+          title: Contenu du message
+        command:
+          type: string
+          nullable: true
+          title: Commande pédagogique
+          description: EXPLAIN, SIMPLIFY, SUMMARY, EXAMPLE, QUIZ, REVISION, COMPARE,
+            DEFINE
+          maxLength: 50
+        sources:
+          readOnly: true
+          title: Sources documentaires citées
+        tokens_used:
+          type: integer
+          readOnly: true
+          title: Tokens consommés
+        metadata:
+          readOnly: true
+          title: Métadonnées d'inférence
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'envoi
+      required:
+      - content
+      - created_at
+      - id
+      - metadata
+      - sender
+      - session_id
+      - sources
+      - tokens_used
+    ChatMessageRoleEnum:
+      enum:
+      - user
+      - assistant
+      - system
+      type: string
+      description: |-
+        * `user` - Utilisateur
+        * `assistant` - Assistant / Tuteur
+        * `system` - Système
+    ChatSessionCreate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre de la session
+          maxLength: 255
+        organization_id:
+          type: string
+          format: uuid
+        document_id:
+          type: string
+          format: uuid
+          nullable: true
+        course_id:
+          type: string
+          format: uuid
+          nullable: true
+        initial_message:
+          type: string
+          writeOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière mise à jour
+      required:
+      - created_at
+      - id
+      - updated_at
+    ChatSessionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre de la session
+          maxLength: 255
+        organization_id:
+          type: string
+          format: uuid
+          title: Organisation
+          readOnly: true
+        user_id:
+          type: string
+          format: uuid
+          title: Utilisateur
+          readOnly: true
+        document:
+          allOf:
+          - $ref: '#/components/schemas/DocumentBrief'
+          readOnly: true
+        course:
+          allOf:
+          - $ref: '#/components/schemas/CourseBrief'
+          readOnly: true
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière mise à jour
+      required:
+      - course
+      - created_at
+      - document
+      - id
+      - messages
+      - organization_id
+      - updated_at
+      - user_id
+    ChatSessionList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre de la session
+          maxLength: 255
+        organization_id:
+          type: string
+          format: uuid
+          title: Organisation
+          readOnly: true
+        user_id:
+          type: string
+          format: uuid
+          title: Utilisateur
+          readOnly: true
+        document:
+          allOf:
+          - $ref: '#/components/schemas/DocumentBrief'
+          readOnly: true
+        course:
+          allOf:
+          - $ref: '#/components/schemas/CourseBrief'
+          readOnly: true
+        message_count:
+          type: integer
+          readOnly: true
+        last_message:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière mise à jour
+      required:
+      - course
+      - created_at
+      - document
+      - id
+      - last_message
+      - message_count
+      - organization_id
+      - updated_at
+      - user_id
+    CourseBrief:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+      required:
+      - id
+      - title
+    CourseCreate:
+      type: object
+      description: Serializer for creating a new course.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          title: Créateur
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+      required:
+      - created_by
+      - id
+      - organization
+      - title
+    CourseDetail:
+      type: object
+      description: Detailed course representation including hierarchical root sections
+        (Chapters).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        organization_name:
+          type: string
+          readOnly: true
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          title: Créateur
+        creator_name:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        sections_count:
+          type: integer
+          readOnly: true
+        total_estimated_minutes:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+        sections:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - creator_name
+      - id
+      - organization
+      - organization_name
+      - sections
+      - sections_count
+      - title
+      - total_estimated_minutes
+      - updated_at
+    CourseList:
+      type: object
+      description: Summary representation for course listings.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        organization_name:
+          type: string
+          readOnly: true
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          title: Créateur
+        creator_name:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        sections_count:
+          type: integer
+          readOnly: true
+        total_estimated_minutes:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+      required:
+      - created_at
+      - created_by
+      - creator_name
+      - id
+      - organization
+      - organization_name
+      - sections_count
+      - title
+      - total_estimated_minutes
+      - updated_at
+    CourseMinimal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        organization_name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - organization_name
+      - title
+    CourseSection:
+      type: object
+      description: Flat serialization for a single CourseSection.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        course:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Cours parent
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          title: Section parente (Chapitre ou Section)
+        title:
+          type: string
+          title: Titre de la section
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Ordre d'affichage
+        content:
+          type: string
+          title: Contenu didactique (éditable par l'enseignant)
+        summary:
+          type: string
+          title: Synthèse / Résumé
+        objectives:
+          title: Objectifs pédagogiques
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Durée estimée (minutes)
+        level_depth:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+      required:
+      - course
+      - created_at
+      - id
+      - level_depth
+      - title
+      - updated_at
+    CourseSectionCreate:
+      type: object
+      description: Serializer for creating a new section under a course.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          title: Section parente (Chapitre ou Section)
+        title:
+          type: string
+          title: Titre de la section
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Ordre d'affichage
+        content:
+          type: string
+          title: Contenu didactique (éditable par l'enseignant)
+        summary:
+          type: string
+          title: Synthèse / Résumé
+        objectives:
+          title: Objectifs pédagogiques
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Durée estimée (minutes)
+      required:
+      - id
+      - title
+    CourseSectionTree:
+      type: object
+      description: Hierarchical recursive serialization for Course -> Chapter -> Section
+        -> Lesson outline.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          title: Section parente (Chapitre ou Section)
+        title:
+          type: string
+          title: Titre de la section
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Ordre d'affichage
+        summary:
+          type: string
+          title: Synthèse / Résumé
+        content:
+          type: string
+          title: Contenu didactique (éditable par l'enseignant)
+        objectives:
+          title: Objectifs pédagogiques
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Durée estimée (minutes)
+        level_depth:
+          type: integer
+          readOnly: true
+        children:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+      required:
+      - children
+      - created_at
+      - id
+      - level_depth
+      - title
+      - updated_at
+    CourseSectionUpdate:
+      type: object
+      description: Serializer for editing section / lesson content by teachers or
+        users.
+      properties:
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          title: Section parente (Chapitre ou Section)
+        title:
+          type: string
+          title: Titre de la section
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Ordre d'affichage
+        content:
+          type: string
+          title: Contenu didactique (éditable par l'enseignant)
+        summary:
+          type: string
+          title: Synthèse / Résumé
+        objectives:
+          title: Objectifs pédagogiques
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Durée estimée (minutes)
+      required:
+      - title
+    CourseUpdate:
+      type: object
+      description: Serializer for updating course metadata.
+      properties:
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+      required:
+      - title
+    DifficultyEnum:
+      enum:
+      - EASY
+      - MEDIUM
+      - HARD
+      type: string
+      description: |-
+        * `EASY` - Facile
+        * `MEDIUM` - Moyen
+        * `HARD` - Difficile
+    DocumentBrief:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre du document
+          maxLength: 255
+        file_type:
+          type: string
+          title: Format du fichier (pdf, docx, pptx, txt)
+          maxLength: 50
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA3eEnum'
+          title: Statut du document
+      required:
+      - file_type
+      - id
+      - title
+    DocumentDetail:
+      type: object
+      description: Detailed document serializer with storage key and metadata.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Organisation
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        title:
+          type: string
+          title: Titre du document
+          maxLength: 255
+        description:
+          type: string
+        file_name:
+          type: string
+          readOnly: true
+          title: Nom du fichier original
+        file_type:
+          type: string
+          readOnly: true
+          title: Format du fichier (pdf, docx, pptx, txt)
+        file_size:
+          type: integer
+          readOnly: true
+          title: Taille du fichier
+          description: Taille en octets
+        file_size_human:
+          type: string
+          description: Returns human-readable representation of file size.
+          readOnly: true
+        file_extension:
+          type: string
+          description: Returns normalized file extension starting with a dot.
+          readOnly: true
+        storage_key:
+          type: string
+          readOnly: true
+          title: Clé de stockage (chemin S3 / local)
+        language:
+          type: string
+          title: Langue principale du document
+          maxLength: 10
+        page_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Nombre de pages estimé
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA3eEnum'
+          title: Statut du document
+        error_message:
+          type: string
+          readOnly: true
+          title: Message d'erreur
+        processing_metadata:
+          readOnly: true
+          title: Métadonnées du pipeline
+        download_url:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'importation
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+      required:
+      - created_at
+      - download_url
+      - error_message
+      - file_extension
+      - file_name
+      - file_size
+      - file_size_human
+      - file_type
+      - id
+      - organization
+      - owner
+      - processing_metadata
+      - storage_key
+      - title
+      - updated_at
+    DocumentList:
+      type: object
+      description: Compact serializer for document listings.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Organisation
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+          title: Titre du document
+        description:
+          type: string
+          readOnly: true
+        file_name:
+          type: string
+          readOnly: true
+          title: Nom du fichier original
+        file_type:
+          type: string
+          readOnly: true
+          title: Format du fichier (pdf, docx, pptx, txt)
+        file_size:
+          type: integer
+          readOnly: true
+          title: Taille du fichier
+          description: Taille en octets
+        file_size_human:
+          type: string
+          description: Returns human-readable representation of file size.
+          readOnly: true
+        file_extension:
+          type: string
+          description: Returns normalized file extension starting with a dot.
+          readOnly: true
+        language:
+          type: string
+          readOnly: true
+          title: Langue principale du document
+        page_count:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: Nombre de pages estimé
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA3eEnum'
+          readOnly: true
+          title: Statut du document
+        download_url:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'importation
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+      required:
+      - created_at
+      - description
+      - download_url
+      - file_extension
+      - file_name
+      - file_size
+      - file_size_human
+      - file_type
+      - id
+      - language
+      - organization
+      - owner
+      - page_count
+      - status
+      - title
+      - updated_at
+    DocumentUpdate:
+      type: object
+      description: Allows updating document metadata.
+      properties:
+        title:
+          type: string
+          title: Titre du document
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue principale du document
+          maxLength: 10
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA3eEnum'
+          title: Statut du document
+      required:
+      - title
+    DocumentUpload:
+      type: object
+      description: Multipart upload serializer with multi-tenant membership and file
+        validation.
+      properties:
+        file:
+          type: string
+          format: uri
+          writeOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          writeOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        language:
+          type: string
+          default: fr
+          maxLength: 10
+      required:
+      - file
+      - organization_id
+    LearningPath:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        course:
+          allOf:
+          - $ref: '#/components/schemas/CourseMinimal'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LearningPathStatusEnum'
+          title: Statut d'apprentissage
+        progress:
+          type: number
+          format: double
+          title: Progression globale (%)
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: Date de début d'apprentissage
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: Date d'achèvement
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'inscription
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière activité
+      required:
+      - course
+      - created_at
+      - id
+      - updated_at
+    LearningPathStatusEnum:
+      enum:
+      - NOT_STARTED
+      - IN_PROGRESS
+      - COMPLETED
+      type: string
+      description: |-
+        * `NOT_STARTED` - Non démarré
+        * `IN_PROGRESS` - En cours
+        * `COMPLETED` - Terminé
+    LevelEnum:
+      enum:
+      - BEGINNER
+      - INTERMEDIATE
+      - ADVANCED
+      - EXPERT
+      type: string
+      description: |-
+        * `BEGINNER` - Débutant
+        * `INTERMEDIATE` - Intermédiaire
+        * `ADVANCED` - Avancé
+        * `EXPERT` - Expert
+    Login:
+      type: object
+      description: Serializer for authenticating users via email & password.
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    Logout:
+      type: object
+      description: Serializer for logging out and optional token revocation.
+      properties:
+        refresh:
+          type: string
+    Organization:
+      type: object
+      description: Full representation of an Organization with caller role.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          title: Nom de l'organisation
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/PlanEnum'
+          title: Plan d'abonnement
+        user_role:
+          type: string
+          nullable: true
+          readOnly: true
+        members_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de modification
+      required:
+      - created_at
+      - id
+      - members_count
+      - name
+      - slug
+      - updated_at
+      - user_role
+    OrganizationCreate:
+      type: object
+      description: Serializer for creating a new Organization (caller becomes OWNER).
+      properties:
+        name:
+          type: string
+          title: Nom de l'organisation
+          maxLength: 200
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/PlanEnum'
+          title: Plan d'abonnement
+        logo:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - name
+    OrganizationMember:
+      type: object
+      description: Representation of an organization member.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Organisation
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role575Enum'
+          title: Rôle
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date d'adhésion
+      required:
+      - created_at
+      - id
+      - organization
+      - user
+    OrganizationMemberCreate:
+      type: object
+      description: Serializer for adding/inviting a member to an organization.
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          allOf:
+          - $ref: '#/components/schemas/OrganizationMemberCreateRoleEnum'
+          default: STUDENT
+      required:
+      - email
+    OrganizationMemberCreateRoleEnum:
+      enum:
+      - ADMIN
+      - TEACHER
+      - STUDENT
+      type: string
+      description: |-
+        * `ADMIN` - Administrateur
+        * `TEACHER` - Enseignant / Formateur
+        * `STUDENT` - Apprenant / Étudiant
+    OrganizationUpdate:
+      type: object
+      description: Serializer for updating organization settings.
+      properties:
+        name:
+          type: string
+          title: Nom de l'organisation
+          maxLength: 200
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/PlanEnum'
+          title: Plan d'abonnement
+      required:
+      - name
+    PaginatedAuditLogList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+    PaginatedChatSessionListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatSessionList'
+    PaginatedCourseListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseList'
+    PaginatedCourseSectionTreeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseSectionTree'
+    PaginatedDocumentListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentList'
+    PaginatedLearningPathList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LearningPath'
+    PaginatedOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    PaginatedQuizListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuizList'
+    PatchedChatSessionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: Titre de la session
+          maxLength: 255
+        organization_id:
+          type: string
+          format: uuid
+          title: Organisation
+          readOnly: true
+        user_id:
+          type: string
+          format: uuid
+          title: Utilisateur
+          readOnly: true
+        document:
+          allOf:
+          - $ref: '#/components/schemas/DocumentBrief'
+          readOnly: true
+        course:
+          allOf:
+          - $ref: '#/components/schemas/CourseBrief'
+          readOnly: true
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière mise à jour
+    PatchedCourseSectionUpdate:
+      type: object
+      description: Serializer for editing section / lesson content by teachers or
+        users.
+      properties:
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          title: Section parente (Chapitre ou Section)
+        title:
+          type: string
+          title: Titre de la section
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Ordre d'affichage
+        content:
+          type: string
+          title: Contenu didactique (éditable par l'enseignant)
+        summary:
+          type: string
+          title: Synthèse / Résumé
+        objectives:
+          title: Objectifs pédagogiques
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Durée estimée (minutes)
+    PatchedCourseUpdate:
+      type: object
+      description: Serializer for updating course metadata.
+      properties:
+        title:
+          type: string
+          title: Titre du cours
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Niveau
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+    PatchedDocumentUpdate:
+      type: object
+      description: Allows updating document metadata.
+      properties:
+        title:
+          type: string
+          title: Titre du document
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue principale du document
+          maxLength: 10
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusA3eEnum'
+          title: Statut du document
+    PatchedOrganizationMemberUpdate:
+      type: object
+      description: Serializer for updating member role.
+      properties:
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role575Enum'
+          title: Rôle
+    PatchedOrganizationUpdate:
+      type: object
+      description: Serializer for updating organization settings.
+      properties:
+        name:
+          type: string
+          title: Nom de l'organisation
+          maxLength: 200
+        logo:
+          type: string
+          format: uri
+          nullable: true
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/PlanEnum'
+          title: Plan d'abonnement
+    PatchedPresentationUpdate:
+      type: object
+      description: Payload for patching presentation metadata and optional slide orders.
+      properties:
+        title:
+          type: string
+          title: Titre de la présentation
+          maxLength: 255
+        theme:
+          allOf:
+          - $ref: '#/components/schemas/ThemeEnum'
+          title: Thème graphique
+        slides_order:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlideOrderItem'
+          writeOnly: true
+    PatchedQuizCreate:
+      type: object
+      description: Serializer for manual or AI-assisted Quiz creation.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        course:
+          type: string
+          format: uuid
+          nullable: true
+          title: Cours associé
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        title:
+          type: string
+          title: Titre du QCM
+          maxLength: 255
+        description:
+          type: string
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Mode de quiz
+        difficulty:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyEnum'
+          title: Niveau de difficulté
+        time_limit_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Temps limite (minutes)
+        passing_score_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Score de validation (%)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+    PatchedUserUpdate:
+      type: object
+      description: Serializer for updating user profile information.
+      properties:
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+    PlanDetails:
+      type: object
+      description: Details and quotas for a specific subscription plan tier.
+      properties:
+        plan:
+          type: string
+        name:
+          type: string
+        quotas:
+          type: object
+          additionalProperties: {}
+        features:
+          type: array
+          items:
+            type: string
+      required:
+      - features
+      - name
+      - plan
+      - quotas
+    PlanEnum:
+      enum:
+      - FREE
+      - PRO
+      - BUSINESS
+      - ENTERPRISE
+      type: string
+      description: |-
+        * `FREE` - Gratuit
+        * `PRO` - Professionnel
+        * `BUSINESS` - Business
+        * `ENTERPRISE` - Entreprise
+    PresentationDetail:
+      type: object
+      description: Detailed serializer for presentations with nested slides and export
+        link.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        course:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Cours source
+        course_title:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          title: Titre de la présentation
+          maxLength: 255
+        theme:
+          allOf:
+          - $ref: '#/components/schemas/ThemeEnum'
+          title: Thème graphique
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PresentationDetailStatusEnum'
+          readOnly: true
+          title: Statut
+        storage_key:
+          type: string
+          readOnly: true
+          title: Clé de stockage du fichier PPTX exporté
+        export_url:
+          type: string
+          nullable: true
+          readOnly: true
+        slides_count:
+          type: integer
+          readOnly: true
+        slides:
+          type: array
+          items:
+            $ref: '#/components/schemas/PresentationSlide'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière mise à jour
+      required:
+      - course
+      - course_title
+      - created_at
+      - export_url
+      - id
+      - slides
+      - slides_count
+      - status
+      - storage_key
+      - title
+      - updated_at
+    PresentationDetailStatusEnum:
+      enum:
+      - DRAFT
+      - GENERATING
+      - READY
+      - EXPORTING
+      - FAILED
+      type: string
+      description: |-
+        * `DRAFT` - Brouillon
+        * `GENERATING` - En cours de génération
+        * `READY` - Prêt
+        * `EXPORTING` - Exportation en cours
+        * `FAILED` - Échec
+    PresentationSlide:
+      type: object
+      description: Serializer for individual presentation slides.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        presentation:
+          type: string
+          format: uuid
+          readOnly: true
+          title: Présentation parente
+        slide_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Numéro d'ordre de la slide
+        title:
+          type: string
+          title: Titre de la slide
+          maxLength: 255
+        content:
+          type: string
+          title: Contenu didactique (puces, points clés)
+        speaker_notes:
+          type: string
+          title: Notes de l'orateur / Présentateur
+        image_prompt:
+          type: string
+          title: Prompt visuel / Idée d'illustration
+        image_url:
+          title: URL de l'image d'illustration
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 1024
+          - type: string
+            maxLength: 0
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Dernière mise à jour
+      required:
+      - created_at
+      - id
+      - presentation
+      - title
+      - updated_at
+    PresentationUpdate:
+      type: object
+      description: Payload for patching presentation metadata and optional slide orders.
+      properties:
+        title:
+          type: string
+          title: Titre de la présentation
+          maxLength: 255
+        theme:
+          allOf:
+          - $ref: '#/components/schemas/ThemeEnum'
+          title: Thème graphique
+        slides_order:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlideOrderItem'
+          writeOnly: true
+      required:
+      - title
+    QuizCreate:
+      type: object
+      description: Serializer for manual or AI-assisted Quiz creation.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        course:
+          type: string
+          format: uuid
+          nullable: true
+          title: Cours associé
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        title:
+          type: string
+          title: Titre du QCM
+          maxLength: 255
+        description:
+          type: string
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Mode de quiz
+        difficulty:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyEnum'
+          title: Niveau de difficulté
+        time_limit_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Temps limite (minutes)
+        passing_score_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Score de validation (%)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+      required:
+      - id
+      - organization
+      - title
+    QuizDetail:
+      type: object
+      description: Detailed quiz with its ordered questions and options.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        organization_name:
+          type: string
+          readOnly: true
+        course:
+          type: string
+          format: uuid
+          nullable: true
+          title: Cours associé
+        course_title:
+          type: string
+          readOnly: true
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        document_id:
+          type: string
+          readOnly: true
+        document_title:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          title: Titre du QCM
+          maxLength: 255
+        description:
+          type: string
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Mode de quiz
+        difficulty:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyEnum'
+          title: Niveau de difficulté
+        time_limit_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Temps limite (minutes)
+        passing_score_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Score de validation (%)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        questions_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+        questions:
+          type: string
+          readOnly: true
+      required:
+      - course_title
+      - created_at
+      - document_id
+      - document_title
+      - id
+      - organization
+      - organization_name
+      - questions
+      - questions_count
+      - title
+      - updated_at
+    QuizList:
+      type: object
+      description: Listing serialization with question metrics.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+          title: Organisation
+        organization_name:
+          type: string
+          readOnly: true
+        course:
+          type: string
+          format: uuid
+          nullable: true
+          title: Cours associé
+        course_title:
+          type: string
+          readOnly: true
+        document:
+          type: string
+          format: uuid
+          nullable: true
+          title: Document source
+        document_id:
+          type: string
+          readOnly: true
+        document_title:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          title: Titre du QCM
+          maxLength: 255
+        description:
+          type: string
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Mode de quiz
+        difficulty:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyEnum'
+          title: Niveau de difficulté
+        time_limit_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Temps limite (minutes)
+        passing_score_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Score de validation (%)
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status2bdEnum'
+          title: Statut
+        questions_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de mise à jour
+      required:
+      - course_title
+      - created_at
+      - document_id
+      - document_title
+      - id
+      - organization
+      - organization_name
+      - questions_count
+      - title
+      - updated_at
+    Register:
+      type: object
+      description: Serializer for self-service user registration.
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 8
+        first_name:
+          type: string
+          default: ''
+        last_name:
+          type: string
+          default: ''
+        language:
+          type: string
+          default: fr
+          maxLength: 10
+      required:
+      - email
+      - password
+    Role575Enum:
+      enum:
+      - OWNER
+      - ADMIN
+      - TEACHER
+      - STUDENT
+      type: string
+      description: |-
+        * `OWNER` - Propriétaire
+        * `ADMIN` - Administrateur
+        * `TEACHER` - Enseignant / Formateur
+        * `STUDENT` - Apprenant / Étudiant
+    SlideOrderItem:
+      type: object
+      description: Item specification for bulk reordering slides.
+      properties:
+        id:
+          type: string
+          format: uuid
+        slide_number:
+          type: integer
+          minimum: 1
+      required:
+      - id
+      - slide_number
+    Status2bdEnum:
+      enum:
+      - DRAFT
+      - PUBLISHED
+      - ARCHIVED
+      type: string
+      description: |-
+        * `DRAFT` - Brouillon
+        * `PUBLISHED` - Publié
+        * `ARCHIVED` - Archivé
+    StatusA3eEnum:
+      enum:
+      - UPLOADING
+      - UPLOADED
+      - EXTRACTING
+      - OCR
+      - STRUCTURING
+      - CHUNKING
+      - PROCESSING
+      - COMPLETED
+      - READY
+      - FAILED
+      - ARCHIVED
+      type: string
+      description: |-
+        * `UPLOADING` - Uploading
+        * `UPLOADED` - Uploadé
+        * `EXTRACTING` - Extracting
+        * `OCR` - OCR
+        * `STRUCTURING` - Structuring
+        * `CHUNKING` - Chunking
+        * `PROCESSING` - En cours de traitement
+        * `COMPLETED` - Completed
+        * `READY` - Prêt
+        * `FAILED` - Échoué
+        * `ARCHIVED` - Archivé
+    Subscription:
+      type: object
+      description: Full subscription contract representation.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_name:
+          type: string
+          readOnly: true
+        plan:
+          allOf:
+          - $ref: '#/components/schemas/PlanEnum'
+          readOnly: true
+          title: Plan souscrit
+        plan_display:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SubscriptionStatusEnum'
+          readOnly: true
+          title: Statut de l'abonnement
+        is_active:
+          type: boolean
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Début de la période
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Fin de la période
+        canceled_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Date d'annulation
+        billing_provider:
+          type: string
+          readOnly: true
+          title: Fournisseur de facturation
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Créé le
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Mis à jour le
+      required:
+      - billing_provider
+      - canceled_at
+      - created_at
+      - current_period_end
+      - id
+      - is_active
+      - organization_id
+      - organization_name
+      - plan
+      - plan_display
+      - started_at
+      - status
+      - updated_at
+    SubscriptionStatusEnum:
+      enum:
+      - ACTIVE
+      - TRIALING
+      - PAST_DUE
+      - CANCELED
+      type: string
+      description: |-
+        * `ACTIVE` - Actif
+        * `TRIALING` - Période d'essai
+        * `PAST_DUE` - Paiement en attente
+        * `CANCELED` - Annulé
+    ThemeEnum:
+      enum:
+      - modern_dark
+      - minimal_light
+      - academic_indigo
+      - corporate_blue
+      type: string
+      description: |-
+        * `modern_dark` - Moderne Sombre
+        * `minimal_light` - Minimaliste Clair
+        * `academic_indigo` - Académique Indigo
+        * `corporate_blue` - Entreprise Bleu
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TypeEnum:
+      enum:
+      - TRAINING
+      - EXAM
+      - REVISION
+      type: string
+      description: |-
+        * `TRAINING` - Entraînement
+        * `EXAM` - Examen
+        * `REVISION` - Révision
+    UsageMetric:
+      type: object
+      description: Metric quota breakdown.
+      properties:
+        metric:
+          type: string
+        current:
+          type: integer
+        limit:
+          type: integer
+        remaining:
+          type: integer
+          nullable: true
+        percentage:
+          type: number
+          format: double
+        unlimited:
+          type: boolean
+      required:
+      - current
+      - limit
+      - metric
+      - percentage
+      - remaining
+      - unlimited
+    UsageSummary:
+      type: object
+      description: Aggregated usage overview for an organization.
+      properties:
+        organization_id:
+          type: string
+          format: uuid
+        plan:
+          type: string
+        metrics:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/UsageMetric'
+      required:
+      - metrics
+      - organization_id
+      - plan
+    User:
+      type: object
+      description: Public profile representation of the User.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        language:
+          type: string
+          title: Langue
+          maxLength: 10
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Actif
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de création
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date de modification
+      required:
+      - created_at
+      - email
+      - id
+      - is_active
+      - updated_at
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

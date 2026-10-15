@@ -7,9 +7,11 @@ from apps.ai.services.pedagogical_blueprint import (
     PedagogicalBlueprint,
     PedagogicalBlueprintService,
 )
+from apps.billing.services.quota_service import QuotaService
 from apps.documents.models import Document
 from apps.ingestion.models import DocumentChunk
 from apps.quizzes.models import Quiz, QuizAnswer, QuizQuestion
+from config.metrics import timed_ai_call
 
 from .validator import InvalidQuizQuestionError, QuizQuestionValidator
 
@@ -292,11 +294,17 @@ class QuizGeneratorService:
 
         for attempt in range(2):
             try:
-                ai_response = provider.generate(
-                    prompt=user_prompt,
-                    system_instruction=system_instruction,
-                    model=model,
-                    response_format="json",
+                with timed_ai_call(provider=provider.name, operation="quiz_generation"):
+                    ai_response = provider.generate(
+                        prompt=user_prompt,
+                        system_instruction=system_instruction,
+                        model=model,
+                        response_format="json",
+                    )
+                QuotaService.consume_tokens(
+                    quiz.organization,
+                    ai_response.input_tokens,
+                    ai_response.output_tokens,
                 )
                 raw_data = ai_response.parsed_json
                 if not raw_data and ai_response.content:

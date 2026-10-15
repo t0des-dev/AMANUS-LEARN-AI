@@ -1,0 +1,27 @@
+questions:
+- question: Quel est le rôle principal du mécanisme d'attention dans les Transformers ?
+  answers:
+  - text: Pondérer dynamiquement l'importance relative de chaque token
+    is_correct: true
+  - text: Réduire la résolution spatiale des tenseurs d'entrée
+    is_correct: false
+  - text: Calculer une moyenne arithmétique simple sans pondération
+    is_correct: false
+  - text: Remplacer l'étape de tokenisation des séquences
+    is_correct: false
+  explanation: L'auto-attention permet de calculer des scores d'affinité entre tous les tokens de la séquence pour focaliser le traitement sur les éléments contextuels clés [1].
+  difficulty: MEDIUM
+  source: 'Chapitre 1 : Auto-attention'
+- question: Quel algorithme d'optimisation est couramment employé pour minimiser la fonction de perte ?
+  answers:
+  - text: Adam ou SGD (Descente de gradient stochastique)
+    is_correct: true
+  - text: L'algorithme de Dijkstra pour les graphes
+    is_correct: false
+  - text: Le clustering non supervisé K-Means
+    is_correct: false
+  - text: La régression linéaire par moindres carrés ordinaires
+    is_correct: false
+  explanation: Les optimiseurs comme Adam ou SGD ajustent itérativement les poids synaptiques par rétropropagation du gradient [2].
+  difficulty: EASY
+  source: 'Chapitre 1 : Optimisation'

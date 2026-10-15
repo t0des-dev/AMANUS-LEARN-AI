@@ -184,15 +184,23 @@ class DocumentGenerateBaseView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
+        from apps.ai.services.orchestration import IdempotencyManager
         from apps.billing.models import UsageMetric
         from apps.billing.services.quota_service import QuotaService
+
+        client_idem_key = IdempotencyManager.extract_key(request)
+        if client_idem_key:
+            cached_res = IdempotencyManager.get_existing_result(client_idem_key)
+            if cached_res:
+                return Response(cached_res, status=status.HTTP_200_OK)
 
         reservation = QuotaService.reserve_quota(
             organization=doc.organization,
             metric=UsageMetric.AI_GENERATIONS,
             amount=1,
             user=request.user,
-            idempotency_key=f"doc_gen_{doc.id}_{generation_method_name}_{uuid.uuid4().hex[:8]}",
+            idempotency_key=client_idem_key
+            or f"doc_gen_{doc.id}_{generation_method_name}_{uuid.uuid4().hex[:8]}",
             estimated_cost_usd=0.010,
         )
 
@@ -217,6 +225,8 @@ class DocumentGenerateBaseView(APIView):
             QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.010)
 
             out_serializer = AIGenerationSerializer(record)
+            if client_idem_key:
+                IdempotencyManager.record_result(client_idem_key, out_serializer.data)
             return Response(out_serializer.data, status=status.HTTP_201_CREATED)
 
         except InsufficientContextError as exc:
@@ -233,7 +243,7 @@ class DocumentGenerateBaseView(APIView):
             QuotaService.release_quota(reservation.id, reason=str(exc))
             logger.exception("AI generation failed for doc %s: %s", doc_id, exc)
             return Response(
-                {"detail": f"Erreur lors de la génération IA : {exc}"},
+                {"detail": "Erreur interne lors de la génération IA.", "code": "generation_failed"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

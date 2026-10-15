@@ -11,7 +11,6 @@ amanus-learn-ai/
 ├── apps/
 │   ├── web/                     # Frontend Next.js (App Router, Tailwind, TypeScript)
 │   └── api/                     # Backend Django REST Framework, Celery, PostgreSQL
-├── workers/                     # Workers Celery spécialisés (Documents, AI, Audio, Slides)
 ├── infrastructure/              # Dockerfiles, Nginx & scripts Postgres
 ├── docs/                        # Architecture, API & suivi des Sprints
 └── docker-compose.yml           # Orchestration locale et production

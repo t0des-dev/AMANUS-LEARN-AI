@@ -1,0 +1,209 @@
+title: 'Cours Complet : Intelligence Artificielle & Ingénierie des Connaissances'
+description: Programme pédagogique complet et structuré couvrant l'intégralité des axes théoriques, méthodologiques et pratiques du document source.
+level: BEGINNER
+learning_objectives:
+- Maîtriser les fondements théoriques et les concepts clés
+- Comprendre les architectures de modèles et les systèmes de recherche vectorielle
+- Mettre en œuvre des solutions fiables, robustes et conformes aux meilleures pratiques
+chapters:
+- title: 'Chapitre 1 : Introduction & Fondements Théoriques'
+  summary: Cadre général, notions fondamentales et définitions indispensables.
+  estimated_minutes: 35
+  sections:
+  - title: 'Leçon 1.1 : Cadre Conceptuel et Définitions Clés'
+    content: '## Cadre Conceptuel Général
+
+
+      Ce premier module établit les bases théoriques indispensables pour appréhender l''ensemble du domaine. En s''appuyant strictement sur les sources documentaires, nous analysons les principes directeurs et la terminologie consacrée [1].
+
+
+      ### Notions Essentielles
+
+      - **Apprentissage Supervisé :** Méthode consistant à entraîner des algorithmes sur des données préalablement labellisées pour établir une fonction prédictive [1].
+
+      - **Représentations Vectorielles (Embeddings) :** Projection géométrique de textes dans un espace multidimensionnel préservant les proximités sémantiques [2].
+
+
+      > **Définition clé :** La fidélité documentaire (groundedness) impose que chaque affirmation produite soit traçable vers un extrait textuel source vérifié.'
+    summary: Assimiler le vocabulaire et les notions théoriques de base.
+    objectives:
+    - Assimiler les notions de base
+    - Distinguer les types d'apprentissage
+    estimated_minutes: 15
+  - title: 'Leçon 1.2 : Cycle de Vie et Structuration des Données'
+    content: '## Le Cycle de Traitement des Données
+
+
+      La qualité d''un système intelligent dépend directement de la rigueur de sa chaîne de traitement des flux documentaires [1].
+
+
+      ### Étapes Clés du Pipeline
+
+      1. **Ingestion et validation formelle :** Contrôle des formats et extraction du texte brut.
+
+      2. **Nettoyage et normalisation :** Élimination des artefacts et filtrage des doublons [2].
+
+      3. **Découpage sémantique (Chunking) :** Préservation de la continuité logique entre paragraphes.
+
+
+      > **Règle méthodologique :** Une traçabilité intégrale des métadonnées (page, chapitre, section) est requise pour toute citation ultérieure.'
+    summary: Comprendre les phases du cycle de vie des données.
+    objectives:
+    - Identifier les étapes de traitement documentaire
+    estimated_minutes: 20
+- title: 'Chapitre 2 : Principes Architecturaux & Modèles'
+  summary: Mécanismes d'attention, modèles Transformers et algorithmes d'optimisation.
+  estimated_minutes: 40
+  sections:
+  - title: 'Leçon 2.1 : Mécanisme d''Auto-Attention et Transformers'
+    content: '## L''Architecture Transformer
+
+
+      Le mécanisme d''auto-attention (Self-Attention) permet au modèle de pondérer l''importance relative de chaque token par rapport à tous les autres au sein d''une même séquence [1].
+
+
+      ### Avantages Déterminants
+
+      - **Parallélisation massive :** Suppression de la dépendance séquentielle des réseaux récurrents traditionnels.
+
+      - **Contexte étendu :** Capture fidèle des relations sémantiques à longue distance [2].
+
+
+      > **Formule pivot :** Le calcul de l''attention repose sur le produit scalaire mis à l''échelle entre les matrices de Requêtes (Queries), Clés (Keys) et Valeurs (Values).'
+    summary: Maîtriser le fonctionnement de l'auto-attention et des Transformers.
+    objectives:
+    - Expliquer le mécanisme d'auto-attention
+    - Comparer Transformers et RNNs
+    estimated_minutes: 20
+  - title: 'Leçon 2.2 : Optimisation et Convergence des Poids'
+    content: '## Algorithmes de Descente de Gradient
+
+
+      L''ajustement itératif des poids synaptiques est gouverné par des optimiseurs adaptatifs tels qu''Adam ou AdamW pour minimiser la fonction de perte [2].
+
+
+      ### Paramètres Critiques
+
+      - **Taux d''apprentissage (Learning Rate) :** Détermine la magnitude des mises à jour des poids.
+
+      - **Taille de lot (Batch Size) :** Équilibre la régularité du gradient et la consommation de mémoire GPU [1].'
+    summary: Comprendre la dynamique d'entraînement et d'optimisation.
+    objectives:
+    - Configurer les hyperparamètres d'entraînement
+    estimated_minutes: 20
+- title: 'Chapitre 3 : Architecture des Systèmes & Recherche Vectorielle (RAG)'
+  summary: Conception des architectures RAG, bases vectorielles et recherche hybride.
+  estimated_minutes: 45
+  sections:
+  - title: 'Leçon 3.1 : Architecture RAG (Génération Augmentée par Récupération)'
+    content: '## Principes Fondamentaux du RAG
+
+
+      Le système RAG associe la précision d''une base de connaissances documentaire indexée à la capacité de rédaction d''un modèle de langage [1].
+
+
+      ### Composants Majeurs de la Chaîne
+
+      1. **Indexation vectorielle :** Stockage des représentations dans pgvector [1].
+
+      2. **Recherche hybride (RRF) :** Combinaison optimale de la recherche lexicale (BM25) et de la recherche dense.
+
+      3. **Réordonnancement (Reranking) :** Réévaluation fine des chunks les plus pertinents avant génération [2].
+
+
+      > **Bonne pratique :** L''application de filtres stricts empêche la génération de réponses non étayées par les sources.'
+    summary: Concevoir des architectures RAG robustes et performantes.
+    objectives:
+    - Concevoir une architecture RAG complète
+    estimated_minutes: 25
+  - title: 'Leçon 3.2 : Stratégies de Découpage et Indexation Vectorielle'
+    content: '## Optimisation du Chunking
+
+
+      Le paramétrage de la taille des segments (Chunk Size) et du chevauchement (Overlap) conditionne la pertinence des extraits transmis au modèle [1].
+
+
+      ### Recommandations Opérationnelles
+
+      - Segments de 600 à 1000 caractères pour préserver les contextes autonomes.
+
+      - Recours à des modèles d''embeddings adaptés à la langue cible [2].'
+    summary: Paramétrer finement le découpage et l'indexation.
+    objectives:
+    - Sélectionner la granularité idéale de chunking
+    estimated_minutes: 20
+- title: 'Chapitre 4 : Mise en Œuvre Pratique & Déploiement'
+  summary: Construction pas à pas de pipelines, gestion des flux et études de cas.
+  estimated_minutes: 40
+  sections:
+  - title: 'Leçon 4.1 : Déploiement d''un Pipeline de RAG en Production'
+    content: '## Implémentation Pratique pas à pas
+
+
+      Cette leçon détaille l''enchaînement opérationnel : extraction OCR, vectorisation et configuration des workers Celery [1].
+
+
+      ### Déroulement Opérationnel
+
+      1. Réception et validation du document source.
+
+      2. Ingestion asynchrone et découpage par paragraphes.
+
+      3. Stockage et calcul des embeddings pgvector [2].'
+    summary: Déployer un pipeline documentaire de bout en bout.
+    objectives:
+    - Configurer un pipeline RAG fonctionnel
+    estimated_minutes: 20
+  - title: 'Leçon 4.2 : Sécurité, Isolation Multi-Tenant et Quotas'
+    content: '## Robustesse et Isolation des Données
+
+
+      Dans un environnement multi-tenant, chaque organisation dispose d''un espace logique hermétique et de quotas de jetons stricts [1].
+
+
+      ### Mesures de Sécurité
+
+      - Isolation au niveau base de données par organisation [2].
+
+      - Limitation de débit (Rate Limiting) sur les endpoints de génération.'
+    summary: Garantir la sécurité et l'isolation des données d'entreprise.
+    objectives:
+    - Appliquer l'isolation des données multi-tenant
+    estimated_minutes: 20
+- title: 'Chapitre 5 : Évaluation, Contrôle Qualité & Perspectives'
+  summary: Audit qualité, métriques de fidélité documentaire et bilan des acquis.
+  estimated_minutes: 35
+  sections:
+  - title: 'Leçon 5.1 : Métriques d''Évaluation de la Fidélité Documentaire'
+    content: '## Contrôle Qualité et Mesure de la Fidélité
+
+
+      L''évaluation continue garantit que les réponses générées sont strictement conformes aux sources [1].
+
+
+      ### Métriques Majeures
+
+      - **Fidélité (Faithfulness) :** Taux d''affirmations sourcées dans le contexte.
+
+      - **Pertinence de la réponse (Answer Relevance) :** Adéquation directe avec la requête utilisateur [2].'
+    summary: Mesurer et auditer la qualité des réponses générées.
+    objectives:
+    - Auditer la fidélité documentaire d'un système IA
+    estimated_minutes: 15
+  - title: 'Leçon 5.2 : Synthèse Globale et Validation des Acquis'
+    content: '## Bilan et Synthèse Pédagogique
+
+
+      Cette leçon clôture le parcours en consolidant les compétences acquises à travers l''ensemble des modules [1].
+
+
+      ### Points d''Ancrage
+
+      - Maîtrise des principes théoriques et des architectures Transformers.
+
+      - Mise en pratique concrète et déploiement de solutions robustes [2].'
+    summary: Consolider les acquis et valider les compétences.
+    objectives:
+    - Valider l'ensemble des compétences du cours
+    estimated_minutes: 20
+conclusion: Bilan pédagogique complet et consolidation des compétences acquises.

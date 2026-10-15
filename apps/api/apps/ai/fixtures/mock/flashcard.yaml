@@ -1,0 +1,11 @@
+title: Fiche de Révision Synthétique
+definitions:
+- term: Attention
+  definition: Pondération dynamique des représentations [1].
+key_formulas_or_rules:
+- Softmax(QK^T / sqrt(d_k))V
+frequent_mistakes:
+- Oublier le facteur d'échelle sqrt(d_k)
+quick_qa:
+- question: Quel est le rôle du scaling factor ?
+  answer: Éviter la saturation du softmax.

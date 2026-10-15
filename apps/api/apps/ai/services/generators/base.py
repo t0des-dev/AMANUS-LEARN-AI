@@ -3,8 +3,10 @@ import json
 import logging
 from typing import Any
 
+from apps.billing.services.quota_service import QuotaService
 from apps.documents.models import Document
 from apps.ingestion.models import DocumentChunk
+from config.metrics import timed_ai_call
 
 from ..citation_builder import CitationBuilder
 from ..context_builder import ContextBuilder
@@ -173,11 +175,17 @@ class BaseGenerator(abc.ABC):
         )
 
         # Step 3: Invoke AI Provider (Strictly structured JSON)
-        ai_response = provider.generate(
-            prompt=user_prompt,
-            system_instruction=system_inst,
-            model=model,
-            response_format="json",
+        with timed_ai_call(provider=provider.name, operation=self.generation_type):
+            ai_response = provider.generate(
+                prompt=user_prompt,
+                system_instruction=system_inst,
+                model=model,
+                response_format="json",
+            )
+        QuotaService.consume_tokens(
+            document.organization,
+            ai_response.input_tokens,
+            ai_response.output_tokens,
         )
 
         # Step 4: Extract and enrich structured result with citations and metadata

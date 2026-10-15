@@ -7,9 +7,7 @@ import {
   OrganizationUpdatePayload,
 } from "../types/organization";
 
-import { getApiBaseUrl } from "./apiClient";
-import { authStorage } from "../lib/authTokens";
-import { authService } from "./authService";
+import { getApiBaseUrl, authedRequest } from "./apiClient";
 
 interface PaginatedResponse<T> {
   count: number;
@@ -23,60 +21,7 @@ async function orgFetch<T>(
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
-  let currentToken = token;
-  let response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${currentToken}`,
-      ...options.headers,
-    },
-  });
-
-  if (response.status === 401) {
-    const tokens = authStorage.getTokens();
-    if (tokens?.refresh) {
-      try {
-        const res = await authService.refresh(tokens.refresh);
-        authStorage.setTokens({
-          access: res.access,
-          refresh: res.refresh || tokens.refresh,
-        });
-        currentToken = res.access;
-        response = await fetch(url, {
-          ...options,
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${currentToken}`,
-            ...options.headers,
-          },
-        });
-      } catch {
-        authStorage.clear();
-      }
-    }
-  }
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    let errorMessage = "Une erreur est survenue.";
-    if (typeof data.detail === "string") {
-      errorMessage = data.detail;
-    } else if (typeof data.message === "string") {
-      errorMessage = data.message;
-    } else if (typeof data === "object" && data !== null) {
-      const firstKey = Object.keys(data)[0];
-      if (firstKey && Array.isArray(data[firstKey])) {
-        errorMessage = `${firstKey}: ${data[firstKey].join(" ")}`;
-      }
-    }
-    throw new Error(errorMessage);
-  }
-
-  return data as T;
+  return authedRequest<T>(endpoint, options, token, "Une erreur est survenue.");
 }
 
 export const organizationService = {

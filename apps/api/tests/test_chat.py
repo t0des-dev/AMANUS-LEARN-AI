@@ -15,7 +15,7 @@ from apps.chat.services.pedagogical_commands import (
 )
 from apps.documents.models import Document, DocumentStatus
 from apps.ingestion.models import DocumentChunk, DocumentPage
-from apps.organizations.models import Organization, OrganizationMember, RoleChoices
+from apps.organizations.models import Organization, OrganizationMember, PlanChoices, RoleChoices
 
 User = get_user_model()
 
@@ -110,7 +110,8 @@ class ChatSessionAndRAGIntegrationTests(APITestCase):
             password="PasswordAlpha123!",
             first_name="Alice",
         )
-        self.org_a = Organization.objects.create(name="Alpha Edu Corp")
+        # ENTERPRISE plan so chat quota tests are not throttled by FREE daily limits
+        self.org_a = Organization.objects.create(name="Alpha Edu Corp", plan=PlanChoices.ENTERPRISE)
         self.member_a = OrganizationMember.objects.create(
             organization=self.org_a,
             user=self.user_a,
@@ -161,7 +162,7 @@ class ChatSessionAndRAGIntegrationTests(APITestCase):
             password="PasswordBeta123!",
             first_name="Bob",
         )
-        self.org_b = Organization.objects.create(name="Beta Edu Corp")
+        self.org_b = Organization.objects.create(name="Beta Edu Corp", plan=PlanChoices.ENTERPRISE)
         self.member_b = OrganizationMember.objects.create(
             organization=self.org_b,
             user=self.user_b,
@@ -430,3 +431,54 @@ class ChatSessionAndRAGIntegrationTests(APITestCase):
             self.assertEqual(res.data["user_message"]["command"], expected_cmd)
             self.assertEqual(res.data["assistant_message"]["command"], expected_cmd)
             self.assertGreater(len(res.data["assistant_message"]["sources"]), 0)
+
+
+class ChatQuotaEnforcementTests(APITestCase):
+    """Verifies chat messages consume the AI-generation quota and are rejected with 429 when exhausted."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="free-user@chat-quota.com",
+            password="PasswordFree123!",
+            first_name="Free",
+        )
+        self.org = Organization.objects.create(name="Free Plan Org", plan=PlanChoices.FREE)
+        OrganizationMember.objects.create(
+            organization=self.org, user=self.user, role=RoleChoices.OWNER
+        )
+        self.doc = Document.objects.create(
+            organization=self.org,
+            owner=self.user,
+            title="Support pédagogique",
+            file_name="support.pdf",
+            file_type="pdf",
+            file_size=1024,
+            storage_key="docs/support.pdf",
+            status=DocumentStatus.READY,
+        )
+        self.session = ChatSession.objects.create(
+            organization=self.org, user=self.user, document=self.doc, title="Quota Session"
+        )
+        token = str(RefreshToken.for_user(self.user).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+        self.url = reverse("v1:chat:session-messages", kwargs={"id": self.session.id})
+
+    def test_chat_message_consumes_quota_and_returns_429_when_exhausted(self):
+        from apps.billing.models import QuotaReservation, ReservationStatus, UsageMetric
+
+        # FREE plan user daily limit for ai_generations is 5 → the 6th must fail
+        for i in range(5):
+            res = self.client.post(self.url, {"content": f"Question numero {i}"}, format="json")
+            self.assertEqual(res.status_code, status.HTTP_201_CREATED, res.data)
+
+        res = self.client.post(self.url, {"content": "Question au dela du quota"}, format="json")
+        self.assertEqual(res.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn("quota", str(res.data.get("detail", "")).lower())
+
+        # Quota was actually consumed (committed reservations recorded)
+        committed = QuotaReservation.objects.filter(
+            organization=self.org,
+            metric=UsageMetric.AI_GENERATIONS,
+            status=ReservationStatus.COMMITTED,
+        ).count()
+        self.assertEqual(committed, 5)

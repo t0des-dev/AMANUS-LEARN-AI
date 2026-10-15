@@ -1,0 +1,7 @@
+key_points:
+- point: Principe d'attention
+  explanation: Mécanisme central permettant de pondérer les tokens.
+- point: Rétropropagation
+  explanation: Algorithme d'optimisation par descente de gradient.
+- point: Normalisation
+  explanation: Standardisation des distributions internes du réseau.

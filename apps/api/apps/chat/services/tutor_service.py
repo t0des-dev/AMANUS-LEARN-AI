@@ -11,7 +11,9 @@ from apps.ai.services import (
     Retriever,
     get_ai_provider,
 )
+from apps.billing.services.quota_service import QuotaService
 from apps.documents.models import Document
+from config.metrics import timed_ai_call
 
 from ..models import ChatMessage, ChatSession, MessageRole
 from .pedagogical_commands import detect_pedagogical_command, get_command_instruction
@@ -206,11 +208,20 @@ class AITutorService:
             input_tokens = len(prompt.split())
             output_tokens = len(assistant_content.split())
         else:
-            response = self.ai_provider.generate(
-                prompt=prompt,
-                system_instruction=system_instruction,
-                temperature=0.2,
-                max_tokens=2500,
+            with timed_ai_call(
+                provider=getattr(self.ai_provider, "name", "unknown"),
+                operation="chat_tutor",
+            ):
+                response = self.ai_provider.generate(
+                    prompt=prompt,
+                    system_instruction=system_instruction,
+                    temperature=0.2,
+                    max_tokens=2500,
+                )
+            QuotaService.consume_tokens(
+                session.organization,
+                response.input_tokens,
+                response.output_tokens,
             )
             assistant_content = response.content
             input_tokens = response.input_tokens

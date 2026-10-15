@@ -76,3 +76,10 @@ redis_data/
 *.sha256
 logs/
 
+# SSL certificates / private keys (never commit)
+infrastructure/nginx/ssl/live/*
+!infrastructure/nginx/ssl/live/.gitkeep
+*.pem
+*.key
+!*.key.example
+

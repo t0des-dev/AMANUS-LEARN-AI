@@ -7,42 +7,14 @@ import {
   SummaryResult,
 } from "../types/generation";
 
-import { getApiBaseUrl } from "./apiClient";
+import { authedRequest } from "./apiClient";
 
 async function generationFetch<T>(
   endpoint: string,
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-    ...(options.headers as Record<string, string>),
-  };
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    let errorDetail = `Erreur HTTP ${response.status}`;
-    try {
-      const errorJson = await response.json();
-      errorDetail =
-        errorJson.detail ||
-        errorJson.message ||
-        JSON.stringify(errorJson);
-    } catch {
-      // Keep default
-    }
-    throw new Error(errorDetail);
-  }
-
-  return response.json() as Promise<T>;
+  return authedRequest<T>(endpoint, options, token);
 }
 
 export const generationService = {

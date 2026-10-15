@@ -10,6 +10,13 @@ from .base import *
 
 ENVIRONMENT = "staging"
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        "ALLOWED_HOSTS", "staging.amanuslearn.com,api-staging.amanuslearn.com,localhost"
+    ).split(",")
+    if host.strip()
+]
 
 # Security settings (parity with production)
 SECURE_BROWSER_XSS_FILTER = True

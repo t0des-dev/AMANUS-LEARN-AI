@@ -266,15 +266,22 @@ class QuizGenerateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        from apps.ai.services.orchestration import IdempotencyManager
         from apps.billing.models import UsageMetric
         from apps.billing.services.quota_service import QuotaService
+
+        client_idem_key = IdempotencyManager.extract_key(request)
+        if client_idem_key:
+            cached_res = IdempotencyManager.get_existing_result(client_idem_key)
+            if cached_res:
+                return Response(cached_res, status=status.HTTP_200_OK)
 
         reservation = QuotaService.reserve_quota(
             organization=quiz.organization,
             metric=UsageMetric.QUIZZES,
             amount=1,
             user=request.user,
-            idempotency_key=f"quiz_gen_{quiz.id}_{uuid.uuid4().hex[:8]}",
+            idempotency_key=client_idem_key or f"quiz_gen_{quiz.id}_{uuid.uuid4().hex[:8]}",
             estimated_cost_usd=0.008,
         )
 
@@ -294,11 +301,14 @@ class QuizGenerateView(APIView):
             QuotaService.commit_quota(reservation.id, actual_amount=1, actual_cost_usd=0.008)
 
             out_serializer = QuizDetailSerializer(quiz, context={"request": request})
+            response_payload = {
+                "quiz": out_serializer.data,
+                "generated_count": len(created_questions),
+            }
+            if client_idem_key:
+                IdempotencyManager.record_result(client_idem_key, response_payload)
             return Response(
-                {
-                    "quiz": out_serializer.data,
-                    "generated_count": len(created_questions),
-                },
+                response_payload,
                 status=status.HTTP_200_OK,
             )
         except InvalidQuizQuestionError as val_err:
@@ -311,7 +321,7 @@ class QuizGenerateView(APIView):
             QuotaService.release_quota(reservation.id, reason=str(exc))
             logger.exception("Quiz generation error: %s", exc)
             return Response(
-                {"detail": f"Erreur lors de la génération IA : {exc}"},
+                {"detail": "Erreur lors de la génération IA du quiz.", "code": "generation_failed"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

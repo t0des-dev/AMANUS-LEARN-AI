@@ -80,25 +80,3 @@ export interface StudentPerformanceItem {
   started_at: string | null;
   last_activity_at: string;
 }
-
-export interface DifficultQuestionItem {
-  question_id: string;
-  question_text: string;
-  order: number;
-  difficulty: string;
-  total_answers: number;
-  wrong_answers: number;
-  error_rate_percent: number;
-}
-
-export interface QuizAnalyticsResponse {
-  quiz_id: string;
-  quiz_title: string;
-  course_id: string | null;
-  course_title: string | null;
-  total_attempts: number;
-  distinct_students_count: number;
-  average_score: number;
-  pass_rate: number;
-  difficult_questions: DifficultQuestionItem[];
-}

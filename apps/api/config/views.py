@@ -1,9 +1,21 @@
 """Core views for Amanus Learn AI API."""
 
+from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiResponse, extend_schema
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+def metrics_view(request):
+    """Prometheus scrape endpoint.
+
+    Plain Django response (not part of the OpenAPI contract). Served on the
+    internal Docker network only: nginx never routes /metrics to the API.
+    Metrics carry no user, organization or document identifiers.
+    """
+    return HttpResponse(generate_latest(), content_type=CONTENT_TYPE_LATEST)
 
 
 class HealthCheckView(APIView):

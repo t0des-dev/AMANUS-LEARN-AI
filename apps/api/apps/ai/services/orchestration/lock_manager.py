@@ -4,6 +4,7 @@ import time
 from typing import Any
 
 from django.core.cache import cache
+from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,20 @@ class IdempotencyManager:
     """Stores and checks idempotency keys to prevent duplicate execution upon network retries."""
 
     DEFAULT_TTL_SECONDS = 86400  # 24 hours
+
+    @classmethod
+    def extract_key(cls, request: Request) -> str | None:
+        """Extracts a client-supplied idempotency key from headers or query params.
+
+        Returns None if not supplied (caller should then generate an ephemeral key
+        that provides no replay protection, preserving previous behavior for
+        clients that do not opt in).
+        """
+        return (
+            request.headers.get("Idempotency-Key")
+            or request.query_params.get("idempotency_key")
+            or None
+        )
 
     @classmethod
     def _make_key(cls, idempotency_key: str) -> str:

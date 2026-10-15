@@ -12,6 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('documents', '0002_document_error_message_document_processing_metadata_and_more'),
+        ('ingestion', '0000_enable_vector_extension'),
     ]
 
     operations = [

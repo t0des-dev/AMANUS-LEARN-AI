@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -18,10 +19,22 @@ if (ROOT_DIR / ".env").is_file():
 elif (BASE_DIR / ".env").is_file():
     load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-amanus-learn-ai-default-dev-key")
+_INSECURE_DEV_KEY = "django-insecure-amanus-learn-ai-default-dev-key"
+SECRET_KEY = os.getenv("SECRET_KEY", _INSECURE_DEV_KEY)
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = ["*"]
+# Fail fast in non-debug if SECRET_KEY was not provided (prevents predictable signing key in prod).
+if not DEBUG and (not SECRET_KEY or SECRET_KEY == _INSECURE_DEV_KEY):
+    raise ImproperlyConfigured(
+        "SECRET_KEY must be set to a strong value when DEBUG is False. "
+        "Generate one with: python -c \"from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())\""
+    )
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -38,6 +51,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "drf_spectacular",
     "pgvector.django",
@@ -178,7 +192,7 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -204,7 +218,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("JWT_ACCESS_MINUTES", "60"))),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_DAYS", "7"))),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
@@ -223,6 +237,13 @@ SPECTACULAR_SETTINGS = {
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# AI provider: allow deterministic mock fallback only in DEBUG by default.
+# Set ALLOW_MOCK_AI_PROVIDER=True/False explicitly to override (e.g. demo envs).
+_allow_mock_env = os.getenv("ALLOW_MOCK_AI_PROVIDER")
+ALLOW_MOCK_AI_PROVIDER: bool | None = (
+    _allow_mock_env.lower() in ("true", "1", "yes") if _allow_mock_env is not None else None
+)
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
@@ -234,6 +255,19 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Celery & Redis Configuration
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+# Cache Configuration (used by DRF throttling, session store, app-level caching)
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.getenv("REDIS_CACHE_URL", REDIS_URL),
+    }
+}
+
+# Read-through embedding cache TTL in seconds (default 7 days). Embeddings are
+# deterministic per (model, text), so entries can be reused safely.
+EMBEDDING_CACHE_TTL = int(os.getenv("EMBEDDING_CACHE_TTL", 60 * 60 * 24 * 7))
+
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/1")
 CELERY_ACCEPT_CONTENT = ["json"]

@@ -1,0 +1,200 @@
+title: 'Comprehensive Course: Artificial Intelligence & Knowledge Systems'
+description: Full structured educational curriculum covering theoretical, architectural, and practical aspects grounded strictly in source documents.
+level: BEGINNER
+learning_objectives:
+- Understand foundational theories and core concepts
+- Analyze neural architectures and vector retrieval systems
+- Implement production-grade pipelines following industry best practices
+chapters:
+- title: 'Chapter 1: Introduction & Theoretical Foundations'
+  summary: Foundational concepts, industry terminology, and theoretical groundwork.
+  estimated_minutes: 35
+  sections:
+  - title: 'Lesson 1.1: Conceptual Framework & Core Definitions'
+    content: '## Conceptual Groundwork
+
+
+      This introductory module establishes the essential technical foundations based on the source document [1].
+
+
+      ### Key Pillars
+
+      - **Supervised Learning:** Training models on verified labeled pairs to establish predictive mappings [1].
+
+      - **Vector Representations (Embeddings):** Geometric mapping of text tokens into continuous multidimensional manifolds preserving semantic affinity [2].
+
+
+      > **Core Axiom:** System answers must be verifiable against source document citations.'
+    summary: Grasping core terminology and theoretical foundations.
+    objectives:
+    - Understand foundational concepts
+    - Differentiate learning paradigms
+    estimated_minutes: 15
+  - title: 'Lesson 1.2: Data Ingestion & Lifecycle Management'
+    content: '## The Data Processing Pipeline
+
+
+      High-performing systems require deterministic ingestion and strict chunking boundaries [1].
+
+
+      ### Critical Pipeline Stages
+
+      1. Ingestion and file validation.
+
+      2. Normalization and artifact removal [2].
+
+      3. Semantic chunking with overlap protection.'
+    summary: Mastering the end-to-end data lifecycle.
+    objectives:
+    - Map out document processing pipelines
+    estimated_minutes: 20
+- title: 'Chapter 2: Neural Architectures & Attention Mechanisms'
+  summary: Transformer internals, multi-head self-attention, and training dynamics.
+  estimated_minutes: 40
+  sections:
+  - title: 'Lesson 2.1: Self-Attention & Transformer Mechanics'
+    content: '## Inside the Transformer
+
+
+      Self-attention dynamically computes affinity weights across tokens regardless of their relative distance [1].
+
+
+      ### Distinct Advantages
+
+      - **Full parallelization:** Eliminating sequential constraints of recurrence.
+
+      - **Long-context capture:** Retaining long-range dependencies accurately [2].'
+    summary: Understanding self-attention mechanics and Transformers.
+    objectives:
+    - Explain self-attention calculations
+    - Compare Transformers against RNNs
+    estimated_minutes: 20
+  - title: 'Lesson 2.2: Optimization Dynamics & Loss Minimization'
+    content: '## Loss Landscapes and Optimizers
+
+
+      Weight updates are guided by adaptive gradient descent optimizers including Adam and AdamW [2].
+
+
+      ### Critical Hyperparameters
+
+      - **Learning Rate:** Governs the magnitude of parameter updates.
+
+      - **Batch Size:** Dictates gradient variance and memory bandwidth [1].'
+    summary: Calibrating optimization parameters and training runs.
+    objectives:
+    - Configure model training hyper-parameters
+    estimated_minutes: 20
+- title: 'Chapter 3: System Architecture & Vector Search (RAG)'
+  summary: RAG architecture, vector databases, hybrid search, and reranking pipelines.
+  estimated_minutes: 45
+  sections:
+  - title: 'Lesson 3.1: Hybrid Search & RAG Architecture'
+    content: '## RAG System Engineering
+
+
+      Retrieval-Augmented Generation connects generative models to grounded external vector stores to eliminate hallucinations [1].
+
+
+      ### Architectural Layers
+
+      1. Document parsing and semantic chunking.
+
+      2. Vector indexing with PostgreSQL pgvector [1].
+
+      3. Cross-encoder reranking and source citation enforcement [2].'
+    summary: Designing reliable, zero-hallucination RAG pipelines.
+    objectives:
+    - Build production-grade retrieval architectures
+    estimated_minutes: 25
+  - title: 'Lesson 3.2: Chunking Strategies & Vector Optimization'
+    content: '## Ingestion Parameter Optimization
+
+
+      Optimal chunk size and overlap prevent context fragmentation while retaining fine-grained factual accuracy [1].
+
+
+      ### Best Practices
+
+      - Medium chunks (500–800 characters) balance semantic coherence.
+
+      - Dense embeddings preserve cross-lingual relationships [2].'
+    summary: Calibrating chunk boundaries for optimal retrieval precision.
+    objectives:
+    - Select optimal chunking parameters
+    estimated_minutes: 20
+- title: 'Chapter 4: Practical Implementation & Case Studies'
+  summary: Real-world deployment scenarios, pipeline testing, and engineering challenges.
+  estimated_minutes: 40
+  sections:
+  - title: 'Lesson 4.1: Building Ingestion Pipelines Hands-On'
+    content: '## Concrete Pipeline Implementation
+
+
+      A full walkthrough from PDF parsing to vector persistence and query validation [1].
+
+
+      ### Step-by-Step Procedure
+
+      1. Ingest documents and validate MIME boundaries.
+
+      2. Generate embeddings and populate indices [2].
+
+      3. Run benchmark queries and verify top-k relevancy.'
+    summary: Implementing end-to-end ingestion and vector search.
+    objectives:
+    - Execute end-to-end ingestion successfully
+    estimated_minutes: 20
+  - title: 'Lesson 4.2: Enterprise Multitenancy & Scaling'
+    content: '## Production Hardening
+
+
+      Operating in a multi-tenant environment requires strict logical tenant isolation, atomic quotas, and concurrency locks [2].
+
+
+      ### Hardening Patterns
+
+      - Rate limiting at API gateways [1].
+
+      - Background async job distribution via Celery workers.'
+    summary: Addressing scaling bottlenecks in enterprise deployments.
+    objectives:
+    - Enforce multi-tenant data isolation
+    estimated_minutes: 20
+- title: 'Chapter 5: Evaluation, Quality Assurance & Best Practices'
+  summary: Evaluation metrics, benchmark datasets, and ongoing governance.
+  estimated_minutes: 35
+  sections:
+  - title: 'Lesson 5.1: Automated Evaluation & Groundedness Metrics'
+    content: '## Measuring System Quality
+
+
+      Accurate evaluation relies on quantifiable metrics: Faithfulness, Answer Relevance, and Context Recall [1].
+
+
+      ### Benchmarking Targets
+
+      - Hallucination rate: strictly 0% on factual queries.
+
+      - Latency: sub-second for cached retrieval [2].'
+    summary: Mastering evaluation frameworks and benchmark metrics.
+    objectives:
+    - Measure retrieval faithfulness accurately
+    estimated_minutes: 15
+  - title: 'Lesson 5.2: Synthesis and Roadmap for Continuous Learning'
+    content: '## Course Synthesis
+
+
+      This comprehensive curriculum synthesizes all foundational, architectural, and practical topics covered throughout the source document [1].
+
+
+      ### Key Takeaways
+
+      - Grounded systems outperform unbounded generation in reliability.
+
+      - Modular design guarantees seamless model upgrades [2].'
+    summary: Comprehensive recap of learning achievements.
+    objectives:
+    - Consolidate learning into actionable engineering plans
+    estimated_minutes: 20
+conclusion: Synthesis of learning outcomes and actionable engineering takeaways.

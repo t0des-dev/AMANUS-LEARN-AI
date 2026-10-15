@@ -33,12 +33,6 @@ amanus-learn-ai/
 │       │   └── notifications/  # Notifications in-app, webhooks & emails
 │       └── manage.py
 │
-├── workers/                     # Tâches d'arrière-plan Celery distribuées
-│   ├── document_worker/         # Extraction OCR & chunking
-│   ├── ai_worker/               # Embeddings & inférence LLM
-│   ├── audio_worker/            # Synthèse vocale & rendu audio
-│   └── slide_worker/            # Construction des présentations
-│
 ├── infrastructure/              # Conteneurs et orchestrations
 │   ├── docker/                  # Dockerfiles (api, web, worker) & scripts d'entrée
 │   ├── nginx/                   # Reverse-proxy Nginx avec routage /api et front

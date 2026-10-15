@@ -8,7 +8,7 @@ global:
 
 scrape_configs:
   - job_name: 'amanus_api'
-    metrics_path: '/api/v1/health'
+    metrics_path: '/metrics'
     static_configs:
       - targets: ['api:8000']
 

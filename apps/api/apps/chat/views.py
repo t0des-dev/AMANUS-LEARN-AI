@@ -8,6 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.billing.models import UsageMetric
+from apps.billing.services.quota_service import QuotaService
 from apps.organizations.models import Organization
 
 from .models import ChatSession
@@ -22,6 +24,28 @@ from .serializers import (
 from .services import PEDAGOGICAL_COMMANDS, AITutorService
 
 logger = logging.getLogger(__name__)
+
+CHAT_GENERATION_COST_USD = 0.004
+
+
+def _quota_managed_stream(stream_gen, reservation_id):
+    """Wraps the tutor SSE stream so the chat quota reservation is always resolved.
+
+    - Normal completion → commit the reservation.
+    - Client disconnect (GeneratorExit) or any error → release it.
+    """
+    try:
+        yield from stream_gen
+    except GeneratorExit:
+        QuotaService.release_quota(reservation_id, reason="client_disconnected")
+        raise
+    except Exception as exc:
+        QuotaService.release_quota(reservation_id, reason=str(exc))
+        raise
+    else:
+        QuotaService.commit_quota(
+            reservation_id, actual_amount=1, actual_cost_usd=CHAT_GENERATION_COST_USD
+        )
 
 
 class ChatSessionListCreateView(generics.ListCreateAPIView):
@@ -113,6 +137,15 @@ class ChatMessageCreateView(APIView):
 
         tutor = AITutorService()
 
+        # Reserve one AI-generation unit for this chat message (raises 429 if quota exhausted)
+        reservation = QuotaService.reserve_quota(
+            organization=session.organization,
+            metric=UsageMetric.AI_GENERATIONS,
+            amount=1,
+            user=request.user,
+            estimated_cost_usd=CHAT_GENERATION_COST_USD,
+        )
+
         if is_stream:
             stream_gen = tutor.process_message_stream(
                 session=session,
@@ -121,7 +154,7 @@ class ChatMessageCreateView(APIView):
                 document_id=str(document_id) if document_id else None,
             )
             response = StreamingHttpResponse(
-                stream_gen,
+                _quota_managed_stream(stream_gen, reservation.id),
                 content_type="text/event-stream; charset=utf-8",
             )
             response["Cache-Control"] = "no-cache"
@@ -129,11 +162,19 @@ class ChatMessageCreateView(APIView):
             return response
 
         # Non-streaming synchronous response
-        user_msg, assistant_msg = tutor.process_message_sync(
-            session=session,
-            user_content=content,
-            explicit_command=command,
-            document_id=str(document_id) if document_id else None,
+        try:
+            user_msg, assistant_msg = tutor.process_message_sync(
+                session=session,
+                user_content=content,
+                explicit_command=command,
+                document_id=str(document_id) if document_id else None,
+            )
+        except Exception as exc:
+            QuotaService.release_quota(reservation.id, reason=str(exc))
+            raise
+
+        QuotaService.commit_quota(
+            reservation.id, actual_amount=1, actual_cost_usd=CHAT_GENERATION_COST_USD
         )
 
         return Response(

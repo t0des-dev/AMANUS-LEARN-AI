@@ -18,7 +18,6 @@ RUN pip install --upgrade pip && \
     pip install -r /app/apps/api/requirements.txt
 
 COPY apps/api /app/apps/api
-COPY workers /app/workers
 
 WORKDIR /app/apps/api
 

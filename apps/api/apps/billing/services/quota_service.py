@@ -6,9 +6,11 @@ their active subscription plan.
 """
 
 import logging
+import threading
+from contextlib import contextmanager
 from typing import Any
 
-from django.db import models, transaction
+from django.db import connection, models, transaction
 from django.db.models import F
 from django.utils import timezone
 from rest_framework import status
@@ -25,8 +27,41 @@ from apps.billing.models import (
     UsageMetric,
     UsageRecord,
 )
+from config.metrics import observe_quota_commit, observe_quota_reservation
 
 logger = logging.getLogger(__name__)
+
+# SQLite (shared-cache in-memory test databases) cannot honour concurrent row
+# locking like PostgreSQL: parallel read/write transactions abort immediately
+# with SQLITE_LOCKED ("database table is locked") instead of waiting. Serialise
+# quota transactions on SQLite only so the test suite behaves like Postgres row
+# locks. Production (PostgreSQL) path is untouched.
+_SQLITE_QUOTA_LOCK = threading.RLock()
+
+
+@contextmanager
+def _atomic_quota():
+    if connection.vendor == "sqlite":
+        with _SQLITE_QUOTA_LOCK:
+            with transaction.atomic():
+                yield
+    else:
+        with transaction.atomic():
+            yield
+
+
+# Metrics whose reservations consume the plan's LLM token budget
+# (PLAN_QUOTAS["tokens"]: FREE 50k, PRO 1M, BUSINESS 10M, ENTERPRISE unlimited).
+# Upload/storage metrics (documents, pages, storage) never trigger LLM spend.
+TOKEN_BUDGET_METRICS = frozenset(
+    {
+        UsageMetric.AI_GENERATIONS,
+        UsageMetric.SLIDES,
+        UsageMetric.QUIZZES,
+        UsageMetric.AUDIO_MINUTES,
+        UsageMetric.TOKENS,
+    }
+)
 
 
 class QuotaExceededException(APIException):
@@ -222,7 +257,7 @@ class QuotaService:
 
         safe_key = idempotency_key or f"res_{_uuid.uuid4().hex}"
 
-        with transaction.atomic():
+        with _atomic_quota():
             # 1. Idempotency replay check
             existing = QuotaReservation.objects.filter(idempotency_key=safe_key).first()
             if existing:
@@ -231,6 +266,31 @@ class QuotaService:
                         f"Reusing existing reservation {existing.id} (key={safe_key}, status={existing.status})"
                     )
                     return existing
+
+            # 2. Plan-level LLM token budget enforcement. Token spend is recorded
+            # post-hoc by consume_tokens(); this blocks any further AI generation
+            # reservation once the budget is exhausted.
+            if metric in TOKEN_BUDGET_METRICS:
+                token_limit = cls.get_quota_limit(organization, UsageMetric.TOKENS)
+                if token_limit != -1:
+                    tokens_used = cls.get_current_usage(organization, UsageMetric.TOKENS)
+                    if tokens_used >= token_limit:
+                        logger.warning(
+                            f"Token budget exhausted: org={organization.id} metric={metric} "
+                            f"tokens_used={tokens_used} limit={token_limit}"
+                        )
+                        observe_quota_reservation(metric=metric, outcome="rejected")
+                        raise QuotaExceededException(
+                            metric=UsageMetric.TOKENS,
+                            current=tokens_used,
+                            limit=token_limit,
+                            requested=1,
+                            detail=(
+                                f"Budget de tokens du plan épuisé ({token_limit} tokens). "
+                                f"Consommation actuelle : {tokens_used} tokens. "
+                                "Veuillez mettre à niveau votre abonnement."
+                            ),
+                        )
 
             limit = cls.get_quota_limit(organization, metric)
             record, _ = UsageRecord.objects.select_for_update().get_or_create(
@@ -255,6 +315,7 @@ class QuotaService:
                     f"Quota reservation rejected: org={organization.id} metric={metric} "
                     f"effective={effective} limit={limit} requested={amount}"
                 )
+                observe_quota_reservation(metric=metric, outcome="rejected")
                 raise QuotaExceededException(
                     metric=metric,
                     current=effective,
@@ -281,6 +342,7 @@ class QuotaService:
                 f"Quota reserved: id={reservation.id} org={organization.id} "
                 f"metric={metric} amount={amount} key={safe_key}"
             )
+            observe_quota_reservation(metric=metric, outcome="allowed")
             return reservation
 
     @classmethod
@@ -295,7 +357,7 @@ class QuotaService:
 
         Idempotent: committing an already committed reservation returns without double counting.
         """
-        with transaction.atomic():
+        with _atomic_quota():
             res_id = reservation.id if hasattr(reservation, "id") else reservation
             res = QuotaReservation.objects.select_for_update().get(id=res_id)
 
@@ -333,6 +395,7 @@ class QuotaService:
             logger.info(
                 f"Quota committed: id={res.id} org={res.organization_id} amount={final_amount}"
             )
+            observe_quota_commit(metric=res.metric, outcome="committed")
             return res
 
     @classmethod
@@ -342,7 +405,7 @@ class QuotaService:
         reason: str = "failed",
     ) -> QuotaReservation:
         """Release or refund quota when generation fails or is cancelled."""
-        with transaction.atomic():
+        with _atomic_quota():
             res_id = reservation.id if hasattr(reservation, "id") else reservation
             res = QuotaReservation.objects.select_for_update().get(id=res_id)
 
@@ -377,7 +440,39 @@ class QuotaService:
             res.updated_at = timezone.now()
             res.save(update_fields=["status", "error_detail", "updated_at"])
             logger.info(f"Quota released: id={res.id} reason={reason}")
+            observe_quota_commit(metric=res.metric, outcome="released")
             return res
+
+    @classmethod
+    def consume_tokens(
+        cls,
+        organization,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+    ) -> int:
+        """Record actual LLM token spend against the organization's plan budget.
+
+        Never raises: the tokens were already spent by the provider. Enforcement
+        happens on the next reserve_quota() call for an AI-generative metric.
+        Returns the number of tokens recorded.
+        """
+        total = max(0, int(input_tokens or 0)) + max(0, int(output_tokens or 0))
+        if total <= 0:
+            return 0
+        with _atomic_quota():
+            record, _ = UsageRecord.objects.get_or_create(
+                organization=organization,
+                metric=UsageMetric.TOKENS,
+                defaults={"quantity": 0, "period_start": timezone.now()},
+            )
+            record.quantity = F("quantity") + total
+            record.updated_at = timezone.now()
+            record.save(update_fields=["quantity", "updated_at"])
+        logger.debug(
+            f"Token usage recorded: org={organization.id} input={input_tokens} "
+            f"output={output_tokens} total={total}"
+        )
+        return total
 
     @classmethod
     def mark_timeout_uncertain(
@@ -389,7 +484,7 @@ class QuotaService:
 
         Preserves cost estimation and flags status=TIMEOUT_UNCERTAIN without double counting.
         """
-        with transaction.atomic():
+        with _atomic_quota():
             res_id = reservation.id if hasattr(reservation, "id") else reservation
             res = QuotaReservation.objects.select_for_update().get(id=res_id)
 
@@ -408,7 +503,7 @@ class QuotaService:
     @classmethod
     def increment_usage(cls, organization, metric: str, amount: int = 1) -> UsageRecord:
         """Atomically increment usage for a metric directly."""
-        with transaction.atomic():
+        with _atomic_quota():
             record, _ = UsageRecord.objects.select_for_update().get_or_create(
                 organization=organization,
                 metric=metric,
@@ -438,7 +533,7 @@ class QuotaService:
 
         Fully atomic inside transaction.atomic() to prevent race conditions.
         """
-        with transaction.atomic():
+        with _atomic_quota():
             limit = cls.get_quota_limit(organization, metric)
             record, _ = UsageRecord.objects.select_for_update().get_or_create(
                 organization=organization,

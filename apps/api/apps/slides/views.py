@@ -73,15 +73,23 @@ class CoursePresentationsView(APIView):
         level = data.get("level")
         focus = data.get("focus")
 
+        from apps.ai.services.orchestration import IdempotencyManager
         from apps.billing.models import UsageMetric
         from apps.billing.services.quota_service import QuotaService
+
+        client_idem_key = IdempotencyManager.extract_key(request)
+        if client_idem_key:
+            cached_res = IdempotencyManager.get_existing_result(client_idem_key)
+            if cached_res:
+                return Response(cached_res, status=status.HTTP_200_OK)
 
         reservation = QuotaService.reserve_quota(
             organization=course.organization,
             metric=UsageMetric.SLIDES,
             amount=1,
             user=request.user,
-            idempotency_key=f"slides_gen_{course.id}_{UUID(int=0) if not request.user else request.user.id}_{title[:10]}",
+            idempotency_key=client_idem_key
+            or f"slides_gen_{course.id}_{UUID(int=0) if not request.user else request.user.id}_{title[:10]}",
             estimated_cost_usd=0.012,
         )
 
@@ -101,6 +109,8 @@ class CoursePresentationsView(APIView):
             raise
 
         output_serializer = PresentationDetailSerializer(presentation)
+        if client_idem_key:
+            IdempotencyManager.record_result(client_idem_key, output_serializer.data)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
 
 

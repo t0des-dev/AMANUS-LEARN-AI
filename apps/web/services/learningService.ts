@@ -6,51 +6,14 @@ import {
   StudySessionItem,
 } from "../types/learning";
 
-import { getApiBaseUrl } from "./apiClient";
+import { authedRequest } from "./apiClient";
 
 async function learningFetch<T>(
   endpoint: string,
   token: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
-  const url = `${baseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
-
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    let errorMessage = "Une erreur est survenue lors de l'accès aux données d'apprentissage.";
-    if (typeof data.detail === "string") {
-      errorMessage = data.detail;
-    } else if (typeof data.message === "string") {
-      errorMessage = data.message;
-    } else if (typeof data === "object" && data !== null) {
-      const firstKey = Object.keys(data)[0];
-      if (firstKey && Array.isArray(data[firstKey])) {
-        errorMessage = `${firstKey}: ${data[firstKey].join(" ")}`;
-      } else if (firstKey && typeof data[firstKey] === "string") {
-        errorMessage = `${firstKey}: ${data[firstKey]}`;
-      }
-    }
-    throw new Error(errorMessage);
-  }
-
-  return data as T;
+  return authedRequest<T>(endpoint, options, token, "Une erreur est survenue lors de l'accès aux données d'apprentissage.");
 }
 
 export const learningService = {

@@ -85,6 +85,12 @@ jobs:
           cd apps/api
           python manage.py makemigrations --check --dry-run
 
+      - name: OpenAPI Schema Export (contract drift check)
+        run: |
+          cd apps/api
+          python manage.py spectacular --file openapi.generated.yaml --validate
+          diff -u openapi.yaml openapi.generated.yaml
+
       - name: Run Backend Pytest Suite
         run: |
           cd apps/api
@@ -128,4 +134,28 @@ jobs:
       - name: NPM Dependency Audit
         working-directory: apps/web
         run: |
-          npm audit --audit-level=critical || true
+          npm audit --audit-level=critical
+
+  dependency-audit:
+    name: Python Dependency Audit (pip-audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: apps/api/requirements.txt
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+
+      - name: Audit Python dependencies (fails on known vulnerabilities)
+        run: |
+          pip-audit -r apps/api/requirements.txt

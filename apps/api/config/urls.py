@@ -11,7 +11,7 @@ from drf_spectacular.views import (
 from apps.ai.views import TaskStatusView
 from apps.billing.views import SystemHealthView
 
-from .views import HealthCheckView
+from .views import HealthCheckView, metrics_view
 
 # API v1 routes
 v1_patterns = [
@@ -39,6 +39,8 @@ v1_patterns = [
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Prometheus scrape endpoint (internal network only)
+    path("metrics", metrics_view, name="metrics"),
     # Top-level direct routes for SaaS specifications
     path("billing/", include("apps.billing.urls")),
     path("system/health", SystemHealthView.as_view(), name="root-system-health"),
